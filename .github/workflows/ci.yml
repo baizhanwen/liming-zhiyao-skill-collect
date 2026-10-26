@@ -1,0 +1,45 @@
+name: Local application checks
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+env:
+  PYTHONUTF8: '1'
+jobs:
+  application:
+    name: Test and build (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - name: Install locked development dependencies
+        run: uv sync --frozen --no-python-downloads
+      - name: Core and connector contract tests
+        run: uv run --frozen pytest -q
+      - name: macOS/Linux repeatable installation
+        if: runner.os != 'Windows'
+        run: bash scripts/setup.sh
+      - name: Windows repeatable installation
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./scripts/setup.ps1
+      - name: Local diagnostic (does not prove external connections)
+        run: uv run --no-sync python scripts/doctor.py --json
