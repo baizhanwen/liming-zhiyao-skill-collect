@@ -4,7 +4,7 @@
 
 一个本地运行的单用户工作台：丢进 GitHub 或抖音链接，或上传视频、字幕，保留来源证据，整理知识和技能，并与已授权的飞书多维表格手动双向同步。展示名保留 `clloect`，技术名为 `liming-zhiyao-skill-collect`。
 
-当前源码 **v0.1.1**：本机109项测试与4项浏览器流程/契约验证通过，用户自配DeepSeek已真实完成Easel分析、追问、草稿与完整包往返。匿名来源API限流时可用受限公开Git读取固定版本；搜索与技能发现仍受各自API限额约束。视觉、语音与企业飞书仍须分别配置和验收。已有[v0.1.0首版](https://github.com/baizhanwen/liming-zhiyao-skill-collect/releases/tag/v0.1.0)及[三平台CI](https://github.com/baizhanwen/liming-zhiyao-skill-collect/actions/runs/40286764251)，最新平台与发布状态见[验收报告](docs/验收报告.md)。
+当前版本 **[v0.1.1预发布](https://github.com/baizhanwen/liming-zhiyao-skill-collect/releases/tag/v0.1.1)**：本机109项测试与4项浏览器流程/契约验证通过，用户自配DeepSeek已真实完成Easel分析、追问、草稿与完整包往返。[v0.1.1三平台CI](https://github.com/baizhanwen/liming-zhiyao-skill-collect/actions/runs/40296985174)的核心测试、安装、构建与诊断均通过。匿名来源API限流时可用受限公开Git读取固定版本；搜索与技能发现仍受各自API限额约束。视觉、语音与企业飞书仍须分别配置和验收，详细结果及跳过边界见[验收报告](docs/验收报告.md)。
 
 ## 让 AI 帮你安装
 
@@ -118,6 +118,6 @@ SKILL_COLLECT_DATA=/absolute/new-data bash scripts/start.sh
 - 同步是有摘要复查的乐观并发，飞书记录接口没有已核实的原子CAS；多人同时写入的最终窗口不能保证强一致。上次创建结果不明时保守停止，不盲目创建副本；未绑定素材不自动删除。
 - 取消停止后续阶段；已发出的请求可能运行到超时并产生供应商费用。进程在外部请求中断时不能保证供应商恰好调用一次，恢复会要求人工继续。
 - 本地检索以FTS5与中文子串为基线；未启用embedding语义检索。没有自动定时同步、企业统一登录或移动端原生应用。
-- Ubuntu/macOS/Windows的核心测试、安装、构建与诊断已在CI通过。CI缺FFmpeg/FFprobe，媒体项未验证；本机macOS媒体测试通过。Windows另跳过需开发者权限的符号链接创建测试。
+- Ubuntu/macOS/Windows的核心测试、安装、构建与诊断已在CI通过。CI缺FFmpeg/FFprobe，媒体项未验证；本机macOS媒体测试通过。Windows另跳过需开发者权限的符号链接创建测试及仅适用于POSIX的TIME_WAIT地址复用测试。
 
 MIT 许可。第三方条款与来源见[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
