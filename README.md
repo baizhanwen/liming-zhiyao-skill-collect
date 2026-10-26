@@ -4,6 +4,8 @@
 
 一个本地运行的单用户工作台：丢进 GitHub 或抖音链接，或上传视频、字幕，保留来源证据，整理知识和技能，并与已授权的飞书多维表格手动双向同步。展示名保留 `clloect`，技术名为 `liming-zhiyao-skill-collect`。
 
+[v0.1.0 本地首版](https://github.com/baizhanwen/liming-zhiyao-skill-collect/releases/tag/v0.1.0)：本机87项测试和桌面/窄屏业务验证通过，[三平台核心、安装与构建CI通过](https://github.com/baizhanwen/liming-zhiyao-skill-collect/actions/runs/40286764251)。真实模型和企业飞书联通待用户本地配置，抖音自动媒体获取受限；完整状态见[验收报告](docs/验收报告.md)。
+
 ## 让 AI 帮你安装
 
 把本仓库地址和下面这段话交给你的 AI 编程助手：
@@ -116,6 +118,6 @@ SKILL_COLLECT_DATA=/absolute/new-data bash scripts/start.sh
 - 同步是有摘要复查的乐观并发，飞书记录接口没有已核实的原子CAS；多人同时写入的最终窗口不能保证强一致。上次创建结果不明时保守停止，不盲目创建副本；未绑定素材不自动删除。
 - 取消停止后续阶段；已发出的请求可能运行到超时并产生供应商费用。进程在外部请求中断时不能保证供应商恰好调用一次，恢复会要求人工继续。
 - 本地检索以FTS5与中文子串为基线；未启用embedding语义检索。没有自动定时同步、企业统一登录或移动端原生应用。
-- 跨平台状态以实际CI为准；本机macOS完整安装验证单独记录。
+- Ubuntu/macOS/Windows的核心测试、安装、构建与诊断已在CI通过。CI缺FFmpeg/FFprobe，媒体项未验证；本机macOS媒体测试通过。Windows另跳过需开发者权限的符号链接创建测试。
 
 MIT 许可。第三方条款与来源见[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。

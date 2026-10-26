@@ -1,0 +1,16 @@
+{
+  "status": "passed",
+  "test_type": "fresh_clone_of_published_repository_no_credentials",
+  "commit": "6f59f2d695e42f7d155c5ae66dc5e6074f270c56",
+  "platform": "macOS",
+  "setup": "passed",
+  "frontend_build": "passed",
+  "diagnostic_required_checks_passed": true,
+  "no_model_startup": true,
+  "real_local_api_create_export_reimport": true,
+  "reimport_same_id": true,
+  "restart_preserved_skill": true,
+  "backup_api_downloaded": true,
+  "external_model_or_feishu_called": false,
+  "scope": "public Git clone -> README setup -> actual local API skill package flow -> process restart; test content self-authored and temporary"
+}

@@ -1,5 +1,5 @@
 {
-  "recorded_at": "2026-10-26T07:34:45Z",
+  "recorded_at": "2026-10-26T07:37:27Z",
   "repository": "baizhanwen/liming-zhiyao-skill-collect",
   "runs": [
     {
@@ -279,12 +279,315 @@
       ],
       "status": "completed",
       "url": "https://github.com/baizhanwen/liming-zhiyao-skill-collect/actions/runs/40286369081"
+    },
+    {
+      "conclusion": "success",
+      "headSha": "6f59f2d695e42f7d155c5ae66dc5e6074f270c56",
+      "jobs": [
+        {
+          "completedAt": "2026-10-26T07:36:48Z",
+          "conclusion": "success",
+          "databaseId": 121452139336,
+          "name": "Test and build (windows-latest)",
+          "startedAt": "2026-10-26T07:35:57Z",
+          "status": "completed",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@v4",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/setup-python@v5",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/setup-node@v4",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run astral-sh/setup-uv@v6",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Install locked development dependencies",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Core and connector contract tests",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "macOS/Linux repeatable installation",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "name": "Windows repeatable installation",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Local diagnostic (does not prove external connections)",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run astral-sh/setup-uv@v6",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/setup-node@v4",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/setup-python@v5",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@v4",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success"
+            }
+          ],
+          "url": "https://github.com/baizhanwen/liming-zhiyao-skill-collect/actions/runs/40286764251/job/121452139336",
+          "test_summary": [
+            "84 passed, 3 skipped, 1 warning in 14.45s"
+          ],
+          "media_dependencies_available_in_diagnostic": false,
+          "test_boundaries": [
+            "No live model or Feishu credentials; connector tests use explicit mock services.",
+            "Optional FFmpeg/FFprobe-dependent media tests skipped on this runner.",
+            "Symlink-creation test skipped due to Windows permission requirements."
+          ]
+        },
+        {
+          "completedAt": "2026-10-26T07:36:21Z",
+          "conclusion": "success",
+          "databaseId": 121452139647,
+          "name": "Test and build (ubuntu-latest)",
+          "startedAt": "2026-10-26T07:35:57Z",
+          "status": "completed",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@v4",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/setup-python@v5",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/setup-node@v4",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run astral-sh/setup-uv@v6",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Install locked development dependencies",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Core and connector contract tests",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "macOS/Linux repeatable installation",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Windows repeatable installation",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "name": "Local diagnostic (does not prove external connections)",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run astral-sh/setup-uv@v6",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/setup-node@v4",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/setup-python@v5",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@v4",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success"
+            }
+          ],
+          "url": "https://github.com/baizhanwen/liming-zhiyao-skill-collect/actions/runs/40286764251/job/121452139647",
+          "test_summary": [
+            "85 passed, 2 skipped, 1 warning in 5.55s"
+          ],
+          "media_dependencies_available_in_diagnostic": false,
+          "test_boundaries": [
+            "No live model or Feishu credentials; connector tests use explicit mock services.",
+            "Optional FFmpeg/FFprobe-dependent media tests skipped on this runner."
+          ]
+        },
+        {
+          "completedAt": "2026-10-26T07:36:28Z",
+          "conclusion": "success",
+          "databaseId": 121452139693,
+          "name": "Test and build (macos-latest)",
+          "startedAt": "2026-10-26T07:35:58Z",
+          "status": "completed",
+          "steps": [
+            {
+              "name": "Set up job",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/checkout@v4",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/setup-python@v5",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run actions/setup-node@v4",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run astral-sh/setup-uv@v6",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Install locked development dependencies",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Core and connector contract tests",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "macOS/Linux repeatable installation",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Windows repeatable installation",
+              "status": "completed",
+              "conclusion": "skipped"
+            },
+            {
+              "name": "Local diagnostic (does not prove external connections)",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run astral-sh/setup-uv@v6",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/setup-node@v4",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/setup-python@v5",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Post Run actions/checkout@v4",
+              "status": "completed",
+              "conclusion": "success"
+            },
+            {
+              "name": "Complete job",
+              "status": "completed",
+              "conclusion": "success"
+            }
+          ],
+          "url": "https://github.com/baizhanwen/liming-zhiyao-skill-collect/actions/runs/40286764251/job/121452139693",
+          "test_summary": [
+            "85 passed, 2 skipped, 1 warning in 7.32s"
+          ],
+          "media_dependencies_available_in_diagnostic": false,
+          "test_boundaries": [
+            "No live model or Feishu credentials; connector tests use explicit mock services.",
+            "Optional FFmpeg/FFprobe-dependent media tests skipped on this runner."
+          ]
+        }
+      ],
+      "status": "completed",
+      "url": "https://github.com/baizhanwen/liming-zhiyao-skill-collect/actions/runs/40286764251"
     }
   ],
-  "status": "initial_full_source_run_failed_windows_sqlite_handles; fix_in_progress",
+  "status": "passed_three_platform_install_build_core_contract_tests",
   "boundaries": [
     "GitHub Actions verifies contracts, local installation/build and diagnostic only; no paid model, Douyin acquisition or real Feishu credentials.",
     "Optional FFmpeg/FFprobe tests skip when runner lacks the binaries. Windows skips symlink creation test because developer permissions may be absent.",
     "Initial CI-only commit deb268ea977078fc9a408add2bb40da80aff8b16 excluded from full-source acceptance."
-  ]
+  ],
+  "verified_head_sha": "6f59f2d695e42f7d155c5ae66dc5e6074f270c56",
+  "verified_run_url": "https://github.com/baizhanwen/liming-zhiyao-skill-collect/actions/runs/40286764251",
+  "fix_summary": "Closed SQLite connection handles explicitly before deleting backup snapshots or replacing restored staging folders; Windows backup/restore now passes.",
+  "acceptance_scope": {
+    "ubuntu": "core contracts + setup/build + local diagnostic passed",
+    "macos": "core contracts + setup/build + local diagnostic passed",
+    "windows": "core contracts + setup.ps1/build + local diagnostic passed",
+    "media": "not verified in CI; optional FFmpeg/FFprobe tests skipped",
+    "real_model": "not tested in CI",
+    "feishu_live": "not tested in CI",
+    "douyin_live": "not tested in CI"
+  }
 }
