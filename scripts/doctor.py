@@ -9,6 +9,7 @@ import socket
 import sqlite3
 import subprocess
 import sys
+from contextlib import closing
 from pathlib import Path
 
 PROJECT = Path(__file__).resolve().parents[1]
@@ -46,7 +47,7 @@ def diagnose(data=None):
     db_ok, detail = False, '未初始化；先运行 setup'
     if db_path.is_file():
         try:
-            with sqlite3.connect(db_path.as_uri() + '?mode=ro', uri=True) as db:
+            with closing(sqlite3.connect(db_path.as_uri() + '?mode=ro', uri=True)) as db:
                 db_ok = db.execute('PRAGMA quick_check').fetchone()[0] == 'ok'
                 detail = 'SQLite 完整性正常' if db_ok else 'SQLite 完整性异常'
         except sqlite3.DatabaseError:

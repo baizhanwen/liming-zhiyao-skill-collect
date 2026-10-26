@@ -17,6 +17,7 @@ import stat
 import sys
 import tempfile
 import zipfile
+from contextlib import closing
 from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
 
@@ -117,7 +118,9 @@ def _remap_value(value, old_root, target, key=''):
 
 
 def _restore_database(path, original_root, final_target):
-    with sqlite3.connect(path) as db:
+    # A sqlite Connection context commits/rolls back but does not close its handle.
+    # The handle must close before Windows can move the restored staging directory.
+    with closing(sqlite3.connect(path)) as db, db:
         if db.execute('PRAGMA quick_check').fetchone()[0] != 'ok':
             raise BackupError('备份数据库完整性检查失败')
         tables = {r[0] for r in db.execute("SELECT name FROM sqlite_master WHERE type='table'")}

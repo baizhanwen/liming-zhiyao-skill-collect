@@ -7,6 +7,7 @@ import subprocess
 import threading
 import time
 import zipfile
+import sqlite3
 from pathlib import Path
 
 import httpx
@@ -262,3 +263,10 @@ def test_skill_optimistic_version_prevents_lost_edit(tmp_path):
     with pytest.raises(AppError) as e:s.update(a['id'],{'body':'stale third','expected_version':1})
     assert e.value.code=='version_conflict'
     assert s.get(a['id'])['body']=='second'
+
+
+def test_sqlite_handles_close_at_context_exit(tmp_path):
+    store=Store(tmp_path)
+    with store.connect() as connection:
+        assert connection.execute('SELECT 1').fetchone()==(1,)
+    with pytest.raises(sqlite3.ProgrammingError):connection.execute('SELECT 1')

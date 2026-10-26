@@ -6,6 +6,7 @@ import threading
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
+from contextlib import contextmanager,closing
 
 
 def now():
@@ -29,10 +30,15 @@ class Store:
             INSERT OR IGNORE INTO migrations VALUES(1,datetime('now'));
             ''')
 
+    @contextmanager
     def connect(self):
         db = sqlite3.connect(self.path, timeout=20)
-        db.execute('PRAGMA busy_timeout=20000')
-        return db
+        try:
+            db.execute('PRAGMA busy_timeout=20000')
+            with db:
+                yield db
+        finally:
+            db.close()
 
     def get(self, kind, id):
         with self.connect() as db:
@@ -73,5 +79,5 @@ class Store:
         return [v for v in values if bool(v.get('archived',False)) == archived and (not tag or tag in v.get('tags',[])) and (not category or v.get('category') == category)]
 
     def backup_to(self, target):
-        with self.lock, self.connect() as source, sqlite3.connect(target) as dest:
+        with self.lock, self.connect() as source, closing(sqlite3.connect(target)) as dest:
             source.backup(dest)
