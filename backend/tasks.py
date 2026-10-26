@@ -134,6 +134,7 @@ class TaskRunner:
                 retryable=getattr(e,'retryable',False)
                 message=self.vault.redact(getattr(e,'message','内部处理失败，请查看诊断与任务阶段'))
                 task['error']={'code':code,'message':message,'retryable':retryable,'stage':task['stage']}
+                if getattr(e,'diagnostic_id',None):task['error']['diagnostic_id']=e.diagnostic_id
                 task.setdefault('stages',[]).append({'stage':task['stage'],'status':'failed','message':message,'at':now(),'attempt':retry+1})
                 if retryable and retry<2:
                     task['attempts']+=1

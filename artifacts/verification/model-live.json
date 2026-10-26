@@ -1,0 +1,31 @@
+{
+  "at": "2026-10-26T08:01:39.489251+00:00",
+  "test_type": "real_user_configured_deepseek_structured_analysis",
+  "provider_host": "api.deepseek.com",
+  "requested_model": "deepseek-flash",
+  "returned_model": "deepseek-flash",
+  "prompt_version": "evidence-first-v1",
+  "finish_reason": "stop",
+  "source_url": "https://github.com/ZJU-REAL/Easel",
+  "source_version": "5a597e5f3ef5b01098b53f36caf719dd9a32b7bf",
+  "source_file_count": 7,
+  "source_transport": "public_git",
+  "source_snapshot_hash": "268dfeb1e34689ffe9e2546c4a81d685f6d61117463c65d7a03a0392e9d933b7",
+  "claims_count": 8,
+  "all_claim_refs_in_saved_evidence": true,
+  "usage_as_reported": {
+    "prompt_tokens": 18144,
+    "completion_tokens": 1507,
+    "total_tokens": 19651,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "prompt_cache_hit_tokens": 0,
+    "prompt_cache_miss_tokens": 18144
+  },
+  "execution_verification": "not_executed",
+  "analysis_basis": "source_files",
+  "cost": "not_reported_by_provider",
+  "credentials_included": false,
+  "previous_live_issue": "source API rate limit resolved by anonymous public Git; structured format initially failed, bounded JSON instruction and DeepSeek non-thinking adaptation passed"
+}

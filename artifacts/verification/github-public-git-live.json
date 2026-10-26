@@ -1,0 +1,161 @@
+{
+  "tested_at": "2026-10-26T07:57:06Z",
+  "mode": "real_public_repository_no_token",
+  "elapsed_seconds": 6.85,
+  "repository": "ZJU-REAL/Easel",
+  "version": "5a597e5f3ef5b01098b53f36caf719dd9a32b7bf",
+  "metadata": {
+    "description": null,
+    "stars": null,
+    "updated_at": null,
+    "license": "UNKNOWN",
+    "default_branch": "main",
+    "html_url": "https://github.com/ZJU-REAL/Easel",
+    "transport": "public_git",
+    "fallback_reason": "rate_limit",
+    "fallback_note": "GitHub API 受限，已通过匿名公开 Git 读取固定版本；未使用本机 GitHub 凭证。",
+    "git_disk_budget_bytes": 134217728,
+    "git_deadline_seconds": 75,
+    "tree_truncated": false,
+    "files_read": 18,
+    "scope": "",
+    "execution_verified": false,
+    "git_disk_bytes_observed": 14992561
+  },
+  "files": [
+    {
+      "path": "README.md",
+      "url": "https://github.com/ZJU-REAL/Easel/blob/5a597e5f3ef5b01098b53f36caf719dd9a32b7bf/README.md",
+      "sha": "fc515ed08f32e81bdffd04d8d5c14029016b15c9",
+      "sha256": "3061a48077a6b5899d92661603f45b6beae2a5b8e0231d53b31131af5a6c3ad7",
+      "characters": 19885
+    },
+    {
+      "path": "LICENSE",
+      "url": "https://github.com/ZJU-REAL/Easel/blob/5a597e5f3ef5b01098b53f36caf719dd9a32b7bf/LICENSE",
+      "sha": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+      "characters": 11357
+    },
+    {
+      "path": "pyproject.toml",
+      "url": "https://github.com/ZJU-REAL/Easel/blob/5a597e5f3ef5b01098b53f36caf719dd9a32b7bf/pyproject.toml",
+      "sha": "b2d1e630f6a40aa7796a1ac358d7c2a64a042a5d",
+      "sha256": "870cbdfae86c422aa79461158175a26030d159193b7911050a99c7550321fa92",
+      "characters": 1274
+    },
+    {
+      "path": "agents/tool-budget/package.json",
+      "url": "https://github.com/ZJU-REAL/Easel/blob/5a597e5f3ef5b01098b53f36caf719dd9a32b7bf/agents/tool-budget/package.json",
+      "sha": "e10f9d1643ac3e235c77904757d7bb7b4d3ff90e",
+      "sha256": "44e2dedbc33112d47437c3ed15caeff6fc542c241b0cd158c180f91117ecd086",
+      "characters": 143
+    },
+    {
+      "path": "web/frontend/package.json",
+      "url": "https://github.com/ZJU-REAL/Easel/blob/5a597e5f3ef5b01098b53f36caf719dd9a32b7bf/web/frontend/package.json",
+      "sha": "d8b47a17fab7238776a66feb17c202595aca1264",
+      "sha256": "6c4afcfe73d774a0f1bb6c95777897cf27a9b4e83c9ee83fc246f93d2f08cd1c",
+      "characters": 615
+    },
+    {
+      "path": "README_EN.md",
+      "url": "https://github.com/ZJU-REAL/Easel/blob/5a597e5f3ef5b01098b53f36caf719dd9a32b7bf/README_EN.md",
+      "sha": "daac70c75ea4f733865699599887f2e732628bdc",
+      "sha256": "4ed178e507a048a4050deed818d1d06b2d9f9189b9f774a5bd09114112ade2d2",
+      "characters": 27462
+    },
+    {
+      "path": "agents/tool-budget/README.md",
+      "url": "https://github.com/ZJU-REAL/Easel/blob/5a597e5f3ef5b01098b53f36caf719dd9a32b7bf/agents/tool-budget/README.md",
+      "sha": "972f91f0cffc9f67231fb9fecf8018519a39f304",
+      "sha256": "641ca74344ceba24c4bb21f0034a1eb2e61156ae562f738dc20040d8408e0113",
+      "characters": 9512
+    },
+    {
+      "path": "profiles/_template/README.md",
+      "url": "https://github.com/ZJU-REAL/Easel/blob/5a597e5f3ef5b01098b53f36caf719dd9a32b7bf/profiles/_template/README.md",
+      "sha": "fa8dd625dd207a3ac8e9f8f072b5011eba959c0d",
+      "sha256": "f3a39afe68111a0f311ac5232df6e7dc418dc9e973298163fd46510aaf2f909a",
+      "characters": 1370
+    },
+    {
+      "path": "skills/shared/README.md",
+      "url": "https://github.com/ZJU-REAL/Easel/blob/5a597e5f3ef5b01098b53f36caf719dd9a32b7bf/skills/shared/README.md",
+      "sha": "1e4ec363a46eaeeca819ef9c35b456a44d997ac8",
+      "sha256": "fb8ac3f8028df5a313f32875a3074d87c1e291a1e8c03bbd629327678a1f8cf1",
+      "characters": 2477
+    },
+    {
+      "path": "web/frontend/README.md",
+      "url": "https://github.com/ZJU-REAL/Easel/blob/5a597e5f3ef5b01098b53f36caf719dd9a32b7bf/web/frontend/README.md",
+      "sha": "d6af7e39ffac6183b891838d6ab1d6eb7ac70dda",
+      "sha256": "fa8aac78b8be1993010b57f41000a243ecba006f6731513fe4ec91e788bf2517",
+      "characters": 1278
+    },
+    {
+      "path": "conftest.py",
+      "url": "https://github.com/ZJU-REAL/Easel/blob/5a597e5f3ef5b01098b53f36caf719dd9a32b7bf/conftest.py",
+      "sha": "fe81434f6ef7f4c2bcb6c122c6d1571fa045859c",
+      "sha256": "dc85f107914051cd4bf2330f0aabedbabda3fd1a3c82d95e1b87b0900f21f3e6",
+      "characters": 508
+    },
+    {
+      "path": "easel/__init__.py",
+      "url": "https://github.com/ZJU-REAL/Easel/blob/5a597e5f3ef5b01098b53f36caf719dd9a32b7bf/easel/__init__.py",
+      "sha": "f9d3243d00f0dd342dda1c8b4abf81bc472f3802",
+      "sha256": "cbc2c67ed5b0d8ef430642ffdf4d6af7e2119c3467a43c5b1dbf77981b29d31f",
+      "characters": 52
+    },
+    {
+      "path": "easel/__main__.py",
+      "url": "https://github.com/ZJU-REAL/Easel/blob/5a597e5f3ef5b01098b53f36caf719dd9a32b7bf/easel/__main__.py",
+      "sha": "beacca052d84d393e85d0ecd055317e9a217224a",
+      "sha256": "bba321e3d320fb60018beb5066b4159e67feb2a89d77c12dfb7e4f199a0c0414",
+      "characters": 110
+    },
+    {
+      "path": "easel/cli.py",
+      "url": "https://github.com/ZJU-REAL/Easel/blob/5a597e5f3ef5b01098b53f36caf719dd9a32b7bf/easel/cli.py",
+      "sha": "a6292a35845cc06f40e3be4c7a000d1b80f010b2",
+      "sha256": "8134d109cb916876d098caca4836137d6f1c2e70e2e7455f7f4dd4a92c3c6241",
+      "characters": 9429
+    },
+    {
+      "path": "easel/direct_api.py",
+      "url": "https://github.com/ZJU-REAL/Easel/blob/5a597e5f3ef5b01098b53f36caf719dd9a32b7bf/easel/direct_api.py",
+      "sha": "7d40e1cd4fe7701e9fb7b5bfe987c40e1ca7d7d2",
+      "sha256": "2c45ef4690889d6c1d4161a6aa2735f819b841f0cf850cee748776e97ccfa775",
+      "characters": 6752
+    },
+    {
+      "path": "easel/gateway_endpoint.py",
+      "url": "https://github.com/ZJU-REAL/Easel/blob/5a597e5f3ef5b01098b53f36caf719dd9a32b7bf/easel/gateway_endpoint.py",
+      "sha": "8a31c0a8e47aa6cecb1d10638ce1b5a628f07dd1",
+      "sha256": "8a3ba86873fd07749f7f1a63fd16ee7e87119b0cc505de2de7542463b6ee4790",
+      "characters": 6021
+    },
+    {
+      "path": "easel/gateway_questions.py",
+      "url": "https://github.com/ZJU-REAL/Easel/blob/5a597e5f3ef5b01098b53f36caf719dd9a32b7bf/easel/gateway_questions.py",
+      "sha": "80766cd72a92ba38436e1ff43bcb007418461b41",
+      "sha256": "d28dce350cd518bafb37cac99088af5567a960f44427ca341b13ec3ad3f74085",
+      "characters": 16631
+    },
+    {
+      "path": "easel/installation.py",
+      "url": "https://github.com/ZJU-REAL/Easel/blob/5a597e5f3ef5b01098b53f36caf719dd9a32b7bf/easel/installation.py",
+      "sha": "391ce8cc5922a6c5d3ee689801be2bc379dda04a",
+      "sha256": "72de5b34dc29008b249f4b762d2b1aecc91833b4bd75cc97a3b16653c1ad65b6",
+      "characters": 1493
+    }
+  ],
+  "evidence_count": 18,
+  "evidence_kinds": [
+    "code_observation",
+    "source_claim"
+  ],
+  "execution_verified": false,
+  "model_analysis": "root performs separately with locally configured user model; this record verifies acquisition only",
+  "contract_tests": "33 passed in tests/test_github.py; real local Git object reader with simulated transport; API and subprocess isolation/limit contracts"
+}

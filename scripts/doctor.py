@@ -43,6 +43,7 @@ def diagnose(data=None):
     for binary in ('ffmpeg', 'ffprobe'):
         checks.append({'name': binary, 'required': False, 'ok': bool(shutil.which(binary)),
                        'detail': '已找到' if shutil.which(binary) else '缺失，媒体处理受限：https://ffmpeg.org/download.html'})
+    checks.append({'name':'Git公开仓库降级读取','required':False,'ok':bool(shutil.which('git')),'detail':'已找到Git' if shutil.which('git') else '未安装；匿名API限流时需安装Git或配置GitHub Token：https://git-scm.com/downloads'})
     db_path = root / 'app.sqlite3'
     db_ok, detail = False, '未初始化；先运行 setup'
     if db_path.is_file():
@@ -57,6 +58,22 @@ def diagnose(data=None):
             'checks': checks, 'notice': '诊断只检查本地环境；不证明模型、GitHub、飞书或视频来源已真实联通。'}
 
 
+def port_available(port):
+    # A recently stopped server may leave TIME_WAIT sockets. Check listeners,
+    # then use the same address reuse semantics as a new local server on POSIX.
+    try:
+        with socket.socket() as probe:
+            probe.settimeout(.2)
+            if probe.connect_ex(('127.0.0.1',port))==0:return False
+        with socket.socket() as sock:
+            if os.name!='nt':sock.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
+            elif hasattr(socket,'SO_EXCLUSIVEADDRUSE'):sock.setsockopt(socket.SOL_SOCKET,socket.SO_EXCLUSIVEADDRUSE,1)
+            sock.bind(('127.0.0.1',port))
+        return True
+    except OSError:
+        return False
+
+
 def main():
     parser = argparse.ArgumentParser(description='只读本地诊断，不读取凭证、不调用外部服务。')
     parser.add_argument('--data')
@@ -67,10 +84,7 @@ def main():
         if not 1024 <= args.check_port <= 65535:
             print('端口必须在 1024—65535 之间', file=sys.stderr)
             return 1
-        try:
-            with socket.socket() as sock:
-                sock.bind(('127.0.0.1', args.check_port))
-        except OSError:
+        if not port_available(args.check_port):
             print('端口已占用；不会结束其他进程', file=sys.stderr)
             return 1
         return 0

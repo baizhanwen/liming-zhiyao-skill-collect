@@ -7,10 +7,29 @@ import sqlite3
 import subprocess
 import sys
 import zipfile
+import socket
 
 import pytest
 
 from backend.store import Store
+from scripts.doctor import port_available
+
+
+def test_port_check_detects_listener_without_stopping_it():
+    with socket.socket() as listener:
+        listener.bind(('127.0.0.1',0));listener.listen()
+        assert not port_available(listener.getsockname()[1])
+        assert listener.fileno()>=0
+
+
+@pytest.mark.skipif(os.name=='nt',reason='POSIX address reuse semantics')
+def test_port_check_allows_immediate_restart_after_time_wait():
+    with socket.socket() as listener:
+        listener.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
+        listener.bind(('127.0.0.1',0));listener.listen();port=listener.getsockname()[1]
+        with socket.create_connection(('127.0.0.1',port)) as client:
+            accepted,_=listener.accept();accepted.close();client.recv(1)
+    assert port_available(port)
 from scripts.backup import BackupError, make_backup, restore_backup
 from scripts.doctor import diagnose
 

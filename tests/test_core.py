@@ -16,7 +16,7 @@ from fastapi.testclient import TestClient
 
 from backend.main import create_app
 from backend.media import inspect_video, prepare_media, subtitle_source
-from backend.models import ModelService
+from backend.models import ModelService,normalize_generated_skill
 from backend.security import AppError, Vault, public_url
 from backend.skills import SkillService, unpack
 from backend.store import Store
@@ -83,6 +83,7 @@ def test_api_subtitle_to_knowledge_draft_zip_and_restart(tmp_path):
         assert answer['evidence_ids']==['sub-1']
         skill=c.post('/api/tasks/'+t['id']+'/skill').json()
         assert skill['status']=='draft'
+        assert skill['generation']['model']=='contract-model' and skill['generation']['prompt_version']
         assert c.post('/api/tasks/'+t['id']+'/skill').json()['id']==skill['id']
         exported=c.get('/api/skills/'+skill['id']+'/export').content
         imp=c.post('/api/skills/import',files={'file':('skill.zip',exported,'application/zip')})
@@ -270,3 +271,95 @@ def test_sqlite_handles_close_at_context_exit(tmp_path):
     with store.connect() as connection:
         assert connection.execute('SELECT 1').fetchone()==(1,)
     with pytest.raises(sqlite3.ProgrammingError):connection.execute('SELECT 1')
+
+
+def test_deepseek_bounded_extraction_default_and_explicit_override(tmp_path):
+    received=[]
+    def handler(req):
+        received.append(json.loads(req.content));return mock_model(req)
+    store,vault,models=configured(tmp_path,handler)
+    store.put('model_configs',{'id':'text','base_url':'https://api.deepseek.com','model':'deepseek-flash'})
+    models.probe('text')
+    assert received[-1]['thinking']=={'type':'disabled'}
+    store.put('model_configs',{'id':'text','base_url':'https://api.deepseek.com','model':'deepseek-flash','thinking_mode':'provider_default'})
+    models.probe('text')
+    assert 'thinking' not in received[-1]
+    store.put('model_configs',{'id':'text','base_url':'https://other-provider.invalid/v1','model':'manual'})
+    models.probe('text');assert 'thinking' not in received[-1]
+
+
+def test_truncated_model_reply_is_not_retried_and_has_private_diagnostic(tmp_path):
+    calls=[]
+    def handler(req):
+        calls.append(1)
+        return httpx.Response(200,json={'model':'contract','choices':[{'message':{'content':'{"overview":"unfinished'},'finish_reason':'length'}],'usage':{'total_tokens':128}})
+    store,vault,models=configured(tmp_path,handler)
+    with pytest.raises(AppError) as e:models.analyze({'text':'fixture','evidence':[],'snapshot_hash':'known-source'})
+    assert e.value.code=='output_limit' and len(calls)==1
+    run=store.get('model_runs',e.value.diagnostic_id)
+    assert run['source_snapshot_hash']=='known-source' and run['finish_reason']=='length'
+    assert run['response'].startswith('{"overview"')
+
+
+def test_model_diagnostics_scoped_to_task_and_credentials_redacted(tmp_path):
+    store,vault,models=configured(tmp_path)
+    vault.set('model_text','synthetic-contract-secret')
+    def handler(req):return httpx.Response(200,json={'choices':[{'message':{'content':'bad JSON synthetic-contract-secret'}}]})
+    models.client=httpx.Client(transport=httpx.MockTransport(handler))
+    with pytest.raises(AppError) as e:models.analyze({'text':'fixture','evidence':[],'snapshot_hash':'source-one'},max_repairs=0)
+    app=create_app(tmp_path,start_worker=False)
+    app.state.store.put('tasks',{'id':'task-one','input':'fixture','status':'failed','source':{'snapshot_hash':'source-one'},'error':{'diagnostic_id':e.value.diagnostic_id}})
+    app.state.store.put('model_runs',{'source_snapshot_hash':'another-source','response':'another task data'})
+    with TestClient(app) as c:
+        diagnostics=c.get('/api/tasks/task-one/diagnostics').json()
+        assert len(diagnostics['runs'])==1
+        assert 'synthetic-contract-secret' not in json.dumps(diagnostics)
+        assert '[REDACTED]' in diagnostics['runs'][0]['response']
+
+
+def test_enterprise_import_preserves_upstream_source(tmp_path):
+    service=SkillService(Store(tmp_path))
+    skill=service.create({'name':'source-chain','body':'# Source','source':{'platform':'github','repository':'org/repo','path':'skills/a/SKILL.md','version':'a'*40,'url':'https://github.com/org/repo'}})
+    origin={'platform':'feishu','origin_key':'feishu:fixture:record-one','record_id':'record-one'}
+    imported=service.import_zip(service.export_zip(skill['id']),origin=origin)
+    assert imported['source']['platform']=='feishu'
+    assert imported['source']['upstream_source']['repository']=='org/repo'
+
+
+def test_generated_skill_metadata_is_safe_and_export_folder_matches_name(tmp_path):
+    value=normalize_generated_skill({'name':'real-workflow','description':'用于“来源复核”的方法','body':'# 流程\n\n依据真实材料执行。'})
+    assert value['body'].startswith('---\nname: "real-workflow"\n')
+    assert 'description:' in value['body']
+    service=SkillService(Store(tmp_path));skill=service.create({**value,'name':'用户修改的展示名称'})
+    with zipfile.ZipFile(io.BytesIO(service.export_zip(skill['id']))) as z:
+        assert 'real-workflow/SKILL.md' in z.namelist()
+    with pytest.raises(AppError):normalize_generated_skill({'name':'Bad--Name','description':'x','body':'test'})
+
+
+def test_concurrent_draft_requests_do_not_duplicate_provider_calls(tmp_path):
+    called=threading.Event();release=threading.Event();calls=[]
+    def handler(req):
+        calls.append(1);called.set();assert release.wait(5)
+        return mock_model(req)
+    app=create_app(tmp_path,start_worker=False,model_client=httpx.Client(transport=httpx.MockTransport(handler)))
+    app.state.store.put('model_configs',{'id':'text','base_url':'https://contract.invalid/v1','model':'contract-model'})
+    app.state.store.put('tasks',{'id':'draft-once','status':'succeeded','input':'fixture','analysis':ANALYSIS,'source':{'text':'known source','evidence':[{'id':'sub-1','excerpt':'known source'}]}})
+    results=[]
+    with TestClient(app) as client:
+        threads=[threading.Thread(target=lambda:results.append(client.post('/api/tasks/draft-once/skill'))) for _ in range(2)]
+        for thread in threads:thread.start()
+        assert called.wait(3);release.set()
+        for thread in threads:thread.join(timeout=8)
+    assert len(calls)==1 and len(results)==2
+    assert all(r.status_code==200 for r in results)
+    assert results[0].json()['id']==results[1].json()['id']
+
+
+def test_editing_model_keeps_unchanged_feishu_test_result(tmp_path):
+    app=create_app(tmp_path,start_worker=False)
+    connection=app.state.store.put('connections',{'id':'feishu','app_id':'cli_fixture','app_token':'baseFixture','table_id':'tblFixture','last_test':{'status':'passed','at':'fixture-test-time'}})
+    with TestClient(app) as c:
+        value=c.put('/api/settings',json={'models':{'text':{'base_url':'https://contract.invalid/v1','model':'fixture'}},'feishu':connection}).json()
+        assert value['feishu']['last_test']['at']=='fixture-test-time'
+        value=c.put('/api/settings',json={'feishu':{'table_id':'tblNewFixture'}}).json()
+        assert 'last_test' not in value['feishu']

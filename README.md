@@ -4,7 +4,7 @@
 
 一个本地运行的单用户工作台：丢进 GitHub 或抖音链接，或上传视频、字幕，保留来源证据，整理知识和技能，并与已授权的飞书多维表格手动双向同步。展示名保留 `clloect`，技术名为 `liming-zhiyao-skill-collect`。
 
-[v0.1.0 本地首版](https://github.com/baizhanwen/liming-zhiyao-skill-collect/releases/tag/v0.1.0)：本机87项测试和桌面/窄屏业务验证通过，[三平台核心、安装与构建CI通过](https://github.com/baizhanwen/liming-zhiyao-skill-collect/actions/runs/40286764251)。真实模型和企业飞书联通待用户本地配置，抖音自动媒体获取受限；完整状态见[验收报告](docs/验收报告.md)。
+当前源码 **v0.1.1**：本机109项测试与4项浏览器流程/契约验证通过，用户自配DeepSeek已真实完成Easel分析、追问、草稿与完整包往返。匿名来源API限流时可用受限公开Git读取固定版本；搜索与技能发现仍受各自API限额约束。视觉、语音与企业飞书仍须分别配置和验收。已有[v0.1.0首版](https://github.com/baizhanwen/liming-zhiyao-skill-collect/releases/tag/v0.1.0)及[三平台CI](https://github.com/baizhanwen/liming-zhiyao-skill-collect/actions/runs/40286764251)，最新平台与发布状态见[验收报告](docs/验收报告.md)。
 
 ## 让 AI 帮你安装
 
@@ -66,7 +66,7 @@ pwsh -File scripts/start.ps1
 4. 视频需要转写和视觉模型分别配置；FFmpeg缺失时其他功能仍可用。仅基于字幕的结果不会称作看过画面。媒体管线本地实测与真实模型理解分开验收。
 5. 飞书按[接入说明](docs/飞书接入.md)配置企业自建应用、目标表与字段。先验证读取、字段兼容和明确标记的写测试，再预览和手动同步。企业可读范围不等于可发给外部模型的范围。
 
-GitHub匿名API受共享IP限流；有需要时在本地设置Token。应用不会自动读取其他应用的GitHub登录。发布时使用的账户登录与应用运行时Token相互独立。详细说明见[GitHub接入](docs/GitHub接入.md)。
+GitHub匿名API受共享IP限流；仓库快照可自动降级为受限公开Git（需要本机Git），搜索与技能发现有需要时仍须在本地设置Token。应用不会自动读取其他应用的GitHub登录。发布时使用的账户登录与应用运行时Token相互独立。详细说明见[GitHub接入](docs/GitHub接入.md)。
 
 ## 架构与数据
 
@@ -111,7 +111,7 @@ SKILL_COLLECT_DATA=/absolute/new-data bash scripts/start.sh
 
 ## 已知限制
 
-- 不附赠模型或第三方解析密钥。真实文字/视觉/转写质量和飞书真实表读写，需要用户在本地完成配置后验收；契约测试不等于真实服务联通。
+- 不附赠模型或第三方解析密钥。文字链路已在用户自配DeepSeek实测，视觉/转写及飞书真实表读写仍需各自配置后验收；契约测试不等于真实服务联通。
 - 抖音任意公开分享链接不能保证下载；本机DNS若把域名解析到保留/Fake-IP地址，来源安全检查会拒绝。可切换到返回公网IP的网络配置，或补传合法持有的视频/字幕。自动获取与补传分别验收。
 - 关键帧最多8张，并非逐帧观看整个视频；转写时间为120秒段范围，不编造词级时间戳。字幕时间保留原文件；TXT不编造时间证据。
 - 模型输出是辅助分析。来源自述、代码观察、推断和用户实际验证分开；不保证外部仓库内容、许可证和模型输出本身正确。

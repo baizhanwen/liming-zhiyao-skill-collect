@@ -52,13 +52,14 @@ class Vault:
                 temp.chmod(0o600)
             temp.replace(self.path)
 
-    def redact(self, message):
+    def redact(self, message, limit=1500):
         message = str(message)
         with self.lock:
             for secret in self._load().values():
                 if secret:
                     message = message.replace(secret, '[REDACTED]')
-        return re.sub(r'(?i)(Bearer\s+)[\w.\-]+', r'\1[REDACTED]', message)[:1500]
+        value=re.sub(r'(?i)(Bearer\s+)[\w.\-]+', r'\1[REDACTED]', message)
+        return value if limit is None else value[:limit]
 
 
 def public_url(url):

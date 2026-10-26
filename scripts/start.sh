@@ -16,11 +16,8 @@ try:
     if not 1024 <= port <= 65535: raise ValueError()
 except ValueError:
     sys.exit('SKILL_COLLECT_PORT 必须是 1024—65535 的整数')
-try:
-    with socket.socket() as sock: sock.bind(('127.0.0.1',port))
-except OSError:
-    sys.exit(f'端口 {port} 已占用。请使用现有服务或修改 SKILL_COLLECT_PORT；不会结束其他进程。')
 PY
+"$PYTHON" scripts/doctor.py --check-port "$SKILL_COLLECT_PORT"
 mkdir -p "$SKILL_COLLECT_DATA/logs"
 LOG="$SKILL_COLLECT_DATA/logs/server.log"
 printf '工作台：http://127.0.0.1:%s\n数据：%s\n日志：%s\n按 Ctrl+C 停止服务。\n' "$SKILL_COLLECT_PORT" "$SKILL_COLLECT_DATA" "$LOG"

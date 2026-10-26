@@ -3,6 +3,7 @@ import io
 import os
 import shutil
 import uuid
+import threading
 from contextlib import asynccontextmanager
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -22,6 +23,7 @@ from .skills import SkillService
 from .store import Store, now
 from .sync import SyncService
 from .tasks import TaskRunner
+from . import __version__
 
 ROOT=Path(__file__).resolve().parent.parent
 CAPS=('text','vision','transcription')
@@ -40,6 +42,8 @@ def create_app(data_dir=None,start_worker=True,model_client=None,github_factory=
     github_factory=github_factory or (lambda:GitHubConnector(vault.get('github_token')))
     sync=SyncService(store,vault,skills,connector_factory=connector_factory)
     runner=TaskRunner(store,vault,models,github_factory)
+    generation_locks={}
+    generation_guard=threading.Lock()
 
     @asynccontextmanager
     async def lifespan(app):
@@ -62,7 +66,7 @@ def create_app(data_dir=None,start_worker=True,model_client=None,github_factory=
         runner.close()
         if lockfile:lockfile.close()
 
-    app=FastAPI(title='利明智耀.skill clloect',version='0.1.0',lifespan=lifespan)
+    app=FastAPI(title='利明智耀.skill clloect',version=__version__,lifespan=lifespan)
     app.state.store,app.state.vault,app.state.skills=store,vault,skills
     app.state.models,app.state.runner,app.state.sync=models,runner,sync
 
@@ -134,6 +138,7 @@ def create_app(data_dir=None,start_worker=True,model_client=None,github_factory=
                     raise AppError('endpoint','远程模型地址需为不含认证信息和查询参数的 HTTPS Base URL；本机模型允许 HTTP')
             if 'max_tokens' in c and (type(c['max_tokens']) is not int or not 128<=c['max_tokens']<=6000):raise AppError('configuration','模型输出上限应为 128—6000 的整数')
             if 'json_mode' in c and type(c['json_mode']) is not bool:raise AppError('configuration','JSON mode 必须为布尔值')
+            if c.get('thinking_mode') not in (None,'disabled','enabled','provider_default'):raise AppError('configuration','推理模式应为disabled/enabled/provider_default')
         for group,key in (('github','token'),('feishu','app_secret')):
             v=value.get(group,{}).get(key,'')
             if not isinstance(v,str) or len(v)>4096:raise AppError('configuration','凭证必须为有效文本')
@@ -144,9 +149,9 @@ def create_app(data_dir=None,start_worker=True,model_client=None,github_factory=
         for cap,c in value.get('models',{}).items():
             if cap not in CAPS:continue
             old=store.get('model_configs',cap) or {'id':cap}
-            for key in ('base_url','model','max_tokens','json_mode'):
+            for key in ('base_url','model','max_tokens','json_mode','thinking_mode'):
                 if key in c:old[key]=c[key]
-            changed=any(old.get(k)!=(store.get('model_configs',cap) or {}).get(k) for k in ('base_url','model','json_mode'))
+            changed=any(old.get(k)!=(store.get('model_configs',cap) or {}).get(k) for k in ('base_url','model','json_mode','max_tokens','thinking_mode'))
             if c.get('api_key'):
                 vault.set('model_'+cap,c['api_key']);changed=True
             if c.get('clear_key'):
@@ -162,6 +167,7 @@ def create_app(data_dir=None,start_worker=True,model_client=None,github_factory=
             store.put('connections',old)
         if 'feishu' in value:
             c=dict(value['feishu']);old=store.get('connections','feishu') or {'id':'feishu'}
+            previous=dict(old)
             if c.get('app_token','').startswith('https://'):
                 c['table_url']=c.pop('app_token')
             elif c.get('app_token'):
@@ -170,14 +176,15 @@ def create_app(data_dir=None,start_worker=True,model_client=None,github_factory=
                 if key in c:old[key]=c[key]
             if c.get('app_secret'):vault.set('feishu_secret',c['app_secret'])
             if c.get('clear_secret'):vault.set('feishu_secret','')
-            old.pop('last_test',None)
+            if c.get('app_secret') or c.get('clear_secret') or any(old.get(k)!=previous.get(k) for k in ('app_id','app_token','table_id','table_url','url','field_mapping','auth_mode')):
+                old.pop('last_test',None)
             store.put('connections',old)
         return settings()
 
     @app.get('/api/status')
     def status():
         s=settings()
-        return {'name':'利明智耀.skill clloect','version':'0.1.0','mode':'local_single_user','counts':{k:len([v for v in store.list(k) if not v.get('archived')]) for k in ('tasks','knowledge','skills')},
+        return {'name':'利明智耀.skill clloect','version':__version__,'mode':'local_single_user','counts':{k:len([v for v in store.list(k) if not v.get('archived')]) for k in ('tasks','knowledge','skills')},
                 'models':s['models'],'github_configured':s['github']['token_configured'],'feishu_configured':s['feishu']['secret_configured'],
                 'diagnostics':{'ffmpeg':bool(shutil.which('ffmpeg')),'ffprobe':bool(shutil.which('ffprobe')),'sqlite':str(store.path),'frontend_built':(ROOT/'frontend/dist/index.html').exists(),'upload_limit_mb':100,'duration_limit_minutes':20,'concurrency':1}}
 
@@ -236,6 +243,15 @@ def create_app(data_dir=None,start_worker=True,model_client=None,github_factory=
     @app.get('/api/tasks/{id}')
     def task_detail(id:str):return get_task(id)
 
+    @app.get('/api/tasks/{id}/diagnostics')
+    def task_diagnostics(id:str):
+        task=get_task(id)
+        snapshot=(task.get('source') or {}).get('snapshot_hash')
+        selected={v for v in ((task.get('error') or {}).get('diagnostic_id'),(task.get('analysis') or {}).get('model_run_id')) if v}
+        keys=('id','model','capability','finish_reason','usage','validation','validation_errors','response','created_at')
+        runs=[{k:r[k] for k in keys if k in r} for r in store.list('model_runs') if r['id'] in selected or (snapshot and r.get('source_snapshot_hash')==snapshot)][:5]
+        return {'runs':runs,'privacy_note':'模型回答可能包含来源资料，仅存本机数据库。不会写入服务日志、技能导出或公开验收材料；私人数据备份会包含这些记录。'}
+
     @app.post('/api/tasks/{id}/retry')
     def retry(id:str):return runner.retry(id)
 
@@ -289,11 +305,19 @@ def create_app(data_dir=None,start_worker=True,model_client=None,github_factory=
 
     @app.post('/api/tasks/{id}/skill')
     def generate_skill(id:str):
+        get_task(id)
+        with generation_guard:lock=generation_locks.setdefault(id,threading.Lock())
+        with lock:return generate_skill_once(id)
+
+    def generate_skill_once(id):
         task=get_task(id)
         if task.get('skill_id'):return skills.get(task['skill_id'])
         if not task.get('analysis'):raise AppError('analysis_missing','请先完成来源分析')
         draft=models.skill_draft(task['source'],task['analysis'])
-        skill=skills.create({**draft,'source':{'platform':task['source'].get('platform'),'url':task['source'].get('url'),'task_id':id,'snapshot_hash':task['source'].get('snapshot_hash')}})
+        source=task['source']
+        provenance={k:source[k] for k in ('platform','url','repository','version') if k in source}
+        provenance.update(kind='generated',origin_key='generated:'+id,task_id=id,snapshot_hash=source.get('snapshot_hash'),evidence=[{k:e[k] for k in ('id','path','url','time') if k in e} for e in source.get('evidence',[])])
+        skill=skills.create({**draft,'source':provenance})
         task['skill_id']=skill['id'];store.put('tasks',task)
         return skill
 

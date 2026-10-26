@@ -191,3 +191,149 @@ def test_connector_package_import_export_roundtrip_and_deduplication(tmp_path):
     assert 'LICENSE' in exported_files
     assert first['source']['repository'] == 'owner/repo'
     assert first['source']['version'] == SHA
+
+
+def test_snapshot_rate_limit_uses_explicit_anonymous_fallback(monkeypatch):
+    c, _ = connector(fail=lambda r: httpx.Response(403, headers={'x-ratelimit-remaining': '0'}, json={}))
+    calls = []
+    monkeypatch.setattr(c, '_snapshot_public_git', lambda url, depth, reason: calls.append((url, depth, reason)) or {'transport': 'fixture-public-git'})
+    assert c.snapshot('https://github.com/owner/repo', 'deep')['transport'] == 'fixture-public-git'
+    assert calls == [('https://github.com/owner/repo', 'deep', 'rate_limit')]
+
+
+@pytest.mark.parametrize('status,headers,token', [(401, {}, ''), (403, {}, ''), (404, {}, ''),
+    (403, {'x-ratelimit-remaining': '0'}, 'configured-token')])
+def test_snapshot_never_bypasses_auth_permission_or_configured_token(monkeypatch, status, headers, token):
+    c, _ = connector(token=token, fail=lambda r: httpx.Response(status, headers=headers, json={}))
+    monkeypatch.setattr(c, '_snapshot_public_git', lambda *args: pytest.fail('anonymous fallback must not run'))
+    with pytest.raises(GithubError):
+        c.snapshot('https://github.com/owner/repo')
+
+
+def test_public_git_environment_blocks_inherited_credentials_and_config(tmp_path, monkeypatch):
+    from backend.connectors.github import _PublicGit
+    monkeypatch.setenv('GIT_CONFIG_PARAMETERS', "'credential.helper=malicious-helper'")
+    monkeypatch.setenv('GIT_CONFIG_COUNT', '1')
+    monkeypatch.setenv('GIT_CONFIG_KEY_0', 'http.extraHeader')
+    monkeypatch.setenv('GIT_CONFIG_VALUE_0', 'Authorization: fixture-private')
+    monkeypatch.setenv('GH_TOKEN', 'fixture-gh-token')
+    monkeypatch.setenv('GIT_ASKPASS', '/malicious-helper')
+    reader = _PublicGit(tmp_path, 'owner/repo')
+    assert reader.url == 'https://github.com/owner/repo.git'
+    assert not any(key in reader.env for key in ('GIT_CONFIG_PARAMETERS', 'GIT_CONFIG_COUNT', 'GIT_CONFIG_KEY_0', 'GH_TOKEN'))
+    assert reader.env['GIT_TERMINAL_PROMPT'] == '0'
+    assert reader.env['GIT_CONFIG_NOSYSTEM'] == '1'
+    assert reader.env['GIT_NO_LAZY_FETCH'] == '1'
+    assert reader.env['GIT_ASKPASS'] == ''
+    for config in ('credential.helper=', 'http.followRedirects=false', 'protocol.file.allow=never',
+                   'protocol.ext.allow=never', 'submodule.recurse=false', 'filter.lfs.process=',
+                   'remote.https://github.com/owner/repo.git.promisor=false'):
+        assert config in reader.command
+
+
+def test_public_git_limits_output_disk_and_process_time(tmp_path):
+    import sys
+    import time
+    from backend.connectors.github import _PublicGit
+    reader = _PublicGit(tmp_path, 'owner/repo')
+    reader.command = [sys.executable, '-c', 'import sys; sys.stdout.write("x" * 1000)']
+    with pytest.raises(GithubError, match='输出超过'):
+        reader.run([], limit=10)
+    reader.MAX_DISK = 10
+    (tmp_path / 'too-big').write_bytes(b'x' * 11)
+    with pytest.raises(GithubError, match='安全上限'):
+        reader._check_disk()
+    (tmp_path / 'too-big').unlink()
+    reader.MAX_DISK = 128 * 1024 * 1024
+    reader.command = [sys.executable, '-c', 'import time; time.sleep(5)']
+    reader.deadline = time.monotonic() + 0.05
+    with pytest.raises(GithubError, match='75 秒'):
+        reader.run([])
+
+
+@pytest.fixture
+def public_git_objects(tmp_path):
+    """Real local Git objects; production transport still only allows public HTTPS."""
+    import os
+    from pathlib import Path
+    import shutil
+    import subprocess
+    git = shutil.which('git')
+    if not git:
+        pytest.skip('Git runtime unavailable for local object-reader contract')
+    root = tmp_path / 'fixture.git'
+    empty = tmp_path / 'fixture-empty'
+    empty.mkdir()
+    env = {**os.environ, 'GIT_CONFIG_NOSYSTEM': '1', 'GIT_CONFIG_GLOBAL': os.devnull,
+           'GIT_AUTHOR_NAME': 'Contract', 'GIT_AUTHOR_EMAIL': 'contract@example.invalid',
+           'GIT_COMMITTER_NAME': 'Contract', 'GIT_COMMITTER_EMAIL': 'contract@example.invalid'}
+    def run(args, input=None):
+        return subprocess.run([git, '-c', 'core.hooksPath=' + str(empty), '-c', 'commit.gpgsign=false',
+                               '--git-dir=' + str(root), *args], input=input, capture_output=True, env=env, check=True).stdout
+    run(['init', '--quiet', '--bare', '--template=' + str(empty), str(root)])
+    data = {'README.md': b'# Read-only Git fixture\n', 'LICENSE': b'MIT fixture',
+            'package.json': b'{"name":"fixture"}', 'entry.py': b'print("never executed")\n',
+            'large.md': b'x' * (512 * 1024 + 1)}
+    lines = []
+    for name, raw in data.items():
+        oid = run(['hash-object', '-w', '--stdin'], raw).decode().strip()
+        lines.append(f'100644 blob {oid}\t{name}\n')
+    oid = run(['hash-object', '-w', '--stdin'], b'../outside').decode().strip()
+    lines.append(f'120000 blob {oid}\tREADME-link.md\n')
+    tree = run(['mktree'], ''.join(lines).encode()).decode().strip()
+    sha = run(['commit-tree', tree], b'Explicit local Git contract\n').decode().strip()
+    run(['update-ref', 'refs/heads/main', sha])
+    run(['update-ref', 'refs/heads/feature/work', sha])
+    return root, sha, data
+
+
+def test_public_git_actual_object_reader_fixed_commit_slash_ref_blob_scope(tmp_path, monkeypatch, public_git_objects):
+    import shutil
+    from backend.connectors.github import _PublicGit
+    fixture, sha, files = public_git_objects
+    original_run = _PublicGit.run
+    commands = []
+    def fixture_transport(reader, args, **kwargs):
+        commands.append(args)
+        if args[0] == 'ls-remote':
+            return (f'ref: refs/heads/main\tHEAD\n{sha}\tHEAD\n{sha}\trefs/heads/feature/work\n').encode()
+        if 'fetch' in args:
+            assert reader.url == 'https://github.com/owner/repo.git'
+            assert '--filter=blob:limit=524288' in args
+            shutil.copytree(fixture, reader.repo, dirs_exist_ok=True)
+            (reader.repo / 'FETCH_HEAD').write_text(sha + '\n')
+            return b''
+        return original_run(reader, args, **kwargs)
+    monkeypatch.setattr(_PublicGit, 'run', fixture_transport)
+    c, _ = connector(fail=lambda r: httpx.Response(403, headers={'x-ratelimit-remaining': '0'}, json={}))
+    result = c.snapshot('https://github.com/owner/repo/tree/feature/work', 'deep')
+    assert result['version'] == sha
+    assert result['metadata']['transport'] == 'public_git'
+    assert result['metadata']['fallback_reason'] == 'rate_limit'
+    assert result['metadata']['execution_verified'] is False
+    actual = {f['path']: f['content'] for f in result['files']}
+    assert actual['README.md'] == files['README.md'].decode()
+    assert actual['entry.py'] == files['entry.py'].decode()
+    assert 'large.md' not in actual and 'README-link.md' not in actual
+    assert all('/blob/' + sha + '/' in e['url'] for e in result['evidence'])
+    single = c.snapshot('https://github.com/owner/repo/blob/feature/work/package.json')
+    assert [f['path'] for f in single['files']] == ['package.json']
+    fixed = c.snapshot('https://github.com/owner/repo/blob/' + sha + '/README.md')
+    assert fixed['files'][0]['content'] == files['README.md'].decode()
+    assert not any('checkout' in a or 'submodule' in a or 'clone' in a for a in commands)
+
+
+def test_public_git_missing_blob_does_not_lazy_fetch(tmp_path, monkeypatch):
+    from backend.connectors.github import _PublicGit
+    reader = _PublicGit(tmp_path, 'owner/repo')
+    calls = []
+    monkeypatch.setattr(reader, 'read', lambda args, **kwargs: calls.append((args, kwargs)) or None)
+    assert reader.blob({'sha': 'a' * 40}, 512 * 1024) is None
+    assert calls == [(['cat-file', '-s', 'a' * 40], {'limit': 128, 'missing': True})]
+
+
+def test_public_git_refuses_existing_netrc_without_reading_it(tmp_path, monkeypatch):
+    from backend.connectors.github import _PublicGit
+    monkeypatch.setattr(_PublicGit, '_has_netrc', staticmethod(lambda: True))
+    with pytest.raises(GithubError, match='netrc'):
+        _PublicGit(tmp_path, 'owner/repo')

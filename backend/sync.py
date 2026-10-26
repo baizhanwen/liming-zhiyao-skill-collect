@@ -141,7 +141,8 @@ class SyncService:
         if not body.strip():
             raise FeishuError("remote_body", "企业技能正文为空；请修复正文或使用完整正文附件标记。")
         return {"record": record, "data": data, "package": package, "values": values,
-            "hash": remote_hash, "body": body}
+            "hash": remote_hash, "body": body,
+            "package_consistent": body == package["body"]}
 
     def records(self):
         connector = self.connector()
@@ -169,7 +170,11 @@ class SyncService:
         except FeishuError as exc:
             row.update(action="blocked", error=exc.message, error_code=exc.code)
             return row
-        row.update(remote_hash=remote["hash"], remote_body=remote["body"])
+        row.update(remote_hash=remote["hash"], remote_body=remote["body"],
+            remote_skill_id=remote["values"].get("skill_id"),
+            package_refresh_required=not remote["package_consistent"])
+        if not remote["package_consistent"]:
+            row["warning"] = "企业正文与附件中的 SKILL.md 不一致；导入不会修改企业表，需明确同步后刷新完整包。"
         row["name"] = row["name"] or remote["values"].get("name") or remote["package"]["manifest"].get("name")
         row["diff"] = "\n".join(difflib.unified_diff(row["local_body"].splitlines(), row["remote_body"].splitlines(),
             fromfile="个人技能", tofile="飞书正文", lineterm=""))[:20000]
@@ -185,6 +190,8 @@ class SyncService:
                 and file_hashes == remote["package"]["file_hashes"]
                 and local.get("name", "") == remote["values"].get("name", ""))
             row["action"] = "push" if identical else "conflict"
+        if row["action"] == "noop" and not remote["package_consistent"]:
+            row["action"] = "refresh_package"
         return row
 
     def preview(self, skill_ids=None):
@@ -247,13 +254,15 @@ class SyncService:
         return {connector.mapping[k]: value for k, value in values.items()
             if connector.mapping.get(k) and connector.mapping[k] in actual}
 
-    def push(self, skill_id, resolution=None):
+    def push(self, skill_id, resolution=None, *, _expected_local_hash=None):
         with SYNC_LOCK:
             local = self._get_skill(skill_id)
             if not local:
                 raise FeishuError("not_found", "个人技能不存在。")
             if local.get("archived"):
                 raise FeishuError("archived", "已归档的个人技能不会同步，请先恢复。")
+            if _expected_local_hash is not None and self._local_hash(local) != _expected_local_hash:
+                raise FeishuError("conflict", "个人技能在保留企业版本后又被修改，请重新预览；未将新修改自动上传。")
             preview = self.preview([skill_id])["items"][0]
             if preview["action"] == "blocked":
                 raise FeishuError("blocked", preview["error"])
@@ -262,7 +271,13 @@ class SyncService:
             if resolution == "remote":
                 if not preview.get("record_id"):
                     raise FeishuError("not_found", "企业记录已不存在，不会自动传播删除。")
-                return self.pull(preview["record_id"], resolution="remote")
+                pulled = self.pull(preview["record_id"], resolution="remote")
+                if pulled.get("package_refresh_required"):
+                    refreshed = self.push(pulled["skill"]["id"],
+                        _expected_local_hash=self._local_hash(pulled["skill"]))
+                    return {**refreshed, "action": "resolved_remote", "skill": pulled["skill"],
+                        "package_refreshed": True}
+                return {**pulled, "action": "resolved_remote", "package_refreshed": False}
             if resolution == "copy" and preview.get("record_id"):
                 return self.pull(preview["record_id"], resolution="copy")
             if resolution not in (None, "local", "copy", "remote"):
@@ -284,6 +299,18 @@ class SyncService:
                 token = connector.upload_package(package, local.get("name", "skill") + ".zip")
                 fields = self._fields_for(connector, local, token)
                 record_id = preview.get("record_id")
+                refresh_only = preview["action"] == "refresh_package"
+                if record_id and preview.get("remote_skill_id"):
+                    # Imported personal copies have their own IDs; the existing
+                    # enterprise record keeps its original stable identity.
+                    fields[connector.mapping["skill_id"]] = preview["remote_skill_id"]
+                if refresh_only:
+                    # Ordinary pull grants no write. An explicit sync of this row
+                    # refreshes only its package metadata, preserving enterprise
+                    # name, status, source and all other user-edited columns.
+                    package_fields = {connector.mapping[k] for k in
+                        ("package", "content_hash", "version", "updated_at") if connector.mapping.get(k)}
+                    fields = {k: v for k, v in fields.items() if k in package_fields}
                 # Durable intent precedes network mutation; no token/credentials are persisted.
                 pending = self.store.get("sync_pending", operation_id)
                 self.store.put("sync_pending", {"id": operation_id, "skill_id": skill_id,
@@ -316,7 +343,9 @@ class SyncService:
                 self._save_baseline(local, remote, record["record_id"])
                 self.store.delete("sync_pending", operation_id)
                 log = self._log("push", "passed", skill_id=skill_id, record_id=record["record_id"])
-                return {"action": "updated" if record_id else "created", "record_id": record["record_id"], "log_id": log["id"]}
+                return {"action": "package_refreshed" if refresh_only else "updated" if record_id else "created",
+                    "record_id": record["record_id"], "log_id": log["id"],
+                    "package_refreshed": refresh_only}
             except FeishuError as exc:
                 if exc.code in ("timeout", "network"):
                     intent = self.store.get("sync_pending", operation_id)
@@ -367,7 +396,8 @@ class SyncService:
                 log = self._log("pull", "passed", skill_id=local["id"], record_id=record_id,
                     resolution=resolution or "remote")
                 return {"action": "copied" if resolution == "copy" else "imported", "skill": local,
-                    "record_id": record_id, "log_id": log["id"]}
+                    "record_id": record_id, "log_id": log["id"],
+                    "package_refresh_required": not remote["package_consistent"]}
             except FeishuError as exc:
                 self._log("pull", "failed", record_id=record_id, code=exc.code, error=exc.message)
                 raise

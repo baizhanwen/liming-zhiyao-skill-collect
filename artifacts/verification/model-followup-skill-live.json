@@ -1,0 +1,37 @@
+{
+  "at": "2026-10-26T08:34:30.801786+00:00",
+  "test_type": "real_user_configured_model_followup_and_draft_then_local_complete_package_roundtrip",
+  "provider_host": "api.deepseek.com",
+  "requested_model": "deepseek-flash",
+  "ask_returned_model": "deepseek-flash",
+  "ask_has_source_refs": true,
+  "ask_evidence_ids": [
+    "G1",
+    "G3",
+    "G5",
+    "G6",
+    "G7"
+  ],
+  "ask_usage_as_reported": {
+    "prompt_tokens": 17612,
+    "completion_tokens": 1157,
+    "total_tokens": 18769,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "prompt_cache_hit_tokens": 0,
+    "prompt_cache_miss_tokens": 17612
+  },
+  "draft_name": "easel-setup-and-content-workflow",
+  "draft_state": "draft",
+  "draft_hash": "e9a6f98733552fc726012dedcbd8406fd6d94c68e838f0388b9dc754ac939a62",
+  "draft_body_characters": 3317,
+  "draft_has_yaml_frontmatter": true,
+  "app_metadata_normalized": true,
+  "package_roundtrip_same_id": true,
+  "package_roundtrip_same_hash": true,
+  "not_executed": true,
+  "credentials_included": false,
+  "source_version": "5a597e5f3ef5b01098b53f36caf719dd9a32b7bf",
+  "prior_draft_attempt": "model returned not_applicable because it conflated absent execution logs with absent workflow; prompt clarified documented workflows can be unverified drafts, no commands invented"
+}

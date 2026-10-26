@@ -110,7 +110,7 @@ class SkillService:
             raise AppError('invalid_skill','请填写技能正文')
         if not isinstance(value.get('name',''),str) or not isinstance(value.get('description',''),str) or not isinstance(value.get('tags',[]),list):
             raise AppError('invalid_skill','技能名称、简介和标签格式无效')
-        skill = {k:value[k] for k in ('name','description','body','tags','category','files','origin','source','origin_key') if k in value}
+        skill = {k:value[k] for k in ('name','description','body','tags','category','files','origin','source','origin_key','generation') if k in value}
         skill.update(name=skill.get('name','未命名技能')[:150], status='draft',version=1,verification_records=[],archived=False)
         return self._save(skill)
 
@@ -154,6 +154,10 @@ class SkillService:
         source = origin or manifest.get('source') or {'platform':'upload'}
         if isinstance(source,str):
             source = {'url':source}
+        source=dict(source)
+        if isinstance(manifest.get('generation'),dict):source.setdefault('upstream_generation',manifest['generation'])
+        if origin and manifest.get('source') and manifest['source']!=source:
+            source['upstream_source']=manifest['source']
         exported_id=manifest.get('skill_id')
         if exported_id:
             local=self.store.get('skills',str(exported_id))
@@ -176,7 +180,13 @@ class SkillService:
         manifest = {'format_version':1,'skill_id':id,'name':skill['name'],'description':skill.get('description',''),'version':skill['version'],
                     'source':skill.get('source') or skill.get('origin') or {'platform':'local','id':id},'content_hash':digest(files),
                     'files':[{'path':p,'sha256':hashlib.sha256(b).hexdigest(),'size':len(b)} for p,b in sorted(files.items())]}
+        if isinstance(skill.get('generation'),dict):
+            manifest['generation']={k:v for k,v in skill['generation'].items() if k in ('model','prompt_version','prompt_hash','usage','finish_reason','max_tokens','thinking_mode')}
         slug = re.sub(r'[^a-zA-Z0-9_-]+','-',skill['name']).strip('-') or 'skill'
+        if skill['body'].startswith('---\n'):
+            header=skill['body'][4:].split('\n---',1)[0]
+            match=re.search(r'^name:\s*[\'\"]?([a-z0-9]+(?:-[a-z0-9]+)*)[\'\"]?\s*$',header,re.M)
+            if match and len(match[1])<=64:slug=match[1]
         out = io.BytesIO()
         with zipfile.ZipFile(out,'w',zipfile.ZIP_DEFLATED) as z:
             for p,b in files.items():

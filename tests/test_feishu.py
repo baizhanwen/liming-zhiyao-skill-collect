@@ -165,7 +165,9 @@ def test_full_package_push_no_duplicate_and_preserves_scripts(sync_env):
     pulled = service.pull(first["record_id"])
     assert "远端直接编辑" in pulled["skill"]["body"]
     assert any(f["path"] == "scripts/demo.py" for f in pulled["skill"]["files"])
-    assert service.preview()["items"][0]["action"] == "noop"
+    assert pulled["package_refresh_required"] is True
+    assert remote.updates == 0, "ordinary pull must not write the enterprise table"
+    assert service.preview()["items"][0]["action"] == "refresh_package"
     assert len(service.logs()) >= 3
 
 
@@ -310,3 +312,62 @@ def test_remote_changed_while_package_uploading_is_not_overwritten(sync_env):
     assert remote.updates == 0
     assert "Concurrent enterprise edit" in remote.records[record_id]["fields"]["Skill 正文"]
     assert "Personal change" not in remote.records[record_id]["fields"]["Skill 正文"]
+
+
+def test_plain_pull_marks_stale_enterprise_package_until_explicit_refresh(sync_env):
+    _, skills, local, remote, service = sync_env
+    record_id = service.push(local["id"])["record_id"]
+    remote.records[record_id]["fields"]["Skill 正文"] += "Enterprise-only body edit\n"
+    remote.records[record_id]["fields"]["状态"] = "企业维护状态"
+    remote.records[record_id]["fields"]["来源链接"] = "https://enterprise.example/source"
+    pulled = service.pull(record_id)
+    assert pulled["package_refresh_required"] is True
+    assert remote.updates == 0
+    row = service.preview([local["id"]])["items"][0]
+    assert row["action"] == "refresh_package" and row["package_refresh_required"]
+    assert row["warning"]
+    refreshed = service.push(local["id"])
+    assert refreshed["action"] == "package_refreshed" and refreshed["package_refreshed"]
+    record = remote.records[record_id]
+    assert record["fields"]["状态"] == "企业维护状态"
+    assert record["fields"]["来源链接"] == "https://enterprise.example/source"
+    token = record["fields"]["技能包附件"][0]["file_token"]
+    package = inspect_package(remote.packages[token])
+    assert package["body"] == record["fields"]["Skill 正文"] == skills.get(local["id"])["body"]
+    assert service.preview([local["id"]])["items"][0]["action"] == "noop"
+
+
+def test_explicit_remote_resolution_keeps_three_bodies_and_full_package_consistent(sync_env):
+    _, skills, local, remote, service = sync_env
+    record_id = service.push(local["id"])["record_id"]
+    skills.update(local["id"], {"body": local["body"] + "Conflicting personal edit\n"})
+    enterprise_body = local["body"] + "Chosen enterprise edit\n"
+    remote.records[record_id]["fields"]["Skill 正文"] = enterprise_body
+    assert service.preview([local["id"]])["items"][0]["action"] == "conflict"
+    result = service.push(local["id"], resolution="remote")
+    assert result["action"] == "resolved_remote" and result["package_refreshed"]
+    record = remote.records[record_id]
+    token = record["fields"]["技能包附件"][0]["file_token"]
+    package = inspect_package(remote.packages[token])
+    assert package["body"] == record["fields"]["Skill 正文"] == skills.get(local["id"])["body"] == enterprise_body
+    assert "scripts/demo.py" in package["file_hashes"]
+    assert record["fields"]["Skill ID"] == local["id"]
+    assert record["fields"]["内容哈希"] == skills.get(local["id"])["content_hash"]
+    assert service.preview([local["id"]])["items"][0]["action"] == "noop"
+    assert remote.creates == 1 and remote.updates == 1
+
+
+def test_enterprise_personal_copy_refresh_preserves_original_remote_stable_id(sync_env):
+    store, _, local, remote, service = sync_env
+    record_id = service.push(local["id"])["record_id"]
+    other_store = Store(store.root / "personal-copy")
+    other_store.put("connections", {"id": "feishu", **CONFIG})
+    other_skills = SkillService(other_store)
+    other = SyncService(other_store, Vault(), other_skills, lambda cfg, secret: remote)
+    personal = other.pull(record_id)["skill"]
+    assert personal["id"] != local["id"]
+    remote.records[record_id]["fields"]["Skill 正文"] += "New enterprise text\n"
+    result = other.push(personal["id"], resolution="remote")
+    assert result["action"] == "resolved_remote" and result["package_refreshed"]
+    assert remote.records[record_id]["fields"]["Skill ID"] == local["id"]
+    assert other.preview([personal["id"]])["items"][0]["action"] == "noop"

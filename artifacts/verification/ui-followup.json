@@ -1,0 +1,37 @@
+{
+  "test_type": "real_local_browser_flow_plus_explicit_UI_contracts",
+  "status": "passed",
+  "checks": [
+    {
+      "title": "真实本地服务：无配置、编辑、包往返、字幕待配置、错误与窄屏操作",
+      "ok": true,
+      "status": [
+        "expected"
+      ]
+    },
+    {
+      "title": "飞书UI契约：普通导入提示旧包，明确确认后刷新企业附件并呈现保留企业版结果",
+      "ok": true,
+      "status": [
+        "expected"
+      ]
+    },
+    {
+      "title": "模型高级设置UI契约：输出上限整数校验与DeepSeek官方host专属推理选项",
+      "ok": true,
+      "status": [
+        "expected"
+      ]
+    },
+    {
+      "title": "模型诊断UI契约：失败回答仅按需读取并单独展开，不发起模型请求",
+      "ok": true,
+      "status": [
+        "expected"
+      ]
+    }
+  ],
+  "external_model_called": false,
+  "feishu_remote": "explicitly simulated for UI contract cases",
+  "original_screenshots_unchanged": true
+}

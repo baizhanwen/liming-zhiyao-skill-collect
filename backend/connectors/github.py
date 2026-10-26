@@ -5,10 +5,15 @@ import base64
 import hashlib
 import io
 import json
+import os
 import re
+import shutil
+import signal
+import subprocess
+import tempfile
 import time
 import zipfile
-from pathlib import PurePosixPath
+from pathlib import Path, PurePosixPath
 from urllib.parse import quote, unquote, urlparse
 
 import httpx
@@ -18,6 +23,205 @@ class GithubError(Exception):
     def __init__(self, code: str, message: str, retryable: bool = False):
         self.code, self.message, self.retryable = code, message, retryable
         super().__init__(message)
+
+
+class _PublicGit:
+    """Isolated, bounded public HTTPS Git reader; never creates a working tree.
+
+    Git's blob size filter fetches small objects without trusting an API quota.
+    Every process has a shared deadline, output limits and a watched disk budget.
+    A promisor remote created by fetch is disabled before reading objects, so an
+    absent large blob cannot silently trigger an unbounded lazy fetch.
+    """
+    MAX_DISK = 128 * 1024 * 1024
+    MAX_SECONDS = 75
+    MAX_DISK_FILES = 50000
+
+    def __init__(self, workspace: Path, repository: str):
+        self.workspace = workspace
+        self.repo = workspace / 'repository.git'
+        self.empty = workspace / 'empty-template'
+        self.empty.mkdir()
+        self.url = 'https://github.com/' + repository + '.git'
+        self.deadline = time.monotonic() + self.MAX_SECONDS
+        if self._has_netrc():
+            # Older libcurl versions ignore the NETRC override. Do not risk
+            # silently reading a user's file when promising anonymous access.
+            raise GithubError('git_local_credentials', '检测到本机 netrc 凭证文件；为保持匿名，不启用公开 Git 降级，请在设置中配置 GitHub Token')
+        executable = shutil.which('git')
+        if not executable:
+            raise GithubError('git_missing', 'GitHub API 受限；请安装 Git 或在设置中配置 GitHub Token')
+        # Do not inherit GIT_CONFIG_*, GIT_DIR, ASKPASS or application credentials.
+        allowed = {'PATH', 'SystemRoot', 'SYSTEMROOT', 'WINDIR', 'TEMP', 'TMP', 'TMPDIR', 'LANG', 'LC_ALL',
+                   'HTTPS_PROXY', 'HTTP_PROXY', 'ALL_PROXY', 'NO_PROXY', 'https_proxy', 'http_proxy',
+                   'all_proxy', 'no_proxy', 'SSL_CERT_FILE', 'SSL_CERT_DIR', 'CURL_CA_BUNDLE'}
+        self.env = {key: value for key, value in os.environ.items() if key in allowed}
+        self.env.update(GIT_CONFIG_NOSYSTEM='1', GIT_CONFIG_SYSTEM=os.devnull, GIT_CONFIG_GLOBAL=os.devnull,
+                        GIT_TERMINAL_PROMPT='0', GIT_ASKPASS='', GIT_ATTR_NOSYSTEM='1', GIT_NO_LAZY_FETCH='1',
+                        NETRC=os.devnull)
+        config = ['credential.helper=', 'core.askPass=', 'core.hooksPath=' + str(self.empty),
+                  'protocol.allow=never', 'protocol.https.allow=always', 'protocol.file.allow=never',
+                  'protocol.ext.allow=never', 'http.followRedirects=false', 'http.extraHeader=Authorization:', 'submodule.recurse=false',
+                  'filter.lfs.required=false', 'filter.lfs.smudge=', 'filter.lfs.process=',
+                  'core.fsmonitor=false', 'core.autocrlf=false', 'maintenance.auto=false', 'gc.auto=0',
+                  'fetch.fsckObjects=true', 'pack.windowMemory=32m', 'pack.deltaCacheSize=16m',
+                  'core.deltaBaseCacheLimit=16m', 'remote.' + self.url + '.promisor=false']
+        self.command = [executable] + [part for value in config for part in ('-c', value)]
+
+    @staticmethod
+    def _has_netrc():
+        homes = {Path.home()}
+        for key in ('HOME', 'USERPROFILE'):
+            if os.environ.get(key):
+                homes.add(Path(os.environ[key]))
+        if os.name != 'nt':
+            import pwd
+            homes.add(Path(pwd.getpwuid(os.getuid()).pw_dir))
+        return any((home / name).exists() or (home / name).is_symlink()
+                   for home in homes for name in ('.netrc', '_netrc'))
+
+    @staticmethod
+    def _stop(process):
+        if os.name == 'nt':
+            try:
+                subprocess.run(['taskkill', '/PID', str(process.pid), '/T', '/F'],
+                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=5)
+            except (OSError, subprocess.SubprocessError):
+                process.kill()
+        else:
+            try:
+                os.killpg(process.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+        try:
+            process.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            process.kill()
+
+    def _check_disk(self):
+        size, count = 0, 0
+        for directory, _, files in os.walk(self.workspace):
+            for name in files:
+                try:
+                    size += (Path(directory) / name).stat().st_size
+                except FileNotFoundError:
+                    continue
+                count += 1
+                if size > self.MAX_DISK or count > self.MAX_DISK_FILES:
+                    raise GithubError('public_git_limit', '公开 Git 读取超过 128 MiB 或文件数量安全上限，请缩小范围或配置 GitHub Token')
+
+    def run(self, args: list[str], *, limit=2 * 1024 * 1024, missing=False) -> bytes | None:
+        if time.monotonic() >= self.deadline:
+            raise GithubError('public_git_timeout', '公开 Git 读取超过 75 秒，请稍后重试或配置 GitHub Token', True)
+        with tempfile.TemporaryFile(dir=self.workspace) as out, tempfile.TemporaryFile(dir=self.workspace) as err:
+            options = {'start_new_session': True} if os.name != 'nt' else {'creationflags': subprocess.CREATE_NEW_PROCESS_GROUP}
+            try:
+                process = subprocess.Popen(self.command + args, cwd=self.workspace, env=self.env,
+                                           stdin=subprocess.DEVNULL, stdout=out, stderr=err, **options)
+            except OSError:
+                raise GithubError('git_missing', '无法启动 Git，请检查 Git 安装或配置 GitHub Token') from None
+            try:
+                while True:
+                    finished = process.poll() is not None
+                    if os.fstat(out.fileno()).st_size > limit or os.fstat(err.fileno()).st_size > 256 * 1024:
+                        raise GithubError('public_git_limit', '公开 Git 输出超过安全上限，请缩小仓库范围')
+                    self._check_disk()
+                    if time.monotonic() >= self.deadline:
+                        raise GithubError('public_git_timeout', '公开 Git 读取超过 75 秒，请稍后重试或配置 GitHub Token', True)
+                    if finished:
+                        break
+                    time.sleep(0.04)
+                if process.returncode:
+                    if missing:
+                        return None
+                    # Git error text may contain proxy settings, so never expose stderr.
+                    raise GithubError('public_git_network', '匿名公开 Git 读取失败；请确认仓库公开、网络可用，或配置 GitHub Token', True)
+                out.seek(0)
+                return out.read(limit + 1)
+            finally:
+                if process.poll() is None:
+                    self._stop(process)
+
+    @staticmethod
+    def safe_ref(value):
+        return bool(value and not value.startswith('-') and not value.endswith(('/', '.'))
+                    and '..' not in value and '@{' not in value and '//' not in value
+                    and not any(ord(c) < 33 or c in '~^:?*[\\' for c in value)
+                    and not any(part.startswith('.') or part.endswith('.lock') for part in value.split('/')))
+
+    def resolve(self, parsed):
+        suffix = parsed['suffix']
+        if suffix and re.fullmatch(r'[0-9a-fA-F]{40}', suffix[0]):
+            return suffix[0].lower(), '/'.join(suffix[1:]), None
+        candidates = []
+        for length in range(min(len(suffix), 10), 0, -1):
+            value = '/'.join(suffix[:length])
+            if self.safe_ref(value):
+                candidates.append((value, '/'.join(suffix[length:])))
+        patterns = ['HEAD'] + [f'refs/{kind}/{ref}' for ref, _ in candidates for kind in ('heads', 'tags')]
+        raw = self.run(['ls-remote', '--symref', self.url, *patterns], limit=512 * 1024)
+        refs, default = {}, None
+        for line in raw.decode('utf-8', errors='replace').splitlines():
+            pair = line.split('\t', 1)
+            if len(pair) != 2:
+                continue
+            if pair[0].startswith('ref: refs/heads/') and pair[1] == 'HEAD':
+                default = pair[0][len('ref: refs/heads/'):]
+            elif re.fullmatch(r'[0-9a-fA-F]{40}', pair[0]):
+                refs[pair[1]] = pair[0].lower()
+        if not suffix and 'HEAD' in refs:
+            return refs['HEAD'], '', default
+        for ref, path in candidates:
+            for kind in ('heads', 'tags'):
+                if f'refs/{kind}/{ref}' in refs:
+                    return refs[f'refs/{kind}/{ref}'], path, default
+        raise GithubError('not_found', '公开仓库中未找到指定分支、标签或提交')
+
+    def fetch(self, revision):
+        self.run(['init', '--quiet', '--bare', '--template=' + str(self.empty), str(self.repo)])
+        self.run(['--git-dir=' + str(self.repo), 'fetch', '--quiet', '--depth=1', '--filter=blob:limit=524288',
+                  '--no-tags', '--no-recurse-submodules', self.url, revision])
+        raw = self.read(['rev-parse', '--verify', 'FETCH_HEAD^{commit}'], limit=128)
+        sha = raw.decode().strip()
+        if not re.fullmatch(r'[0-9a-f]{40}', sha):
+            raise GithubError('protocol', '公开 Git 未返回固定提交 SHA')
+        return sha
+
+    def read(self, args, **kwargs):
+        return self.run(['--git-dir=' + str(self.repo), *args], **kwargs)
+
+    def tree(self, sha, max_entries):
+        # No -l: that would ask Git to lazily fetch missing large blob sizes.
+        raw = self.read(['ls-tree', '-r', '-z', sha], limit=8 * 1024 * 1024)
+        entries = []
+        records = raw.split(b'\0')
+        for record in records[:max_entries]:
+            if not record:
+                continue
+            try:
+                meta, path = record.split(b'\t', 1)
+                mode, kind, oid = meta.decode('ascii').split(' ')
+                name = path.decode('utf-8')
+            except (ValueError, UnicodeError):
+                continue
+            if re.fullmatch(r'[0-9a-f]{40}', oid):
+                entries.append({'path': name, 'mode': mode, 'type': kind, 'sha': oid})
+        return entries, len(records) - 1 > max_entries
+
+    def blob(self, item, max_bytes):
+        size_raw = self.read(['cat-file', '-s', item['sha']], limit=128, missing=True)
+        if size_raw is None:
+            return None  # blob filter excluded it; credentials and lazy fetch stay disabled.
+        try:
+            size = int(size_raw)
+        except ValueError:
+            raise GithubError('protocol', '公开 Git 文件大小无效') from None
+        if size < 0 or size > max_bytes:
+            return None
+        raw = self.read(['cat-file', 'blob', item['sha']], limit=max_bytes)
+        if len(raw) != size or hashlib.sha1(f'blob {len(raw)}\0'.encode() + raw).hexdigest() != item['sha']:
+            raise GithubError('integrity', '公开 Git 文件哈希校验失败')
+        return raw
 
 
 class GitHubConnector:
@@ -177,8 +381,54 @@ class GitHubConnector:
                 'sha': item['sha'], 'content': content, 'sha256': hashlib.sha256(raw).hexdigest()}
 
     def snapshot(self, url: str, depth: str = 'quick') -> dict:
+        self._parse(url)  # Validate before either transport can run.
+        try:
+            return self._snapshot_api(url, depth)
+        except GithubError as exc:
+            # Explicitly configured credentials and private/permission errors never
+            # cause a second anonymous authentication attempt.
+            if self.token or exc.code not in ('rate_limit', 'network', 'timeout'):
+                raise
+            return self._snapshot_public_git(url, depth, exc.code)
+
+    def _snapshot_api(self, url: str, depth: str = 'quick') -> dict:
         target = self.normalize(url)
         tree, truncated = self._tree(target)
+        target['metadata']['transport'] = 'github_api'
+        return self._read_snapshot(target, tree, truncated, depth, self._text_file)
+
+    def _snapshot_public_git(self, url, depth, reason):
+        parsed = self._parse(url)
+        with tempfile.TemporaryDirectory(prefix='skill-collect-public-git-') as temporary:
+            reader = _PublicGit(Path(temporary), parsed['repository'])
+            revision, scope, default = reader.resolve(parsed)
+            sha = reader.fetch(revision)
+            target = {**parsed, 'version': sha, 'path': scope, 'original_url': url, 'url': f'https://github.com/{parsed["repository"]}' +
+                      (f'/{parsed["kind"]}/{sha}/{quote(scope)}' if scope else ''),
+                      'metadata': {'description': None, 'stars': None, 'updated_at': None, 'license': 'UNKNOWN',
+                                   'default_branch': default, 'html_url': f'https://github.com/{parsed["repository"]}',
+                                   'transport': 'public_git', 'fallback_reason': reason,
+                                   'fallback_note': 'GitHub API 受限，已通过匿名公开 Git 读取固定版本；未使用本机 GitHub 凭证。',
+                                   'git_disk_budget_bytes': reader.MAX_DISK, 'git_deadline_seconds': reader.MAX_SECONDS}}
+            tree, truncated = reader.tree(sha, self.MAX_TREE)
+            def text_file(t, item):
+                self._safe_path(item['path'])
+                raw = reader.blob(item, self.MAX_FILE)
+                if raw is None:
+                    return None
+                try:
+                    content = raw.decode('utf-8')
+                except UnicodeError:
+                    return None
+                if '\x00' in content:
+                    return None
+                return {'path': item['path'], 'url': f'https://github.com/{t["repository"]}/blob/{sha}/{quote(item["path"])}',
+                        'sha': item['sha'], 'content': content, 'sha256': hashlib.sha256(raw).hexdigest()}
+            result = self._read_snapshot(target, tree, truncated, depth, text_file)
+            result['metadata']['git_disk_bytes_observed'] = sum(p.stat().st_size for p in reader.repo.rglob('*') if p.is_file())
+            return result
+
+    def _read_snapshot(self, target, tree, truncated, depth, text_reader):
         scope = target['path']
         blobs = [i for i in tree if i.get('type') == 'blob' and i.get('mode') not in ('120000', '160000')]
         if scope and not any(self._inside(i['path'], scope) for i in tree):
@@ -189,27 +439,33 @@ class GitHubConnector:
             candidates = [i for i in blobs if self._inside(i['path'], scope) and i.get('size', 0) <= self.MAX_FILE]
             def score(i):
                 path = i['path'].lower()
+                relative = path[len(scope) + 1:] if scope and path.startswith(scope.lower() + '/') else path
+                nesting = relative.count('/')
                 name = PurePosixPath(path).name
                 if name.startswith('readme'):
-                    rank = 0
+                    rank = 0 if nesting <= 1 and name in ('readme', 'readme.md', 'readme.rst') else 3 if nesting <= 2 else 6
                 elif name.startswith(('license', 'copying', 'notice')):
-                    rank = 1
+                    rank = 1 if nesting <= 1 else 6
                 elif name in ('package.json', 'pyproject.toml', 'requirements.txt', 'cargo.toml', 'go.mod', 'dockerfile', 'skill.md'):
-                    rank = 2
+                    rank = 2 if nesting <= 2 else 6
                 elif path.endswith(('.md', '.rst')) and path.count('/') < 5:
-                    rank = 3
+                    rank = 5
                 elif path.endswith(('.py', '.ts', '.tsx', '.js', '.go', '.rs')) and 'lock' not in name:
-                    rank = 4
+                    rank = 4 if not any(p in ('vendor', 'node_modules') for p in PurePosixPath(path).parts) else 8
                 else:
                     rank = 8
                 return rank, path.count('/'), path
             candidates.sort(key=score)
             selected = [i for i in candidates if score(i)[0] < 8][:18 if depth == 'deep' else 8]
+            # Keep an actual source file in the bounded sample when one is available.
+            code = next((i for i in candidates if score(i)[0] == 4), None)
+            if code and not any(score(i)[0] == 4 for i in selected):
+                selected[-1:] = [code]
         if not selected:
             raise GithubError('no_content', '该范围没有可读取的文字文件')
         files, total = [], 0
         for item in selected:
-            f = self._text_file(target, item)
+            f = text_reader(target, item)
             if f and total + len(f['content']) <= (150000 if depth == 'deep' else 60000):
                 files.append(f)
                 total += len(f['content'])
@@ -218,7 +474,7 @@ class GitHubConnector:
         evidence = [{'id': f'G{i + 1}', 'path': f['path'], 'url': f['url'], 'excerpt': f['content'][:1200],
                      'kind': 'source_claim' if f['path'].lower().endswith(('.md', '.rst', '.txt')) else 'code_observation'}
                     for i, f in enumerate(files)]
-        return {'platform': 'github', 'url': target['url'], 'original_url': url, 'repository': target['repository'],
+        return {'platform': 'github', 'url': target['url'], 'original_url': target.get('original_url', target['url']), 'repository': target['repository'],
                 'version': target['version'], 'title': target['repository'], 'files': files, 'evidence': evidence,
                 'text': '\n\n'.join(f'[{e["id"]}] {f["path"]}\n{f["content"]}' for e, f in zip(evidence, files)),
                 'metadata': {**target['metadata'], 'tree_truncated': truncated, 'files_read': len(files),
