@@ -1,0 +1,75 @@
+{
+  "status": "failed",
+  "test_type": "real_feishu_dedicated_table_self_authored_fixture",
+  "started_at": "2026-10-26T10:09:02.504435+00:00",
+  "finished_at": "2026-10-26T10:10:17.587361+00:00",
+  "target_sha256": "e1e4d43ea9a5db59f925ff2c1c47fdced101716a62a6f71015e0321b7a990cf2",
+  "model_calls": 0,
+  "acceptance_steps_passed": false,
+  "cleanup_passed": true,
+  "steps": [
+    {
+      "step": "target_bound_and_preexisting_rows_snapshotted",
+      "status": "passed",
+      "at": "2026-10-26T10:09:04.054062+00:00",
+      "target_sha256": "e1e4d43ea9a5db59f925ff2c1c47fdced101716a62a6f71015e0321b7a990cf2"
+    },
+    {
+      "step": "real_authentication_read_and_field_types",
+      "status": "passed",
+      "at": "2026-10-26T10:09:06.325193+00:00"
+    },
+    {
+      "step": "marked_write_test_created_and_deleted",
+      "status": "passed",
+      "at": "2026-10-26T10:09:15.727442+00:00"
+    },
+    {
+      "step": "first_owned_record_created",
+      "status": "passed",
+      "at": "2026-10-26T10:09:26.323406+00:00"
+    },
+    {
+      "step": "duplicate_sync_no_new_record",
+      "status": "passed",
+      "at": "2026-10-26T10:09:29.472639+00:00"
+    },
+    {
+      "step": "first_attachment_download_and_hash_recovery",
+      "status": "passed",
+      "at": "2026-10-26T10:09:31.355580+00:00",
+      "file_hashes": {
+        "SKILL.md": "6d64577db3c14dbfc4fb9d8836ac9d3d6505c5b9f83032c8ca03d8f45da93256",
+        "references/acceptance.txt": "7d61802af5626a4528054cd521299823b33b78da2030794edaea4ab799b399e1",
+        "templates/probe.bin": "40aff2e9d2d8922e47afd4648e6967497158785fbd1da870e7110266bf944880"
+      },
+      "zip_sha256": "c5781816ee5c98a56c905686866aa65c2dac98924d0338f4f27bb970e2c11a6e",
+      "body_sha256": "6d64577db3c14dbfc4fb9d8836ac9d3d6505c5b9f83032c8ca03d8f45da93256",
+      "content_sha256": "fe424ca262f8730e386434649d014ea37ac9e831b15728ee28f739f01fadc1a2"
+    },
+    {
+      "step": "personal_update_roundtrip",
+      "status": "passed",
+      "at": "2026-10-26T10:09:43.419488+00:00",
+      "file_hashes": {
+        "SKILL.md": "7a5376cd639d5b389f256727232ad8455240cc7059121e0522f71c27adc44d1f",
+        "references/acceptance.txt": "7d61802af5626a4528054cd521299823b33b78da2030794edaea4ab799b399e1",
+        "templates/probe.bin": "40aff2e9d2d8922e47afd4648e6967497158785fbd1da870e7110266bf944880"
+      },
+      "zip_sha256": "1264f0b3d79062b41fabf3f3c4ed1d5d7111908dcc05fa3671c9673ecd399421",
+      "body_sha256": "7a5376cd639d5b389f256727232ad8455240cc7059121e0522f71c27adc44d1f",
+      "content_sha256": "e855d318640320920b4f76328a2055734c797a66d7d988dbadf767a06b7bced8"
+    },
+    {
+      "step": "remote_direct_edit_import_is_read_only_and_flags_stale_package",
+      "status": "passed",
+      "at": "2026-10-26T10:09:57.616724+00:00"
+    },
+    {
+      "step": "owned_data_cleaned_and_all_preexisting_rows_unchanged",
+      "status": "passed",
+      "at": "2026-10-26T10:10:17.586301+00:00"
+    }
+  ],
+  "error_code": "remote_body"
+}

@@ -1,0 +1,108 @@
+{
+  "format_version": 1,
+  "run_started_at": "2026-10-26T10:00:59.531Z",
+  "source": "此前实际Playwright运行结果的脱敏结构化汇总；未重新运行测试",
+  "test_source": "frontend/tests/workbench.spec.ts",
+  "status": "passed",
+  "assessment": "通过",
+  "summary": {
+    "total": 5,
+    "real_local_flow": 1,
+    "explicit_ui_contracts": 4,
+    "passed": 5,
+    "failed": 0,
+    "skipped": 0,
+    "flaky": 0,
+    "duration_ms": 23955.723
+  },
+  "scenarios": [
+    {
+      "name": "真实本地服务：无配置、编辑、包往返、字幕待配置、错误与窄屏操作",
+      "status": "passed",
+      "assessment": "通过",
+      "duration_ms": 9769,
+      "evidence_kind": "real_local_flow",
+      "evidence_label": "真实本地业务流程",
+      "scope": "真实 Chrome 浏览器连接隔离临时目录中的 FastAPI、SQLite 和 ZIP 服务；材料为测试作者自行编写的样例。",
+      "verified": [
+        "无配置启动及模型设置空状态",
+        "技能创建、编辑形成版本、附属文件显示、ZIP导出再导入去重",
+        "知识与技能搜索筛选、编辑、归档及归档入口",
+        "自编SRT上传后待配置并保留字幕时间证据，再取消任务",
+        "未配置飞书读取显示真实本地错误；桌面1440×1100和窄屏390×844操作无横向溢出",
+        "全流程无浏览器未捕获异常"
+      ]
+    },
+    {
+      "name": "飞书UI契约：普通导入提示旧包，明确确认后刷新企业附件并呈现保留企业版结果",
+      "status": "passed",
+      "assessment": "通过",
+      "duration_ms": 1367,
+      "evidence_kind": "explicit_ui_contract",
+      "evidence_label": "显式界面契约",
+      "scope": "使用显式飞书响应替身，验证界面确认和结果提示；没有访问真实飞书。",
+      "verified": [
+        "普通导入提示企业正文与附件不一致，未发起同步写入",
+        "预览显示完整包待刷新，点击明确确认之前同步写入次数为0",
+        "确认后才发起同步，并区分刷新完整包与保留企业版本的结果"
+      ]
+    },
+    {
+      "name": "模型高级设置UI契约：输出上限整数校验与DeepSeek官方host专属推理选项",
+      "status": "passed",
+      "assessment": "通过",
+      "duration_ms": 1338,
+      "evidence_kind": "explicit_ui_contract",
+      "evidence_label": "显式界面契约",
+      "scope": "使用显式设置接口替身和模型请求拦截，不调用真实DeepSeek服务。",
+      "verified": [
+        "默认输出上限3000，拒绝低于128及非整数值",
+        "仅精确api.deepseek.com主机显示推理模式选项",
+        "保存有效输出上限及enabled/provider_default选项；模型请求次数为0"
+      ]
+    },
+    {
+      "name": "模型诊断UI契约：失败回答仅按需读取并单独展开，不发起模型请求",
+      "status": "passed",
+      "assessment": "通过",
+      "duration_ms": 2940,
+      "evidence_kind": "explicit_ui_contract",
+      "evidence_label": "显式界面契约",
+      "scope": "使用自编失败任务和诊断回答响应，验证本机诊断显示层；不读取真实任务回答。",
+      "verified": [
+        "点击查看本机模型诊断之前请求次数为0",
+        "点击后才读取诊断；校验原因与原始回答需分别展开",
+        "原始回答默认隐藏，模型调用次数为0"
+      ]
+    },
+    {
+      "name": "MiniMax提示UI契约：精确官方主机显示原生路径，独立配置不复制模型或密钥",
+      "status": "passed",
+      "assessment": "通过",
+      "duration_ms": 2208,
+      "evidence_kind": "explicit_ui_contract",
+      "evidence_label": "显式界面契约",
+      "scope": "使用自编MiniMax设置响应和请求拦截，验证官方主机提示及能力配置隔离。",
+      "verified": [
+        "精确官方MiniMax主机显示Chat Completions或speech_to_text路径提示",
+        "相似或仿冒主机不会触发MiniMax专用提示",
+        "显示asr-1.0及旧Token Plan Plus的ASR权益待核对说明",
+        "不复制文字模型或密钥到图片/转写配置；不保存配置、不调用模型"
+      ]
+    }
+  ],
+  "privacy": {
+    "user_credentials_read": false,
+    "user_configuration_modified": false,
+    "real_model_calls": false,
+    "real_feishu_calls": false,
+    "contains_private_account_identifiers": false,
+    "contains_raw_model_answers": false
+  },
+  "limits": [
+    "四项界面契约使用明确的响应替身，不能作为真实供应商联通或模型语义准确率证据。",
+    "字幕真实本地流程停在待配置，不声称完成语音转写或画面理解。",
+    "MiniMax旧Plus的实际ASR权益、真实15秒视频识别和飞书权限均由独立真实验收记录说明。",
+    "本报告不替换此前历史UI报告和截图。"
+  ]
+}

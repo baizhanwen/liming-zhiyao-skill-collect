@@ -1,0 +1,39 @@
+{
+  "status": "failed",
+  "test_type": "real_feishu_dedicated_table_self_authored_fixture",
+  "started_at": "2026-10-26T09:51:08.772332+00:00",
+  "finished_at": "2026-10-26T09:51:42.223587+00:00",
+  "target_sha256": "e1e4d43ea9a5db59f925ff2c1c47fdced101716a62a6f71015e0321b7a990cf2",
+  "model_calls": 0,
+  "acceptance_steps_passed": false,
+  "cleanup_passed": true,
+  "steps": [
+    {
+      "step": "target_bound_and_preexisting_rows_snapshotted",
+      "status": "passed",
+      "at": "2026-10-26T09:51:10.512738+00:00",
+      "target_sha256": "e1e4d43ea9a5db59f925ff2c1c47fdced101716a62a6f71015e0321b7a990cf2"
+    },
+    {
+      "step": "real_authentication_read_and_field_types",
+      "status": "passed",
+      "at": "2026-10-26T09:51:12.619004+00:00"
+    },
+    {
+      "step": "marked_write_test_created_and_deleted",
+      "status": "passed",
+      "at": "2026-10-26T09:51:21.316240+00:00"
+    },
+    {
+      "step": "first_owned_record_created",
+      "status": "passed",
+      "at": "2026-10-26T09:51:31.845821+00:00"
+    },
+    {
+      "step": "owned_data_cleaned_and_all_preexisting_rows_unchanged",
+      "status": "passed",
+      "at": "2026-10-26T09:51:42.220393+00:00"
+    }
+  ],
+  "error_code": "conflict"
+}

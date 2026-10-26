@@ -128,8 +128,11 @@ class SyncService:
 
     def _remote(self, connector, record):
         fields = record.get("fields", {})
-        canonical = {k: fields.get(v) for k, v in connector.mapping.items() if v and k != "package"}
-        values = {k: text(v) for k, v in canonical.items()}
+        # Text writes return strings, while list reads may return rich-text
+        # fragments, nulls or omitted empty cells. Hash the same semantic value
+        # on both paths; formatting/transport representations are not edits.
+        canonical = {k: text(fields.get(v)) for k, v in connector.mapping.items() if v and k != "package"}
+        values = dict(canonical)
         attachments = fields.get(connector.mapping["package"], [])
         if not isinstance(attachments, list) or len(attachments) != 1 or not isinstance(attachments[0], dict) or not attachments[0].get("file_token"):
             raise FeishuError("attachment_missing", "目标记录需有且仅有一个完整技能 ZIP 附件；先修复附件再同步。")
@@ -145,11 +148,27 @@ class SyncService:
             "package_consistent": body == package["body"]}
 
     def records(self):
+        def genuinely_empty(value):
+            # Check every remote field, including fields outside our mapping.
+            # Explicit zero/false and whitespace are content, not placeholders.
+            if value is None:
+                return True
+            if isinstance(value, str):
+                return value == ""
+            if isinstance(value, dict):
+                return all(genuinely_empty(item) for item in value.values())
+            if isinstance(value, list):
+                return all(genuinely_empty(item) for item in value)
+            return False
+
         connector = self.connector()
         try:
             result = []
             for record in connector.list_records():
-                values = {k: text(record.get("fields", {}).get(v)) for k, v in connector.mapping.items() if k != "package"}
+                fields = record.get("fields", {})
+                if all(genuinely_empty(value) for value in fields.values()):
+                    continue
+                values = {k: text(fields.get(v)) for k, v in connector.mapping.items() if k != "package"}
                 result.append({**record, "name": values.get("name"), "skill_id": values.get("skill_id"),
                     "body": values.get("body"), "validation": "not_downloaded"})
             return result
@@ -271,7 +290,7 @@ class SyncService:
             if resolution == "remote":
                 if not preview.get("record_id"):
                     raise FeishuError("not_found", "企业记录已不存在，不会自动传播删除。")
-                pulled = self.pull(preview["record_id"], resolution="remote")
+                pulled = self.pull(preview["record_id"], resolution="remote", target_skill_id=skill_id)
                 if pulled.get("package_refresh_required"):
                     refreshed = self.push(pulled["skill"]["id"],
                         _expected_local_hash=self._local_hash(pulled["skill"]))
@@ -279,7 +298,7 @@ class SyncService:
                         "package_refreshed": True}
                 return {**pulled, "action": "resolved_remote", "package_refreshed": False}
             if resolution == "copy" and preview.get("record_id"):
-                return self.pull(preview["record_id"], resolution="copy")
+                return self.pull(preview["record_id"], resolution="copy", target_skill_id=skill_id)
             if resolution not in (None, "local", "copy", "remote"):
                 raise FeishuError("config", "未知同步冲突处理方式。")
             if preview["action"] == "noop":
@@ -295,7 +314,7 @@ class SyncService:
                     if not current_local or self._local_hash(current_local) != self._local_hash(local):
                         raise FeishuError("conflict", "个人技能在同步预览后发生变化，请重新预览。")
                     package = self.skills.export_zip(skill_id)
-                inspect_package(package)
+                package_info = inspect_package(package)
                 token = connector.upload_package(package, local.get("name", "skill") + ".zip")
                 fields = self._fields_for(connector, local, token)
                 record_id = preview.get("record_id")
@@ -332,14 +351,33 @@ class SyncService:
                         remote = self._remote(connector, record)
                         same = (remote["values"].get("content_hash") == local["content_hash"]
                             and remote["body"] == local.get("body", "")
-                            and remote["package"]["file_hashes"] == inspect_package(package)["file_hashes"])
+                            and remote["package"]["file_hashes"] == package_info["file_hashes"])
                         if not same:
                             raise FeishuError("conflict", "发现已有同 ID 企业记录且内容不同，请重新预览后处理。")
                     elif pending and pending.get("uncertain"):
                         raise FeishuError("uncertain_write", "上次创建结果仍未知且暂未查到记录；请稍后再次预览，避免生成重复记录。")
                     else:
                         record = connector.create_record(fields)
-                remote = self._remote(connector, record)
+                # Create/update acknowledgements may include only submitted
+                # fields. A package-only update legitimately omits body/name;
+                # do not interpret omissions in its response as cleared cells.
+                # Confirm the complete persisted record via a fresh read instead.
+                acknowledged_id = record.get("record_id") if isinstance(record, dict) else None
+                if not acknowledged_id:
+                    raise FeishuError("write_unconfirmed", "飞书写入已返回，但缺少可核对的记录标识；请重新预览，未盲目重复写入。")
+                intent = self.store.get("sync_pending", operation_id)
+                if intent:
+                    self.store.put("sync_pending", {**intent, "record_id": acknowledged_id, "uncertain": True})
+                confirmed = next((r for r in connector.list_records() if r["record_id"] == acknowledged_id), None)
+                if confirmed is None:
+                    raise FeishuError("write_unconfirmed", "飞书写入已返回，但暂未读到完整记录；请重新预览核对，未盲目重复写入。")
+                remote = self._remote(connector, confirmed)
+                if (remote["body"] != local.get("body", "")
+                    or remote["package"]["file_hashes"] != package_info["file_hashes"]
+                    or any(text(confirmed.get("fields", {}).get(name)) != text(value)
+                        for name, value in fields.items() if name != connector.mapping["package"])):
+                    raise FeishuError("write_unconfirmed", "飞书写入后的正文、字段或完整包尚未核验一致；保留个人内容，请重新预览核对。")
+                record = confirmed
                 self._save_baseline(local, remote, record["record_id"])
                 self.store.delete("sync_pending", operation_id)
                 log = self._log("push", "passed", skill_id=skill_id, record_id=record["record_id"])
@@ -347,7 +385,7 @@ class SyncService:
                     "record_id": record["record_id"], "log_id": log["id"],
                     "package_refreshed": refresh_only}
             except FeishuError as exc:
-                if exc.code in ("timeout", "network"):
+                if exc.code in ("timeout", "network", "write_unconfirmed"):
                     intent = self.store.get("sync_pending", operation_id)
                     if intent:
                         self.store.put("sync_pending", {**intent, "uncertain": True})
@@ -356,7 +394,7 @@ class SyncService:
             finally:
                 connector.close()
 
-    def pull(self, record_id, resolution=None):
+    def pull(self, record_id, resolution=None, *, target_skill_id=None):
         with SYNC_LOCK:
             if resolution not in (None, "remote", "local", "copy"):
                 raise FeishuError("config", "未知同步冲突处理方式。")
@@ -367,9 +405,27 @@ class SyncService:
                 if not record:
                     raise FeishuError("not_found", "飞书记录不存在，不会自动删除个人内容。")
                 remote = self._remote(connector, record)
-                links = [x for x in self.store.list("sync_links") if x.get("record_id") == record_id]
+                links = [x for x in self.store.list("sync_links") if x.get("record_id") == record_id
+                    and x.get("connection_id", "feishu") == "feishu"]
                 stable_id = remote["values"].get("skill_id")
-                local = self._get_skill(links[0]["skill_id"]) if links else self._get_skill(stable_id)
+                candidate_ids = {x["skill_id"] for x in links}
+                if stable_id:
+                    candidate_ids.add(stable_id)
+                candidates = {sid: value for sid in candidate_ids if (value := self._get_skill(sid))}
+                if target_skill_id is not None:
+                    local = candidates.get(target_skill_id)
+                    if not local:
+                        raise FeishuError("sync_target", "指定个人技能与该企业记录没有有效关联；未修改个人内容。")
+                elif resolution == "copy":
+                    # Explicitly creating another copy never needs to choose an
+                    # existing personal destination or overwrite one of them.
+                    local = None
+                elif len(candidates) > 1:
+                    raise FeishuError("ambiguous_local_copies", "该企业记录关联多个个人副本。请从需要更新的个人技能进入同步并选择企业版本，或明确选择另建个人副本；未修改任何个人内容。")
+                else:
+                    local = next(iter(candidates.values()), None)
+                if local and local.get("archived") and resolution != "copy":
+                    raise FeishuError("archived", "关联个人技能已归档，请先恢复并从该技能同步，或选择另建个人副本。")
                 if local:
                     row = self._row(connector, local, record)
                     if row["action"] in ("conflict", "push") and resolution is None:

@@ -1,0 +1,62 @@
+{
+  "recorded_at": "2026-10-26T10:20:03.349104+00:00",
+  "version": "0.1.2",
+  "platform": "Darwin",
+  "python": "3.12.14",
+  "node": "v24.19.0",
+  "pytest": {
+    "command": ".venv/bin/python -m pytest -q --junitxml=artifacts/verification/pytest-v012.xml",
+    "tests": 139,
+    "passed": 139,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "duration_seconds": "8.486",
+    "junit": "artifacts/verification/pytest-v012.xml",
+    "warnings": "one upstream Starlette/httpx TestClient deprecation; no test failures",
+    "boundary": "Local core/contracts, isolated SQLite/files and local FFmpeg fixture. Model and Feishu tests explicitly simulate remote services; no paid call or enterprise data in this run.",
+    "source_snapshot_notes": "Includes final ACK record_id marked uncertain before confirmation re-read; source finalized before this test process began."
+  },
+  "frontend_build": {
+    "command": "npm --prefix frontend run build",
+    "status": "passed",
+    "framework": "Vite 8.3.5",
+    "modules_transformed": 17,
+    "package_version": "0.1.2"
+  },
+  "ui": {
+    "status": "passed",
+    "tests": 5,
+    "expected": 5,
+    "unexpected": 0,
+    "skipped": 0,
+    "duration_ms": 23955.723,
+    "source": "frontend agent Playwright report from isolated temporary fixture",
+    "public_report": "artifacts/verification/ui-minimax.json",
+    "boundary": "One actual local API workflow and four explicit interface contracts, no real service probes or live MiniMax calls.",
+    "subsequent_targeted_validation": {
+      "report": "artifacts/verification/ui-frame-claim-label.json",
+      "boundary": "Only affected frame-label interface test rerun; historical five-test suite not rerun after label change. Sidebar now imports package version; frontend agent rebuilt successfully."
+    }
+  },
+  "privacy": {
+    "credentials_included": false,
+    "daily_data_included": false,
+    "feishu_live_attempt1_preserved": true
+  },
+  "release_state": "candidate with final sync confirmation fixes; no commit/push/release by this task; third live Feishu verification pending root result",
+  "previous_pytest_runs": [
+    {
+      "command": ".venv/bin/python -m pytest -q --junitxml=artifacts/verification/pytest-v012.xml",
+      "tests": 136,
+      "passed": 136,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "duration_seconds": "9.731",
+      "junit": "artifacts/verification/pytest-v012-candidate1.xml",
+      "warnings": "one upstream Starlette/httpx TestClient deprecation; no test failures",
+      "boundary": "Local core/contracts, isolated SQLite/files and local FFmpeg fixture. Model and Feishu tests explicitly simulate remote services; no paid call or enterprise data in this run."
+    }
+  ]
+}

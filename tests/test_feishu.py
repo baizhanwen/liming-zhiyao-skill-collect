@@ -171,6 +171,40 @@ def test_full_package_push_no_duplicate_and_preserves_scripts(sync_env):
     assert len(service.logs()) >= 3
 
 
+def test_records_skip_only_empty_placeholders_keep_partial_and_unmapped_content(sync_env):
+    _, _, _, remote, service = sync_env
+    empty_fields = {
+        "empty-row": {},
+        "empty-cells": {"名称": "", "Skill 正文": None, "技能包附件": [], "未映射空字段": {}},
+        "nested-empty": {"未映射空字段": [None, "", {}, []]},
+    }
+    nonempty_fields = {
+        "incomplete-skill": {"Skill ID": "incomplete-contract", "名称": "需要修复的技能"},
+        "unmapped-text": {"未映射备注": "保留这条记录"},
+        "unmapped-attachment": {"其他附件": [{"file_token": "contract-file"}]},
+        "mapped-attachment": {"技能包附件": [{"file_token": "contract-package"}]},
+        "explicit-zero": {"计数": 0},
+        "explicit-false": {"复选框": False},
+        "whitespace-text": {"备注": " "},
+    }
+    original = {**empty_fields, **nonempty_fields}
+    remote.records = {key: {"record_id": key, "fields": copy.deepcopy(fields)}
+        for key, fields in original.items()}
+
+    listed = service.records()
+
+    assert [row["record_id"] for row in listed] == list(nonempty_fields)
+    assert all(row["fields"] == nonempty_fields[row["record_id"]] for row in listed)
+    assert all(row["validation"] == "not_downloaded" for row in listed)
+    # Keeping a partial skill also keeps its actionable sync diagnosis visible.
+    incomplete = next(row for row in service.preview()["items"]
+        if row.get("record_id") == "incomplete-skill")
+    assert incomplete["action"] == "blocked"
+    assert incomplete["error_code"] == "attachment_missing"
+    assert {key: value["fields"] for key, value in remote.records.items()} == original
+    assert remote.creates == remote.updates == 0
+
+
 def test_two_sides_modified_conflict_and_resolution(sync_env):
     store, skills, local, remote, service = sync_env
     record_id = service.push(local["id"])["record_id"]
@@ -371,3 +405,183 @@ def test_enterprise_personal_copy_refresh_preserves_original_remote_stable_id(sy
     assert result["action"] == "resolved_remote" and result["package_refreshed"]
     assert remote.records[record_id]["fields"]["Skill ID"] == local["id"]
     assert other.preview([personal["id"]])["items"][0]["action"] == "noop"
+
+
+def test_create_strings_and_list_richtext_empty_shapes_share_same_baseline(sync_env):
+    """Models the real API distinction that caused a duplicate sync conflict."""
+    store, skills, local, _, _ = sync_env
+    class RichTextListBase(MockBase):
+        def list_records(self):
+            rows = super().list_records()
+            for row in rows:
+                transformed = {}
+                for index, (key, value) in enumerate(row["fields"].items()):
+                    if key == self.mapping["package"]:
+                        transformed[key] = value
+                    elif value == "":
+                        # Reads may omit empty cells or return null/empty arrays.
+                        if index % 3 == 0:
+                            continue
+                        transformed[key] = None if index % 3 == 1 else []
+                    elif isinstance(value, str):
+                        cut = len(value) // 2
+                        transformed[key] = [{"type": "text", "text": value[:cut]},
+                            {"type": "text", "text": value[cut:]}]
+                    else:
+                        transformed[key] = value
+                row["fields"] = transformed
+            return rows
+    remote = RichTextListBase()
+    service = SyncService(store, Vault(), skills, lambda config, secret: remote)
+    created = service.push(local["id"])
+    assert created["action"] == "created"
+    rid = created["record_id"]
+    # First baseline was calculated from the string-valued create response.
+    baseline_hash = store.get("sync_links", "feishu:" + local["id"])["remote_hash"]
+    row = service.preview([local["id"]])["items"][0]
+    assert row["remote_hash"] == baseline_hash and row["action"] == "noop"
+    assert service.push(local["id"])["action"] == "noop"
+    assert remote.creates == 1 and remote.updates == 0
+    # Semantic edits still count even though the transport always uses fragments.
+    remote.records[rid]["fields"]["Skill 正文"] += "Actual remote edit\n"
+    assert service.preview([local["id"]])["items"][0]["action"] == "pull"
+    remote.records[rid]["fields"]["名称"] = "Actual renamed skill"
+    service.push(local["id"], resolution="remote")
+    assert skills.get(local["id"])["name"] == "Actual renamed skill"
+    assert service.preview([local["id"]])["items"][0]["action"] == "noop"
+
+
+def test_personal_remote_resolution_targets_requested_primary_not_latest_copy(sync_env):
+    store, skills, primary, remote, service = sync_env
+    record_id = service.push(primary["id"])["record_id"]
+    copied = service.pull(record_id, resolution="copy")["skill"]
+    assert copied["id"] != primary["id"]
+    copy_before = skills.get(copied["id"])
+    skills.update(primary["id"], {"body": primary["body"] + "Primary conflict\n"})
+    chosen_body = primary["body"] + "Chosen enterprise revision\n"
+    remote.records[record_id]["fields"]["Skill 正文"] = chosen_body
+    resolved = service.push(primary["id"], resolution="remote")
+    assert resolved["skill"]["id"] == primary["id"]
+    assert skills.get(primary["id"])["body"] == chosen_body
+    assert skills.get(copied["id"]) == copy_before
+    assert service.preview([primary["id"]])["items"][0]["action"] == "noop"
+    # The same explicit path can target the personal copy while leaving primary alone.
+    primary_before = skills.get(primary["id"])
+    copied_body = chosen_body + "Copy-targeted enterprise revision\n"
+    remote.records[record_id]["fields"]["Skill 正文"] = copied_body
+    resolved_copy = service.push(copied["id"], resolution="remote")
+    assert resolved_copy["skill"]["id"] == copied["id"]
+    assert skills.get(copied["id"])["body"] == copied_body
+    assert skills.get(primary["id"]) == primary_before
+    assert remote.records[record_id]["fields"]["Skill ID"] == primary["id"]
+
+
+def test_ambiguous_enterprise_import_rejects_without_mutating_any_copy(sync_env):
+    store, skills, primary, remote, service = sync_env
+    record_id = service.push(primary["id"])["record_id"]
+    copied = service.pull(record_id, resolution="copy")["skill"]
+    before = {s["id"]: s for s in store.list("skills")}
+    remote_before = copy.deepcopy(remote.records)
+    updates_before = remote.updates
+    for resolution in (None, "remote", "local"):
+        with pytest.raises(FeishuError) as error:
+            service.pull(record_id, resolution=resolution)
+        assert error.value.code == "ambiguous_local_copies"
+    assert {s["id"]: s for s in store.list("skills")} == before
+    assert remote.records == remote_before and remote.updates == updates_before
+    # Explicit copy remains valid even when multiple destinations already exist.
+    another = service.pull(record_id, resolution="copy")["skill"]
+    assert another["id"] not in before
+    assert skills.get(primary["id"]) == before[primary["id"]]
+    assert skills.get(copied["id"]) == before[copied["id"]]
+    assert remote.updates == updates_before
+
+
+def test_personal_copy_resolution_creates_new_copy_without_overwriting_existing(sync_env):
+    store, skills, primary, remote, service = sync_env
+    record_id = service.push(primary["id"])["record_id"]
+    copied = service.pull(record_id, resolution="copy")["skill"]
+    before = {s["id"]: s for s in store.list("skills")}
+    remote.records[record_id]["fields"]["Skill 正文"] += "Remote revision for a new copy\n"
+    result = service.push(primary["id"], resolution="copy")
+    assert result["action"] == "copied" and result["skill"]["id"] not in before
+    assert skills.get(primary["id"]) == before[primary["id"]]
+    assert skills.get(copied["id"]) == before[copied["id"]]
+    assert remote.updates == 0
+    # Internal destination selection must not accept an unrelated personal skill.
+    unrelated = skills.create({"name": "unrelated", "body": "# Unrelated\n"})
+    with pytest.raises(FeishuError) as error:
+        service.pull(record_id, resolution="remote", target_skill_id=unrelated["id"])
+    assert error.value.code == "sync_target"
+
+
+def test_partial_update_ack_is_reread_before_baseline_and_package_refresh(sync_env):
+    """Real partial update ACKs omit unchanged body; actual persisted body remains."""
+    store, skills, local, _, _ = sync_env
+    class PartialAcknowledgementBase(MockBase):
+        def create_record(self, fields):
+            record = super().create_record(fields)
+            return {"record_id": record["record_id"], "fields": {"名称": fields["名称"]}}
+        def update_record(self, record_id, fields):
+            super().update_record(record_id, fields)
+            # Precisely echoes the submitted subset, not the whole persisted row.
+            return {"record_id": record_id, "fields": copy.deepcopy(fields)}
+    remote = PartialAcknowledgementBase()
+    service = SyncService(store, Vault(), skills, lambda cfg, secret: remote)
+    record_id = service.push(local["id"])["record_id"]
+    assert service.push(local["id"])["action"] == "noop"
+    remote.records[record_id]["fields"]["Skill 正文"] += "Live-shaped remote body edit\n"
+    service.pull(record_id)
+    assert service.preview([local["id"]])["items"][0]["action"] == "refresh_package"
+    refreshed = service.push(local["id"])
+    assert refreshed["action"] == "package_refreshed"
+    record = remote.records[record_id]
+    package = inspect_package(remote.packages[record["fields"]["技能包附件"][0]["file_token"]])
+    assert package["body"] == record["fields"]["Skill 正文"] == skills.get(local["id"])["body"]
+    assert service.preview([local["id"]])["items"][0]["action"] == "noop"
+    assert store.get("sync_pending", "feishu:" + local["id"]) is None
+
+
+def test_acknowledged_but_not_readable_create_remains_uncertain_without_duplicate(sync_env):
+    store, skills, local, _, _ = sync_env
+    class DelayedVisibilityBase(MockBase):
+        hidden = False
+        def list_records(self):
+            return [] if self.hidden else super().list_records()
+        def create_record(self, fields):
+            record = super().create_record(fields)
+            self.hidden = True
+            return record
+    remote = DelayedVisibilityBase()
+    service = SyncService(store, Vault(), skills, lambda cfg, secret: remote)
+    with pytest.raises(FeishuError) as error:
+        service.push(local["id"])
+    assert error.value.code == "write_unconfirmed"
+    intent = store.get("sync_pending", "feishu:" + local["id"])
+    assert intent["uncertain"] is True and intent["record_id"]
+    with pytest.raises(FeishuError) as error:
+        service.push(local["id"])
+    assert error.value.code == "uncertain_write" and remote.creates == 1
+    remote.hidden = False
+    service.push(local["id"])
+    assert remote.creates == 1 and service.preview([local["id"]])["items"][0]["action"] == "noop"
+
+
+def test_complete_reread_does_not_hide_an_actual_remote_body_clear(sync_env):
+    store, skills, local, _, _ = sync_env
+    class ActuallyClearedBodyBase(MockBase):
+        def update_record(self, record_id, fields):
+            super().update_record(record_id, fields)
+            self.records[record_id]["fields"]["Skill 正文"] = ""
+            return {"record_id": record_id, "fields": {"版本": fields.get("版本", "")}}
+    remote = ActuallyClearedBodyBase()
+    service = SyncService(store, Vault(), skills, lambda cfg, secret: remote)
+    record_id = service.push(local["id"])["record_id"]
+    before = copy.deepcopy(store.get("sync_links", "feishu:" + local["id"]))
+    changed = skills.update(local["id"], {"body": local["body"] + "Personal update\n"})
+    with pytest.raises(FeishuError) as error:
+        service.push(local["id"])
+    assert error.value.code == "remote_body"
+    assert store.get("sync_links", "feishu:" + local["id"]) == before
+    assert skills.get(local["id"])["body"] == changed["body"]
+    assert remote.records[record_id]["fields"]["Skill 正文"] == ""

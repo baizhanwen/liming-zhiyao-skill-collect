@@ -1,0 +1,162 @@
+{
+  "status": "passed",
+  "test_type": "real_feishu_dedicated_table_self_authored_fixture",
+  "started_at": "2026-10-26T10:20:56.619164+00:00",
+  "finished_at": "2026-10-26T10:23:18.410783+00:00",
+  "target_sha256": "e1e4d43ea9a5db59f925ff2c1c47fdced101716a62a6f71015e0321b7a990cf2",
+  "model_calls": 0,
+  "acceptance_steps_passed": true,
+  "cleanup_passed": true,
+  "steps": [
+    {
+      "step": "target_bound_and_preexisting_rows_snapshotted",
+      "status": "passed",
+      "at": "2026-10-26T10:20:57.951450+00:00",
+      "target_sha256": "e1e4d43ea9a5db59f925ff2c1c47fdced101716a62a6f71015e0321b7a990cf2"
+    },
+    {
+      "step": "real_authentication_read_and_field_types",
+      "status": "passed",
+      "at": "2026-10-26T10:20:59.577099+00:00"
+    },
+    {
+      "step": "marked_write_test_created_and_deleted",
+      "status": "passed",
+      "at": "2026-10-26T10:21:07.189471+00:00"
+    },
+    {
+      "step": "first_owned_record_created",
+      "status": "passed",
+      "at": "2026-10-26T10:21:17.643697+00:00"
+    },
+    {
+      "step": "duplicate_sync_no_new_record",
+      "status": "passed",
+      "at": "2026-10-26T10:21:20.968813+00:00"
+    },
+    {
+      "step": "first_attachment_download_and_hash_recovery",
+      "status": "passed",
+      "at": "2026-10-26T10:21:23.064118+00:00",
+      "file_hashes": {
+        "SKILL.md": "c2be7bbaa3f64c377e7ff909eed7d97d66026ed303abe4e9307b5a0334a06852",
+        "references/acceptance.txt": "774762fd7d12cdde1edbc9931abed17ecf27c003f493f1c7e2d44488d8025cd2",
+        "templates/probe.bin": "40aff2e9d2d8922e47afd4648e6967497158785fbd1da870e7110266bf944880"
+      },
+      "zip_sha256": "efbe75746441dbd2ee83a1bc8eeb7f7b935505d3f007b96a879034c218ef2af1",
+      "body_sha256": "c2be7bbaa3f64c377e7ff909eed7d97d66026ed303abe4e9307b5a0334a06852",
+      "content_sha256": "f28b318c828392ba75c3bbf85752f9a2d971a23d6ec222fd3028ba24a1b47ec7"
+    },
+    {
+      "step": "personal_update_roundtrip",
+      "status": "passed",
+      "at": "2026-10-26T10:21:35.267695+00:00",
+      "file_hashes": {
+        "SKILL.md": "8b4e9a6dfd5a65bc5556f13d26b08a2492d6bc691b8dc3fc675b485cf83d3245",
+        "references/acceptance.txt": "774762fd7d12cdde1edbc9931abed17ecf27c003f493f1c7e2d44488d8025cd2",
+        "templates/probe.bin": "40aff2e9d2d8922e47afd4648e6967497158785fbd1da870e7110266bf944880"
+      },
+      "zip_sha256": "50d2356b368544304817e863d1a7f591ae4467a84ef72bc70e18175f570946a3",
+      "body_sha256": "8b4e9a6dfd5a65bc5556f13d26b08a2492d6bc691b8dc3fc675b485cf83d3245",
+      "content_sha256": "f50188f213cc247420dd3e10c68b813d92cf74411e423d6869d1b0a189c9a40b"
+    },
+    {
+      "step": "remote_direct_edit_import_is_read_only_and_flags_stale_package",
+      "status": "passed",
+      "at": "2026-10-26T10:21:47.707395+00:00"
+    },
+    {
+      "step": "explicit_refresh_makes_three_bodies_consistent",
+      "status": "passed",
+      "at": "2026-10-26T10:21:57.672169+00:00",
+      "file_hashes": {
+        "SKILL.md": "7d52821db691dc948cefcbc649aad3c97f3eea4e0a04f3520fa7a1e1d866ed42",
+        "references/acceptance.txt": "774762fd7d12cdde1edbc9931abed17ecf27c003f493f1c7e2d44488d8025cd2",
+        "templates/probe.bin": "40aff2e9d2d8922e47afd4648e6967497158785fbd1da870e7110266bf944880"
+      },
+      "zip_sha256": "6c768b5d62f33dd021516ea1a25a2207dc1b957e4374ddac71c91f8d4dcb42a6",
+      "body_sha256": "7d52821db691dc948cefcbc649aad3c97f3eea4e0a04f3520fa7a1e1d866ed42",
+      "content_sha256": "bb8181e192c5197b79c5397230552986d516ec4af69448da008e6aeba447fcae"
+    },
+    {
+      "step": "local_conflict_resolution_roundtrip",
+      "status": "passed",
+      "at": "2026-10-26T10:22:17.429008+00:00",
+      "file_hashes": {
+        "SKILL.md": "5461d41a21881e57968f4a398a4b5a3efdbb7c78bbbe775d1968f9d18f4868f0",
+        "references/acceptance.txt": "774762fd7d12cdde1edbc9931abed17ecf27c003f493f1c7e2d44488d8025cd2",
+        "templates/probe.bin": "40aff2e9d2d8922e47afd4648e6967497158785fbd1da870e7110266bf944880"
+      },
+      "zip_sha256": "ef3429523ee5bfde7db8a1d8ff46fe7f031cd5f127efd58c58a1bd67603a31a8",
+      "body_sha256": "5461d41a21881e57968f4a398a4b5a3efdbb7c78bbbe775d1968f9d18f4868f0",
+      "content_sha256": "b9b6f408a98227875994e54f490104e17b257dac01e84f48246a4dc7be2c552c"
+    },
+    {
+      "step": "two_sided_conflict_blocks_unchosen_write",
+      "status": "passed",
+      "at": "2026-10-26T10:22:17.429798+00:00"
+    },
+    {
+      "step": "remote_conflict_resolution_and_complete_package_refresh",
+      "status": "passed",
+      "at": "2026-10-26T10:22:37.723141+00:00",
+      "file_hashes": {
+        "SKILL.md": "04c33f519386be33f92ce3483d007a3ef79f929e69f4b1357b5e766816a46871",
+        "references/acceptance.txt": "774762fd7d12cdde1edbc9931abed17ecf27c003f493f1c7e2d44488d8025cd2",
+        "templates/probe.bin": "40aff2e9d2d8922e47afd4648e6967497158785fbd1da870e7110266bf944880"
+      },
+      "zip_sha256": "bd022ce2745374aec14ea0b199a2d469b5ce1f3968d0669d43db634353186c5e",
+      "body_sha256": "04c33f519386be33f92ce3483d007a3ef79f929e69f4b1357b5e766816a46871",
+      "content_sha256": "cff08fb62782724ea264eac0cb1621dddd19dd039f67eb2bb660ac6ff1d991cf"
+    },
+    {
+      "step": "final_noop_stable_remote_identity_and_audit_logs",
+      "status": "passed",
+      "at": "2026-10-26T10:22:39.621744+00:00"
+    },
+    {
+      "step": "complete_attachment_imported_as_personal_copy",
+      "status": "passed",
+      "at": "2026-10-26T10:22:45.380939+00:00",
+      "file_hashes": {
+        "SKILL.md": "04c33f519386be33f92ce3483d007a3ef79f929e69f4b1357b5e766816a46871",
+        "references/acceptance.txt": "774762fd7d12cdde1edbc9931abed17ecf27c003f493f1c7e2d44488d8025cd2",
+        "templates/probe.bin": "40aff2e9d2d8922e47afd4648e6967497158785fbd1da870e7110266bf944880"
+      },
+      "zip_sha256": "bd022ce2745374aec14ea0b199a2d469b5ce1f3968d0669d43db634353186c5e",
+      "body_sha256": "04c33f519386be33f92ce3483d007a3ef79f929e69f4b1357b5e766816a46871",
+      "content_sha256": "cff08fb62782724ea264eac0cb1621dddd19dd039f67eb2bb660ac6ff1d991cf"
+    },
+    {
+      "step": "ambiguous_enterprise_import_refused_without_changing_personal_copies",
+      "status": "passed",
+      "at": "2026-10-26T10:22:50.212874+00:00",
+      "primary_content_sha256": "cff08fb62782724ea264eac0cb1621dddd19dd039f67eb2bb660ac6ff1d991cf",
+      "copy_content_sha256": "cff08fb62782724ea264eac0cb1621dddd19dd039f67eb2bb660ac6ff1d991cf"
+    },
+    {
+      "step": "specific_primary_resolution_preserves_other_copy_and_complete_package",
+      "status": "passed",
+      "at": "2026-10-26T10:23:09.664594+00:00",
+      "file_hashes": {
+        "SKILL.md": "fed03854bf9c705edaaf8751c6fc827cf00005841479b8bc4b6516a7410a076a",
+        "references/acceptance.txt": "774762fd7d12cdde1edbc9931abed17ecf27c003f493f1c7e2d44488d8025cd2",
+        "templates/probe.bin": "40aff2e9d2d8922e47afd4648e6967497158785fbd1da870e7110266bf944880"
+      },
+      "zip_sha256": "55b30b4a3266bb9b80e0ff3d0c586e8c612e1fc46434d84a2a9ed2d527f54e63",
+      "body_sha256": "fed03854bf9c705edaaf8751c6fc827cf00005841479b8bc4b6516a7410a076a",
+      "content_sha256": "20c7e8de68da168ba1e816f1890902f0ab267ee7c36cb5e2a4e76016a40f4091"
+    },
+    {
+      "step": "multiple_personal_copies_primary_target_is_exact_and_remote_identity_stable",
+      "status": "passed",
+      "at": "2026-10-26T10:23:11.666572+00:00",
+      "unchanged_copy_content_sha256": "cff08fb62782724ea264eac0cb1621dddd19dd039f67eb2bb660ac6ff1d991cf"
+    },
+    {
+      "step": "owned_data_cleaned_and_all_preexisting_rows_unchanged",
+      "status": "passed",
+      "at": "2026-10-26T10:23:18.408260+00:00"
+    }
+  ]
+}

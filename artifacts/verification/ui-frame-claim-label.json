@@ -1,0 +1,45 @@
+{
+  "format_version": 1,
+  "run_started_at": "2026-10-26T10:12:44.158Z",
+  "status": "passed",
+  "assessment": "通过",
+  "evidence_kind": "explicit_ui_contract_partial_regression",
+  "test_source": "frontend/tests/workbench.spec.ts",
+  "previous_full_suite_report": "artifacts/verification/ui-minimax.json",
+  "summary": {
+    "suite_defined_tests": 5,
+    "tests_executed_this_run": 1,
+    "passed": 1,
+    "failed": 0,
+    "full_suite_rerun": false,
+    "duration_ms": 5988.803
+  },
+  "change": "仅修正分析观点的显示标签；原始模型kind、来源快照、后端结果和历史记录未修改。",
+  "scenarios": [
+    {
+      "name": "模型诊断UI契约：失败回答仅按需读取并单独展开，不发起模型请求",
+      "status": "passed",
+      "duration_ms": 2574
+    }
+  ],
+  "verified": [
+    "code_observation引用非空，且每个引用均实际对应model_frame_observation时显示抽样画面观察",
+    "画面与代码混合引用保持代码观察",
+    "普通代码、未知证据、空引用以及同ID存在不同类型时保持代码观察",
+    "inference即使引用画面仍保持推断",
+    "原有本机诊断按需读取和回答折叠断言继续通过，模型请求数为0"
+  ],
+  "privacy": {
+    "user_credentials_read": false,
+    "user_configuration_modified": false,
+    "real_model_calls": false,
+    "existing_analysis_repeated": false,
+    "contains_private_account_identifiers": false,
+    "contains_raw_model_answers": false
+  },
+  "limits": [
+    "本次仅重跑扩展后的第4项显式界面契约，不声称其他4项已重新运行。",
+    "此前5项完整运行的报告与历史截图保持原样。",
+    "这是界面标签语义回归，不代表新的视频模型语义验收。"
+  ]
+}

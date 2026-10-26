@@ -85,7 +85,8 @@ test('真实本地服务：无配置、编辑、包往返、字幕待配置、�
 
 test('飞书UI契约：普通导入提示旧包，明确确认后刷新企业附件并呈现保留企业版结果',async({page})=>{
  const skill={id:'ui-contract-enterprise',name:'[契约样例] 团队技能',body:'企业当前正文',version:2,status:'draft',content_hash:'local-hash',files:[],tags:[],archived:false};
- let previewCount=0,syncWrites=0;
+ let previewCount=0,syncWrites=0,modelCalls=0;
+ await page.route('**/api/models/**',route=>{modelCalls++;return route.fulfill({status:400,json:{error:{message:'同步界面契约不调用模型'}}});});
  await page.route('**/api/skills',route=>route.fulfill({json:[skill]}));
  await page.route('**/api/skills?*',route=>route.fulfill({json:[]}));
  await page.route('**/api/feishu/records',route=>route.fulfill({json:[{record_id:'rec-contract',name:skill.name,skill_id:skill.id,body:skill.body}]}));
@@ -106,15 +107,32 @@ test('飞书UI契约：普通导入提示旧包，明确确认后刷新企业附
  await expect(page.locator('.sync-preview')).toContainText('企业正文已更新，完整包待刷新');
  await expect(page.locator('.sync-preview')).toContainText('按当前企业内容重新生成完整 ZIP 包，并更新原企业记录');
  expect(syncWrites).toBe(0);
- await page.getByRole('button',{name:'确认同步并刷新企业完整包',exact:true}).click();
+ await expect(page.locator('body')).toHaveJSProperty('scrollWidth',1440);
+ const desktopConfirm=page.getByRole('button',{name:'确认同步并刷新企业完整包',exact:true});
+ await desktopConfirm.scrollIntoViewIfNeeded();await expect(desktopConfirm).toBeInViewport();await expect(desktopConfirm).toBeEnabled();
+ mkdirSync(artifacts,{recursive:true});
+ if(await page.locator('.toast button').isVisible())await page.locator('.toast button').click();
+ await page.evaluate(()=>window.scrollTo(0,0));await page.screenshot({path:resolve(artifacts,'sync-desktop-contract.png'),fullPage:true,animations:'disabled'});
+ await desktopConfirm.click();
  await expect(page.locator('.sync-result')).toContainText('已按当前企业内容刷新完整包，并更新原企业记录');
  expect(syncWrites).toBe(1);
- await page.getByRole('button',{name:'预览同步变化',exact:true}).click();
- await page.getByLabel('处理选择',{exact:true}).selectOption('remote');
- await expect(page.getByLabel('处理选择',{exact:true})).toContainText('更新个人副本并刷新企业完整包');
- await page.getByRole('button',{name:'确认同步并刷新企业完整包',exact:true}).click();
+ await page.setViewportSize({width:390,height:844});
+ const mobilePreview=page.getByRole('button',{name:'预览同步变化',exact:true});
+ await mobilePreview.scrollIntoViewIfNeeded();await expect(mobilePreview).toBeInViewport();await mobilePreview.click();
+ await expect(page.locator('.sync-preview')).toContainText('两端冲突');
+ await expect(page.locator('body')).toHaveJSProperty('scrollWidth',390);
+ const resolution=page.getByLabel('处理选择',{exact:true});
+ await resolution.scrollIntoViewIfNeeded();await expect(resolution).toBeInViewport();await expect(resolution).toBeEnabled();
+ await resolution.selectOption('remote');await expect(resolution).toHaveValue('remote');
+ await expect(resolution).toContainText('更新个人副本并刷新企业完整包');
+ const mobileConfirm=page.getByRole('button',{name:'确认同步并刷新企业完整包',exact:true});
+ await mobileConfirm.scrollIntoViewIfNeeded();await expect(mobileConfirm).toBeInViewport();await expect(mobileConfirm).toBeEnabled();
+ if(await page.locator('.toast button').isVisible())await page.locator('.toast button').click();
+ await page.evaluate(()=>window.scrollTo(0,0));await page.screenshot({path:resolve(artifacts,'sync-mobile-conflict-contract.png'),fullPage:true,animations:'disabled'});
+ await mobileConfirm.click();
  await expect(page.locator('.sync-result')).toContainText('已保留企业版本、更新个人副本，并刷新原企业记录的完整包');
- expect(syncWrites).toBe(2);
+ await expect(page.locator('body')).toHaveJSProperty('scrollWidth',390);
+ expect(syncWrites).toBe(2);expect(modelCalls).toBe(0);
 });
 
 test('模型高级设置UI契约：输出上限整数校验与DeepSeek官方host专属推理选项',async({page})=>{
@@ -152,9 +170,9 @@ test('模型高级设置UI契约：输出上限整数校验与DeepSeek官方host
 test('模型诊断UI契约：失败回答仅按需读取并单独展开，不发起模型请求',async({page})=>{
  const task={id:'ui-contract-failed-model',title:'[契约样例] 模型格式失败',input:'契约材料',status:'failed',stage:'analysis',attempts:1,stages:[],error:{code:'output_format',message:'模型返回的结构或证据引用无效'},created_at:'2026-10-26T00:00:00Z'};
  const response='[本机契约诊断样例] 这是一段截断 JSON 回答；不含用户来源和凭证。';
- let diagnosticReads=0,modelCalls=0;
- await page.route('**/api/tasks',route=>route.fulfill({json:[task]}));
- await page.route('**/api/tasks/'+task.id,route=>route.fulfill({json:task}));
+ let diagnosticReads=0,modelCalls=0,currentTask:any=task;
+ await page.route('**/api/tasks',route=>route.fulfill({json:[currentTask]}));
+ await page.route('**/api/tasks/'+task.id,route=>route.fulfill({json:currentTask}));
  await page.route('**/api/tasks/'+task.id+'/diagnostics',route=>{diagnosticReads++;return route.fulfill({json:{privacy_note:'仅供本机查看，不进入日志或公开验收材料。',runs:[{id:'run-contract',model:'ui-contract-text',finish_reason:'length',usage:{completion_tokens:128},validation:'failed',validation_errors:['JSON 在结束前被截断'],response}]}});});
  await page.route('**/api/models/**',route=>{modelCalls++;return route.fulfill({status:400,json:{error:{message:'本测试不发起模型请求'}}});});
  await page.goto('/#tasks');await page.locator('.task-row').filter({hasText:task.title}).click();
@@ -167,5 +185,50 @@ test('模型诊断UI契约：失败回答仅按需读取并单独展开，不发
  await page.getByText('查看校验原因',{exact:true}).click();await expect(page.getByText('[\n  "JSON 在结束前被截断"\n]',{exact:true})).toBeVisible();
  await expect(page.getByText(response,{exact:true})).not.toBeVisible();
  await page.getByText('展开本机原始模型回答',{exact:true}).click();await expect(page.getByText(response,{exact:true})).toBeVisible();
+ currentTask={...task,status:'succeeded',error:null,source:{evidence:[
+   {id:'frame-a',kind:'model_frame_observation'},{id:'frame-b',kind:'model_frame_observation'},
+   {id:'code-a',kind:'code_observation'},{id:'ambiguous',kind:'model_frame_observation'},{id:'ambiguous',kind:'code_observation'}
+ ]},analysis:{overview:'[契约样例] 抽样画面证据标签',basis:'transcript_and_frames',claims:[
+   {text:'[契约] 仅引用两处抽样画面',kind:'code_observation',evidence_ids:['frame-a','frame-b']},
+   {text:'[契约] 混合画面与代码引用',kind:'code_observation',evidence_ids:['frame-a','code-a']},
+   {text:'[契约] 普通代码引用',kind:'code_observation',evidence_ids:['code-a']},
+   {text:'[契约] 未知证据引用',kind:'code_observation',evidence_ids:['unknown']},
+   {text:'[契约] 空证据引用',kind:'code_observation',evidence_ids:[]},
+   {text:'[契约] 同ID证据类型不明确',kind:'code_observation',evidence_ids:['ambiguous']},
+   {text:'[契约] 画面上的推断仍是推断',kind:'inference',evidence_ids:['frame-a']}
+ ]}};
+ await page.reload();await page.locator('.task-row').filter({hasText:task.title}).click();
+ const claims=page.locator('.claim-list article');
+ await expect(claims.filter({hasText:'[契约] 仅引用两处抽样画面'}).locator('.badge')).toHaveText('抽样画面观察');
+ for(const text of ['混合画面与代码引用','普通代码引用','未知证据引用','空证据引用','同ID证据类型不明确']){
+   await expect(claims.filter({hasText:'[契约] '+text}).locator('.badge')).toHaveText('代码观察');
+ }
+ await expect(claims.filter({hasText:'[契约] 画面上的推断仍是推断'}).locator('.badge')).toHaveText('推断');
  expect(modelCalls).toBe(0);
+});
+
+test('MiniMax提示UI契约：精确官方主机显示原生路径，独立配置不复制模型或密钥',async({page})=>{
+ const config={models:{text:{base_url:'https://api.minimax.cn/v1',model:'keep-user-text',key_configured:true},vision:{},transcription:{}},github:{token_configured:false},feishu:{secret_configured:false,field_mapping:{}}};
+ let writes=0,modelCalls=0;
+ await page.route('**/api/settings',route=>{if(route.request().method()==='PUT')writes++;return route.fulfill({json:config});});
+ await page.route('**/api/models/**',route=>{modelCalls++;return route.fulfill({status:400,json:{error:{message:'本契约不调用模型'}}});});
+ await page.goto('/#settings');
+ const textCard=page.locator('.model-card').filter({has:page.getByRole('heading',{name:'文字分析',exact:true})});
+ const visionCard=page.locator('.model-card').filter({has:page.getByRole('heading',{name:'图片理解',exact:true})});
+ const asrCard=page.locator('.model-card').filter({has:page.getByRole('heading',{name:'语音转写',exact:true})});
+ await expect(textCard.locator('.minimax-note')).toContainText('/v1/chat/completions');
+ await expect(textCard.getByLabel('模型名称',{exact:true})).toHaveValue('keep-user-text');
+ await expect(visionCard.getByLabel('Base URL',{exact:true})).toHaveValue('');
+ await expect(visionCard.getByLabel('模型名称',{exact:true})).toHaveValue('');
+ await expect(visionCard.getByLabel('API Key',{exact:true})).toHaveValue('');
+ await asrCard.getByLabel('Base URL',{exact:true}).fill('https://api.minimax.cn.evil.invalid/v1');
+ await expect(asrCard.locator('.minimax-note')).toHaveCount(0);
+ await asrCard.getByLabel('Base URL',{exact:true}).fill('https://api.minimax.cn/v1');
+ await expect(asrCard.locator('.minimax-note')).toContainText('/v1/speech_to_text');
+ await expect(asrCard.locator('.minimax-note')).toContainText('asr-1.0');
+ await expect(asrCard.locator('.minimax-note')).toContainText('旧 Token Plan Plus 是否覆盖 ASR 需核对当前套餐权益');
+ await expect(asrCard.getByLabel('模型名称',{exact:true})).toHaveValue('');
+ await expect(asrCard.getByLabel('API Key',{exact:true})).toHaveValue('');
+ await expect(asrCard.getByRole('button',{name:'测试语音转写',exact:true})).toBeDisabled();
+ expect(writes).toBe(0);expect(modelCalls).toBe(0);
 });

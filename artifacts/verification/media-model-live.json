@@ -1,0 +1,106 @@
+{
+  "status": "passed",
+  "test_type": "real_uploaded_self_authored_fixture_not_douyin_source",
+  "at": "2026-10-26T10:12:30.554944+00:00",
+  "source_sha256": "c7b4ad4f801d3758ef98cf2a29175d8c87f62fdf8eaadc5f9cf4d73f7c7fbce8",
+  "source_duration_seconds": 15.3,
+  "task_status": "succeeded",
+  "basis": "transcript_and_frames",
+  "asr": {
+    "requested_provider": "MiniMax official domestic subscription API",
+    "requested_model": "asr-1.0",
+    "real_transcript": "这是利明制药技能工作台的真实语音验收。第一步，读取来源材料。第二步，核对证据。第三步，保存知识卡片。没有运行过的技能，必须标记为未验证。",
+    "expected_transcript": "这是利明智耀技能工作台的真实语音验收。第一步，读取来源材料。第二步，核对证据。第三步，保存知识卡片。没有运行过的技能，必须标记为未验证。",
+    "normalized_reference_characters": 59,
+    "character_edit_distance": 2,
+    "character_error_rate": 0.0339,
+    "known_error": "利明智耀 misrecognized as 利明制药; two homophone character substitutions",
+    "all_other_normalized_content_matches": true,
+    "usage_reported": false,
+    "exact_transcript_match": false,
+    "quality_warning": "This single fixed fixture is not a population accuracy estimate."
+  },
+  "vision": {
+    "model": "MiniMax-M3.1-Flash",
+    "usage": {
+      "total_tokens": 2299,
+      "total_characters": 0,
+      "prompt_tokens": 1543,
+      "completion_tokens": 756,
+      "completion_tokens_details": {
+        "reasoning_tokens": 418
+      },
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "frame_count": 4,
+    "manual_semantic_checks": [
+      {
+        "time_seconds": 1.91,
+        "ocr_matches_expected": true,
+        "background_matches_expected": true,
+        "time_error_seconds": 0.01
+      },
+      {
+        "time_seconds": 5.74,
+        "ocr_matches_expected": true,
+        "background_matches_expected": true,
+        "time_error_seconds": 0.04
+      },
+      {
+        "time_seconds": 9.56,
+        "ocr_matches_expected": true,
+        "background_matches_expected": true,
+        "time_error_seconds": 0.04
+      },
+      {
+        "time_seconds": 13.39,
+        "ocr_matches_expected": true,
+        "background_matches_expected": true,
+        "time_error_seconds": 0.01
+      }
+    ],
+    "scope": "four sampled frames; no claim of continuous full-video viewing"
+  },
+  "analysis": {
+    "model": "deepseek-flash",
+    "usage": {
+      "prompt_tokens": 1749,
+      "completion_tokens": 938,
+      "total_tokens": 2687,
+      "prompt_tokens_details": {
+        "cached_tokens": 384
+      },
+      "prompt_cache_hit_tokens": 384,
+      "prompt_cache_miss_tokens": 1365
+    },
+    "evidence_references_validated": true,
+    "knowledge_saved": true
+  },
+  "private_task_state": "stored locally, not published",
+  "limits": [
+    "ASR brand names require human review; original output preserved",
+    "Self-authored 15-second fixture does not establish arbitrary-video accuracy",
+    "Does not prove automatic Douyin media retrieval"
+  ],
+  "acceptance_scope": "real pipeline, required procedure statements, four-frame colors/OCR/time checks; brand-name error retained",
+  "independent_capability_probes": {
+    "vision": {
+      "http_status": 200,
+      "status": "passed",
+      "capability": "vision",
+      "at": "2026-10-26T09:58:13.382353+00:00",
+      "note": "图片请求已返回有效文本；画面理解准确率需用实际视频另验",
+      "model": "MiniMax-M3.1-Flash"
+    },
+    "transcription": {
+      "http_status": 200,
+      "status": "passed",
+      "capability": "transcription",
+      "at": "2026-10-26T10:20:57.203739+00:00",
+      "note": "转写接口接受 1 秒静音探针；语音准确率需用用户音频另验",
+      "model": "asr-1.0"
+    }
+  }
+}
