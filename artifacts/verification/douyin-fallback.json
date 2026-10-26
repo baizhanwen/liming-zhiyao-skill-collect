@@ -1,0 +1,21 @@
+{
+  "at": "2026-10-26T07:25:27.040907+00:00",
+  "test_type": "real_public_fetch_then_local_self_authored_subtitle",
+  "url": "https://www.douyin.com/video/7694218588706251234",
+  "same_task_id": true,
+  "transitions": [
+    "waiting_material",
+    "waiting_config"
+  ],
+  "fetch_error": {
+    "code": "douyin_fetch",
+    "message": "抖音来源获取未完成：来源链接不能访问本机、内网或保留地址；可在原任务补传视频或字幕",
+    "retryable": false,
+    "stage": "fetch"
+  },
+  "supplement_basis": "subtitles",
+  "supplement_time": "00:00:00,000 --> 00:00:02,000",
+  "model_configured": false,
+  "analysis_performed": false,
+  "fixture_note": "补传字幕为自行编写的验收样例，不是该真实视频转写。仅验收原任务继续与材料保留。"
+}

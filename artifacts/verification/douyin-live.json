@@ -1,0 +1,13 @@
+{
+  "status": "waiting_external_condition",
+  "media_obtained": false,
+  "code": "douyin_fetch",
+  "message": "抖音来源获取未完成：来源链接不能访问本机、内网或保留地址；可在原任务补传视频或字幕",
+  "analysis": "not_performed",
+  "fallback": "upload video/subtitle to same task",
+  "url": "https://www.douyin.com/video/7694218588706251234",
+  "at": "2026-10-26T07:24:42.638056+00:00",
+  "test_type": "real_public_network",
+  "cookies_used": false,
+  "paid_parser_used": false
+}

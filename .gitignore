@@ -1,0 +1,19 @@
+.venv/
+node_modules/
+frontend/dist/
+data/
+backups/
+.env
+.env.*
+!.env.example
+__pycache__/
+.pytest_cache/
+*.pyc
+*.log
+.DS_Store
+chat analysis/
+artifacts/private/
+*.egg-info/
+playwright-report/
+test-results/
+*.tsbuildinfo

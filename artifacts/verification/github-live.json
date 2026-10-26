@@ -1,0 +1,610 @@
+{
+  "timestamp": "2026-10-26T07:03:10Z",
+  "mode": "real_public_github_api",
+  "authenticated": true,
+  "unauthenticated_results": {
+    "easel": {
+      "status": "failed",
+      "code": "rate_limit",
+      "message": "GitHub 请求限额已用完，请稍后重试或配置 Token",
+      "retryable": true
+    },
+    "search": {
+      "status": "passed",
+      "query": "anthropic",
+      "effective_query": "anthropic skill",
+      "items": [
+        {
+          "repository": "linny006/awesome-agent-skills",
+          "name": "linny006/awesome-agent-skills",
+          "url": "https://github.com/linny006/awesome-agent-skills",
+          "description": "Curated, auto-updated awesome-list of vetted AI agent skills with quality ratings for Claude, GPT, a",
+          "stars": 44,
+          "updated_at": "2026-10-26T07:00:38Z",
+          "license": "UNKNOWN",
+          "path": null,
+          "verification_status": "not_inspected",
+          "kind": "repository"
+        },
+        {
+          "repository": "linny006/skills-tracker",
+          "name": "linny006/skills-tracker",
+          "url": "https://github.com/linny006/skills-tracker",
+          "description": "Real-time tracking of every new GitHub 'skills' repo to capture the AI agent skill ecosystem trend",
+          "stars": 30,
+          "updated_at": "2026-10-26T07:00:36Z",
+          "license": "UNKNOWN",
+          "path": null,
+          "verification_status": "not_inspected",
+          "kind": "repository"
+        },
+        {
+          "repository": "aditya-13115/openCODE",
+          "name": "aditya-13115/openCODE",
+          "url": "https://github.com/aditya-13115/openCODE",
+          "description": "My personal OpenCode development environment featuring curated AI agent skills, Superpowers workflows, Hugging Face and MLflow tooling, Anthropic skills, OpenAgents, browser automation, and reusable configurations for AI-assisted coding, debugging, testing, code reviews, and LLM development.",
+          "stars": 0,
+          "updated_at": "2026-10-26T07:00:22Z",
+          "license": "UNKNOWN",
+          "path": null,
+          "verification_status": "not_inspected",
+          "kind": "repository"
+        },
+        {
+          "repository": "linny006/trending-claude-skills",
+          "name": "linny006/trending-claude-skills",
+          "url": "https://github.com/linny006/trending-claude-skills",
+          "description": "Auto-updated leaderboard of trending claude-skills and AI agent repos, refreshed every 15 minutes",
+          "stars": 133,
+          "updated_at": "2026-10-26T07:00:20Z",
+          "license": "UNKNOWN",
+          "path": null,
+          "verification_status": "not_inspected",
+          "kind": "repository"
+        },
+        {
+          "repository": "yonatangross/orchestkit",
+          "name": "yonatangross/orchestkit",
+          "url": "https://github.com/yonatangross/orchestkit",
+          "description": "The Complete AI Development Toolkit for Claude Code. 106 skills, 36 agents, 171 hooks. Install `ork` for stable (v9.x), or `ork-alpha` for the v10 line, which ships daily.",
+          "stars": 298,
+          "updated_at": "2026-10-26T06:58:10Z",
+          "license": "MIT",
+          "path": null,
+          "verification_status": "not_inspected",
+          "kind": "repository"
+        },
+        {
+          "repository": "jeremylongshore/tons-of-skills-marketplace",
+          "name": "jeremylongshore/tons-of-skills-marketplace",
+          "url": "https://github.com/jeremylongshore/tons-of-skills-marketplace",
+          "description": "Model-agnostic agent-skills platform with a harness-free canonical layer, verified adapters, and the ccpi package manager. Explore at tonsofskills.com.",
+          "stars": 2871,
+          "updated_at": "2026-10-26T06:55:55Z",
+          "license": "MIT",
+          "path": null,
+          "verification_status": "not_inspected",
+          "kind": "repository"
+        }
+      ],
+      "total_count": 5421,
+      "incomplete_results": false,
+      "code_search_available": false,
+      "notes": [
+        "未配置 GitHub Token：使用真实仓库搜索。认证代码搜索不可用，进入仓库后可逐个发现技能。"
+      ],
+      "source": "https://api.github.com/search/repositories",
+      "fetched_at": 1792998191,
+      "note": "Stars 仅为仓库关注信息；搜索结果并不穷尽全部技能。"
+    },
+    "multi_skill": {
+      "status": "failed",
+      "code": "rate_limit",
+      "message": "GitHub 请求限额已用完，请稍后重试或配置 Token",
+      "retryable": true
+    }
+  },
+  "credential_source": "existing gh keyring; token read only in process memory; not saved to application",
+  "results": {
+    "easel": {
+      "status": "passed",
+      "repository": "ZJU-REAL/Easel",
+      "version": "5a597e5f3ef5b01098b53f36caf719dd9a32b7bf",
+      "metadata": {
+        "description": "An open-source AI agent for social media — discover trends, create content, publish everywhere, and learn what works across Xiaohongshu, Douyin, Zhihu, Bilibili, and more.🎨一个开源的 AI 社交媒体智能体——发现热点趋势、创作内容、一键发布至各大平台，并学习分析哪些内容真正有效，覆盖小红书、抖音、知乎、哔哩哔哩等平台。",
+        "stars": 4090,
+        "updated_at": "2026-10-26T04:58:00Z",
+        "license": "Apache-2.0",
+        "default_branch": "main",
+        "html_url": "https://github.com/ZJU-REAL/Easel",
+        "tree_truncated": false,
+        "files_read": 17,
+        "scope": "",
+        "execution_verified": false
+      },
+      "files": [
+        {
+          "path": "README.md",
+          "url": "https://github.com/ZJU-REAL/Easel/blob/5a597e5f3ef5b01098b53f36caf719dd9a32b7bf/README.md",
+          "sha": "fc515ed08f32e81bdffd04d8d5c14029016b15c9",
+          "sha256": "3061a48077a6b5899d92661603f45b6beae2a5b8e0231d53b31131af5a6c3ad7",
+          "characters": 19885
+        },
+        {
+          "path": "README_EN.md",
+          "url": "https://github.com/ZJU-REAL/Easel/blob/5a597e5f3ef5b01098b53f36caf719dd9a32b7bf/README_EN.md",
+          "sha": "daac70c75ea4f733865699599887f2e732628bdc",
+          "sha256": "4ed178e507a048a4050deed818d1d06b2d9f9189b9f774a5bd09114112ade2d2",
+          "characters": 27462
+        },
+        {
+          "path": "agents/tool-budget/README.md",
+          "url": "https://github.com/ZJU-REAL/Easel/blob/5a597e5f3ef5b01098b53f36caf719dd9a32b7bf/agents/tool-budget/README.md",
+          "sha": "972f91f0cffc9f67231fb9fecf8018519a39f304",
+          "sha256": "641ca74344ceba24c4bb21f0034a1eb2e61156ae562f738dc20040d8408e0113",
+          "characters": 9512
+        },
+        {
+          "path": "profiles/_template/README.md",
+          "url": "https://github.com/ZJU-REAL/Easel/blob/5a597e5f3ef5b01098b53f36caf719dd9a32b7bf/profiles/_template/README.md",
+          "sha": "fa8dd625dd207a3ac8e9f8f072b5011eba959c0d",
+          "sha256": "f3a39afe68111a0f311ac5232df6e7dc418dc9e973298163fd46510aaf2f909a",
+          "characters": 1370
+        },
+        {
+          "path": "skills/shared/README.md",
+          "url": "https://github.com/ZJU-REAL/Easel/blob/5a597e5f3ef5b01098b53f36caf719dd9a32b7bf/skills/shared/README.md",
+          "sha": "1e4ec363a46eaeeca819ef9c35b456a44d997ac8",
+          "sha256": "fb8ac3f8028df5a313f32875a3074d87c1e291a1e8c03bbd629327678a1f8cf1",
+          "characters": 2477
+        },
+        {
+          "path": "web/frontend/README.md",
+          "url": "https://github.com/ZJU-REAL/Easel/blob/5a597e5f3ef5b01098b53f36caf719dd9a32b7bf/web/frontend/README.md",
+          "sha": "d6af7e39ffac6183b891838d6ab1d6eb7ac70dda",
+          "sha256": "fa8aac78b8be1993010b57f41000a243ecba006f6731513fe4ec91e788bf2517",
+          "characters": 1278
+        },
+        {
+          "path": "skills/builtin/gzh-design/README.en.md",
+          "url": "https://github.com/ZJU-REAL/Easel/blob/5a597e5f3ef5b01098b53f36caf719dd9a32b7bf/skills/builtin/gzh-design/README.en.md",
+          "sha": "cbc03011555f358e7521c10684cec67dc85d9063",
+          "sha256": "10f3398b97738daa1baea052fcaf52c3083691f2502d8949e8376fc7eaa7fe63",
+          "characters": 15695
+        },
+        {
+          "path": "skills/builtin/gzh-design/README.md",
+          "url": "https://github.com/ZJU-REAL/Easel/blob/5a597e5f3ef5b01098b53f36caf719dd9a32b7bf/skills/builtin/gzh-design/README.md",
+          "sha": "287a75d68fd8cbfe40fd1d0e9cd6cc39a2ffdc40",
+          "sha256": "4dbf54e1798c6d546a428c82f3f7a7be536523185e458c93ca026e686792edfb",
+          "characters": 11885
+        },
+        {
+          "path": "skills/builtin/skill-wechat-publisher/assets/image-styles/README.md",
+          "url": "https://github.com/ZJU-REAL/Easel/blob/5a597e5f3ef5b01098b53f36caf719dd9a32b7bf/skills/builtin/skill-wechat-publisher/assets/image-styles/README.md",
+          "sha": "89e5075352e2010cace4ca71ce53f90a3600980b",
+          "sha256": "868f1673f47b9e901213364f13d2983bf7501716f14b2d2e150ae2f161ac3e1b",
+          "characters": 20358
+        },
+        {
+          "path": "skills/builtin/skill-wechat-publisher/assets/theme-previews/README.md",
+          "url": "https://github.com/ZJU-REAL/Easel/blob/5a597e5f3ef5b01098b53f36caf719dd9a32b7bf/skills/builtin/skill-wechat-publisher/assets/theme-previews/README.md",
+          "sha": "353da7fa0667b4ef6e20eee5addb1c5f4ac1bf2b",
+          "sha256": "c3ec666463264a565cc6e214bb3b95546b25948851a866af8a9803546dd3c4ec",
+          "characters": 1322
+        },
+        {
+          "path": "skills/builtin/video-production/vendor/video-pipeline-sdk/README.md",
+          "url": "https://github.com/ZJU-REAL/Easel/blob/5a597e5f3ef5b01098b53f36caf719dd9a32b7bf/skills/builtin/video-production/vendor/video-pipeline-sdk/README.md",
+          "sha": "cbd853d0fd721e946bece3304f45f6c7eccbe7e0",
+          "sha256": "19ff14608b9df3995088d3785e8f0d44fee67ca89617699ab1b7dff55a419b6f",
+          "characters": 2644
+        },
+        {
+          "path": "skills/builtin/video-production/vendor/video-pipeline-sdk/tools/README.md",
+          "url": "https://github.com/ZJU-REAL/Easel/blob/5a597e5f3ef5b01098b53f36caf719dd9a32b7bf/skills/builtin/video-production/vendor/video-pipeline-sdk/tools/README.md",
+          "sha": "fd15dd0d2d3e15f2b5da6d689f9f56b815881da4",
+          "sha256": "08b40da6cb384ed9c2a00efd75b1fd53873b8ce17d03ae24c96767a8b9b2a4f2",
+          "characters": 1401
+        },
+        {
+          "path": "skills/builtin/video-production/vendor/video-pipeline-sdk/assets/fonts/README.md",
+          "url": "https://github.com/ZJU-REAL/Easel/blob/5a597e5f3ef5b01098b53f36caf719dd9a32b7bf/skills/builtin/video-production/vendor/video-pipeline-sdk/assets/fonts/README.md",
+          "sha": "90549b18ffe8c00a6ac0d94d148115c583fcd92c",
+          "sha256": "42a4da6e65e719fa090bfdc0caf6a7b2a381d6e64b0d2419dc08e2af54940951",
+          "characters": 321
+        },
+        {
+          "path": "skills/builtin/video-production/vendor/video-pipeline-sdk/assets/luts/README.md",
+          "url": "https://github.com/ZJU-REAL/Easel/blob/5a597e5f3ef5b01098b53f36caf719dd9a32b7bf/skills/builtin/video-production/vendor/video-pipeline-sdk/assets/luts/README.md",
+          "sha": "48ca78e6476eb588147ee7f5112332cc2fbb6cd1",
+          "sha256": "76d5fb6ad323ae9f7b220d70de2eebdfdda0c1ffca2db83c34e16a7323d5c50a",
+          "characters": 370
+        },
+        {
+          "path": "skills/builtin/video-production/vendor/video-pipeline-sdk/assets/sfx/README.md",
+          "url": "https://github.com/ZJU-REAL/Easel/blob/5a597e5f3ef5b01098b53f36caf719dd9a32b7bf/skills/builtin/video-production/vendor/video-pipeline-sdk/assets/sfx/README.md",
+          "sha": "29ee5d17595cefa60111bc6e8115ff372dd9aa94",
+          "sha256": "2372025c4b8a0c867c57d3beb6aa846ae26c1609f51db02c104a451335adc9e4",
+          "characters": 425
+        },
+        {
+          "path": "LICENSE",
+          "url": "https://github.com/ZJU-REAL/Easel/blob/5a597e5f3ef5b01098b53f36caf719dd9a32b7bf/LICENSE",
+          "sha": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64",
+          "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+          "characters": 11357
+        },
+        {
+          "path": "skills/builtin/video-production/vendor/video-pipeline-sdk/LICENSE",
+          "url": "https://github.com/ZJU-REAL/Easel/blob/5a597e5f3ef5b01098b53f36caf719dd9a32b7bf/skills/builtin/video-production/vendor/video-pipeline-sdk/LICENSE",
+          "sha": "1e7f605b5422a15b0a20a142bb68487627554eab",
+          "sha256": "ea4ff6a19a2fc2f57a859aaea119440f23c053f5acdc74da4fd58320bab0346b",
+          "characters": 1067
+        }
+      ],
+      "evidence_count": 17,
+      "model_analysis": "not_run_no_model_credentials",
+      "execution_verified": false
+    },
+    "search_authenticated": {
+      "status": "passed",
+      "query": "transcript",
+      "effective_query": "transcript skill",
+      "items": [
+        {
+          "repository": "senzelden/claude-setup-audit",
+          "name": "senzelden/claude-setup-audit",
+          "url": "https://github.com/senzelden/claude-setup-audit",
+          "description": "A Claude Code plugin that audits your whole setup — settings, permissions, hooks, MCP servers, skills, CLAUDE.md, memory — against the current docs and your own transcripts, and returns a ranked list of security, cost and context fixes. Read-only by default; applies nothing without approval.",
+          "stars": 3,
+          "updated_at": "2026-10-26T06:03:01Z",
+          "license": "MIT",
+          "path": null,
+          "verification_status": "not_inspected",
+          "kind": "repository"
+        },
+        {
+          "repository": "trevkang/shortform-analyzer",
+          "name": "trevkang/shortform-analyzer",
+          "url": "https://github.com/trevkang/shortform-analyzer",
+          "description": "Break a short-form video into scenes: transcript, beat, lever and hold per scene, plus its format. Library, CLI, MCP server and agent skill.",
+          "stars": 0,
+          "updated_at": "2026-10-26T06:01:43Z",
+          "license": "MIT",
+          "path": null,
+          "verification_status": "not_inspected",
+          "kind": "repository"
+        },
+        {
+          "repository": "api-evangelist/social-fetch",
+          "name": "api-evangelist/social-fetch",
+          "url": "https://github.com/api-evangelist/social-fetch",
+          "description": "Hosted social-media scraper API returning structured JSON for public profiles, posts, comments, engagement metrics, transcripts, and search across ~23 platforms. Offers a REST API with public OpenAPI contract, a hosted MCP server, an llms.txt file set, published agent skills, and x402 pay-per-call p",
+          "stars": 1,
+          "updated_at": "2026-10-26T05:51:32Z",
+          "license": "UNKNOWN",
+          "path": null,
+          "verification_status": "not_inspected",
+          "kind": "repository"
+        },
+        {
+          "repository": "williamwang-ty/yt-transcript",
+          "name": "williamwang-ty/yt-transcript",
+          "url": "https://github.com/williamwang-ty/yt-transcript",
+          "description": "YouTube video transcription skill for Claude/AI agents",
+          "stars": 1,
+          "updated_at": "2026-10-26T04:08:58Z",
+          "license": "MIT",
+          "path": null,
+          "verification_status": "not_inspected",
+          "kind": "repository"
+        },
+        {
+          "repository": "BaesTheorem/exobrain-harness",
+          "name": "BaesTheorem/exobrain-harness",
+          "url": "https://github.com/BaesTheorem/exobrain-harness",
+          "description": "A self-hosted AI exobrain. Claude Code plus 50+ skills, launchd watchers, and MCP servers, pulling voice transcripts, handwritten notes, calendar, tasks, and health data into one place so I stop losing track of things.",
+          "stars": 1,
+          "updated_at": "2026-10-26T02:23:06Z",
+          "license": "UNKNOWN",
+          "path": null,
+          "verification_status": "not_inspected",
+          "kind": "repository"
+        },
+        {
+          "repository": "scribetoany/skills",
+          "name": "scribetoany/skills",
+          "url": "https://github.com/scribetoany/skills",
+          "description": "Agent Skills for transcripts and subtitles: transcribe local audio and video to text, SRT or VTT with the ScribeToAny CLI, and fix subtitle reading speed (CPS). Claude Code, Codex, Cursor, Gemini CLI.",
+          "stars": 0,
+          "updated_at": "2026-10-26T01:53:27Z",
+          "license": "MIT",
+          "path": null,
+          "verification_status": "not_inspected",
+          "kind": "repository"
+        },
+        {
+          "repository": "zarazhangrui/follow-builders",
+          "name": "SKILL.md",
+          "path": "SKILL.md",
+          "url": "https://github.com/zarazhangrui/follow-builders/blob/8841bc8e6d41a5eceb849f95d8962b1f12f50005/SKILL.md",
+          "description": "AI builders digest — monitors top AI builders on X and YouTube podcasts, remixes their content into digestible summaries. Follow builders, not influencers.",
+          "kind": "skill",
+          "verification_status": "not_inspected",
+          "license": "UNKNOWN",
+          "stars": null,
+          "updated_at": null
+        },
+        {
+          "repository": "tenfoldmarc/llm-council-skill",
+          "name": "SKILL.md",
+          "path": "SKILL.md",
+          "url": "https://github.com/tenfoldmarc/llm-council-skill/blob/0dc03275b0ddf542545da3a9684510fff31df353/SKILL.md",
+          "description": null,
+          "kind": "skill",
+          "verification_status": "not_inspected",
+          "license": "UNKNOWN",
+          "stars": null,
+          "updated_at": null
+        },
+        {
+          "repository": "tripleyak/SkillForge",
+          "name": "SKILL.md",
+          "path": "SKILL.md",
+          "url": "https://github.com/tripleyak/SkillForge/blob/4fc8bb486aa8edca12facbf02b53aa1ada76a4a9/SKILL.md",
+          "description": "A skill creator that proves its skills work. Evidence-driven skill creation for Claude Code and Codex: baseline-tested generation, per-skill regression evals, ecosystem doctor, cross-runtime compile, and an opt-in proactive advisor.",
+          "kind": "skill",
+          "verification_status": "not_inspected",
+          "license": "UNKNOWN",
+          "stars": null,
+          "updated_at": null
+        },
+        {
+          "repository": "op7418/Claude-to-IM-skill",
+          "name": "SKILL.md",
+          "path": "SKILL.md",
+          "url": "https://github.com/op7418/Claude-to-IM-skill/blob/536908f5e9bd65a151ca4cb4b08d3fedc1a43b4d/SKILL.md",
+          "description": "Bridge Claude Code / Codex to IM platforms — chat with AI coding agents from Telegram, Discord, or Feishu/Lark.",
+          "kind": "skill",
+          "verification_status": "not_inspected",
+          "license": "UNKNOWN",
+          "stars": null,
+          "updated_at": null
+        },
+        {
+          "repository": "vibeforge1111/keep-codex-fast",
+          "name": "SKILL.md",
+          "path": "SKILL.md",
+          "url": "https://github.com/vibeforge1111/keep-codex-fast/blob/e74c4496aca550c54228740fcc144372308da529/SKILL.md",
+          "description": "A backup-first Codex skill for keeping local Codex state fast, clean, and recoverable.",
+          "kind": "skill",
+          "verification_status": "not_inspected",
+          "license": "UNKNOWN",
+          "stars": null,
+          "updated_at": null
+        },
+        {
+          "repository": "JimmySadek/video-fetcher-to-markdown",
+          "name": "SKILL.md",
+          "path": "SKILL.md",
+          "url": "https://github.com/JimmySadek/video-fetcher-to-markdown/blob/c196ba48df72c064811adcb934104c3e6567858b/SKILL.md",
+          "description": "Portable AI-agent skill: turn YouTube, Instagram, TikTok, X and other video links into Obsidian-ready Markdown notes: captions or local Whisper transcripts, frames, metadata and timestamps",
+          "kind": "skill",
+          "verification_status": "not_inspected",
+          "license": "UNKNOWN",
+          "stars": null,
+          "updated_at": null
+        }
+      ],
+      "total_count": 1515,
+      "incomplete_results": false,
+      "code_search_available": true,
+      "notes": [],
+      "source": "https://api.github.com/search/repositories",
+      "fetched_at": 1792998229,
+      "note": "Stars 仅为仓库关注信息；搜索结果并不穷尽全部技能。"
+    },
+    "multi_skill": {
+      "status": "passed",
+      "repository": "anthropics/skills",
+      "version": "dbd4588f9e1033efb41dad4bef2f7947c8993d44",
+      "total_found": 20,
+      "truncated": false,
+      "skills": [
+        {
+          "path": "skills/academy-guide/SKILL.md",
+          "name": "academy-guide",
+          "license": "UNKNOWN",
+          "file_count": 2,
+          "package_complete": true,
+          "verification_status": "not_executed"
+        },
+        {
+          "path": "skills/algorithmic-art/SKILL.md",
+          "name": "algorithmic-art",
+          "license": "UNKNOWN",
+          "file_count": 4,
+          "package_complete": true,
+          "verification_status": "not_executed"
+        },
+        {
+          "path": "skills/brand-guidelines/SKILL.md",
+          "name": "brand-guidelines",
+          "license": "UNKNOWN",
+          "file_count": 2,
+          "package_complete": true,
+          "verification_status": "not_executed"
+        },
+        {
+          "path": "skills/canvas-design/SKILL.md",
+          "name": "canvas-design",
+          "license": "UNKNOWN",
+          "file_count": 83,
+          "package_complete": true,
+          "verification_status": "not_executed"
+        },
+        {
+          "path": "skills/claude-api/SKILL.md",
+          "name": "claude-api",
+          "license": "UNKNOWN",
+          "file_count": 96,
+          "package_complete": true,
+          "verification_status": "not_executed"
+        },
+        {
+          "path": "skills/discernment-nudge/SKILL.md",
+          "name": "discernment-nudge",
+          "license": "UNKNOWN",
+          "file_count": 2,
+          "package_complete": true,
+          "verification_status": "not_executed"
+        },
+        {
+          "path": "skills/doc-coauthoring/SKILL.md",
+          "name": "doc-coauthoring",
+          "license": "UNKNOWN",
+          "file_count": 1,
+          "package_complete": true,
+          "verification_status": "not_executed"
+        },
+        {
+          "path": "skills/docx/SKILL.md",
+          "name": "docx",
+          "license": "UNKNOWN",
+          "file_count": 61,
+          "package_complete": true,
+          "verification_status": "not_executed"
+        },
+        {
+          "path": "skills/frontend-design/SKILL.md",
+          "name": "frontend-design",
+          "license": "UNKNOWN",
+          "file_count": 2,
+          "package_complete": true,
+          "verification_status": "not_executed"
+        },
+        {
+          "path": "skills/internal-comms/SKILL.md",
+          "name": "internal-comms",
+          "license": "UNKNOWN",
+          "file_count": 6,
+          "package_complete": true,
+          "verification_status": "not_executed"
+        },
+        {
+          "path": "skills/mcp-builder/SKILL.md",
+          "name": "mcp-builder",
+          "license": "UNKNOWN",
+          "file_count": 10,
+          "package_complete": true,
+          "verification_status": "not_executed"
+        },
+        {
+          "path": "skills/pdf/SKILL.md",
+          "name": "pdf",
+          "license": "UNKNOWN",
+          "file_count": 12,
+          "package_complete": true,
+          "verification_status": "not_executed"
+        },
+        {
+          "path": "skills/pptx/SKILL.md",
+          "name": "pptx",
+          "license": "UNKNOWN",
+          "file_count": 56,
+          "package_complete": true,
+          "verification_status": "not_executed"
+        },
+        {
+          "path": "skills/skill-creator/SKILL.md",
+          "name": "skill-creator",
+          "license": "UNKNOWN",
+          "file_count": 18,
+          "package_complete": true,
+          "verification_status": "not_executed"
+        },
+        {
+          "path": "skills/slack-gif-creator/SKILL.md",
+          "name": "slack-gif-creator",
+          "license": "UNKNOWN",
+          "file_count": 7,
+          "package_complete": true,
+          "verification_status": "not_executed"
+        },
+        {
+          "path": "skills/theme-factory/SKILL.md",
+          "name": "theme-factory",
+          "license": "UNKNOWN",
+          "file_count": 13,
+          "package_complete": true,
+          "verification_status": "not_executed"
+        },
+        {
+          "path": "skills/web-artifacts-builder/SKILL.md",
+          "name": "web-artifacts-builder",
+          "license": "UNKNOWN",
+          "file_count": 5,
+          "package_complete": true,
+          "verification_status": "not_executed"
+        },
+        {
+          "path": "skills/webapp-testing/SKILL.md",
+          "name": "webapp-testing",
+          "license": "UNKNOWN",
+          "file_count": 6,
+          "package_complete": true,
+          "verification_status": "not_executed"
+        },
+        {
+          "path": "skills/xlsx/SKILL.md",
+          "name": "xlsx",
+          "license": "UNKNOWN",
+          "file_count": 53,
+          "package_complete": true,
+          "verification_status": "not_executed"
+        },
+        {
+          "path": "template/SKILL.md",
+          "name": "template-skill",
+          "license": "UNKNOWN",
+          "file_count": 1,
+          "package_complete": true,
+          "verification_status": "not_executed"
+        }
+      ]
+    },
+    "skill_package": {
+      "status": "passed",
+      "repository": "anthropics/skills",
+      "path": "skills/algorithmic-art/SKILL.md",
+      "version": "dbd4588f9e1033efb41dad4bef2f7947c8993d44",
+      "archive_bytes": 61091,
+      "files": [
+        {
+          "path": "LICENSE.txt",
+          "sha256": "bc6b3af2f331cbc7fb0da1344efb2cbe5877a31498b4d70dbc7000f3405a1362",
+          "size": 11345
+        },
+        {
+          "path": "SKILL.md",
+          "sha256": "3bc4092c09804853186524c826bc0621b940bb6122c05b84496dff95388e6eef",
+          "size": 19769
+        },
+        {
+          "path": "templates/generator_template.js",
+          "sha256": "9ee0f1da52ef8f7bbfde1917123654880890d43f2d388642d71eab6dd78f94c4",
+          "size": 7826
+        },
+        {
+          "path": "templates/viewer.html",
+          "sha256": "86c79d7ce97d2599ebe4bd9b97fdeb7295c9d3ed61ceeb513cbe1b2bb5d1ce29",
+          "size": 20844
+        }
+      ],
+      "content_hash": "975b8ad65d5f5ed9facc0653735674fa2b8f1d8501e2be798f56de4e20a05ad6",
+      "license": "UNKNOWN",
+      "scripts_executed": false
+    }
+  }
+}

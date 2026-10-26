@@ -1,0 +1,15 @@
+[project]
+name = "liming-zhiyao-skill-collect"
+version = "0.1.0"
+description = "Local evidence-first skill and knowledge workbench"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi>=0.142,<0.163", "uvicorn>=0.38,<0.42", "httpx>=0.28,<0.29",
+  "python-multipart>=0.0.20,<0.1", "cryptography>=46,<48", "pydantic>=2.12,<3",
+]
+[dependency-groups]
+dev = ["pytest>=8.4,<10", "pytest-timeout>=2.4,<3"]
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+timeout = 60

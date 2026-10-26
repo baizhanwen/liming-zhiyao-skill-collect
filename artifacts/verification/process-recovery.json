@@ -1,0 +1,12 @@
+{
+  "status": "passed",
+  "test_type": "real_uvicorn_process_kill_restart_with_explicit_local_mock_model",
+  "process_killed_during": "analysis",
+  "recovered_status": "waiting_config",
+  "recovered_error": "interrupted_request",
+  "final_status": "succeeded",
+  "source_hash_preserved": true,
+  "knowledge_count": 1,
+  "mock_model_calls": 2,
+  "real_external_model": false
+}

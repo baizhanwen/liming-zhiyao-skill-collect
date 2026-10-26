@@ -1,0 +1,100 @@
+{
+  "tested_at": "2026-10-26T07:16:13Z",
+  "platform": "Darwin",
+  "python": "Python 3.12.14",
+  "node": "v24.19.0",
+  "method": "fresh temporary checkout without virtualenv, node_modules, frontend build or data; no application credentials",
+  "first_install": "passed",
+  "repeat_install": "passed",
+  "repeat_preserved_existing_data": true,
+  "diagnostic": {
+    "ok": true,
+    "platform": "Darwin",
+    "data_directory": "<private temporary checkout>/data",
+    "checks": [
+      {
+        "name": "Python",
+        "required": true,
+        "ok": true,
+        "detail": "3.12.14"
+      },
+      {
+        "name": "fastapi",
+        "required": true,
+        "ok": true,
+        "detail": "0.162.0"
+      },
+      {
+        "name": "uvicorn",
+        "required": true,
+        "ok": true,
+        "detail": "0.41.0"
+      },
+      {
+        "name": "httpx",
+        "required": true,
+        "ok": true,
+        "detail": "0.28.1"
+      },
+      {
+        "name": "pydantic",
+        "required": true,
+        "ok": true,
+        "detail": "2.14.1"
+      },
+      {
+        "name": "python-multipart",
+        "required": true,
+        "ok": true,
+        "detail": "0.0.32"
+      },
+      {
+        "name": "cryptography",
+        "required": true,
+        "ok": true,
+        "detail": "47.0.0"
+      },
+      {
+        "name": "Node.js",
+        "required": true,
+        "ok": true,
+        "detail": "v24.19.0"
+      },
+      {
+        "name": "前端构建",
+        "required": true,
+        "ok": true,
+        "detail": "frontend/dist/index.html"
+      },
+      {
+        "name": "ffmpeg",
+        "required": false,
+        "ok": true,
+        "detail": "已找到"
+      },
+      {
+        "name": "ffprobe",
+        "required": false,
+        "ok": true,
+        "detail": "已找到"
+      },
+      {
+        "name": "资料库",
+        "required": true,
+        "ok": true,
+        "detail": "SQLite 完整性正常"
+      }
+    ],
+    "notice": "诊断只检查本地环境；不证明模型、GitHub、飞书或视频来源已真实联通。"
+  },
+  "occupied_port_rejected_without_killing_process": true,
+  "script_syntax": "bash -n passed",
+  "windows_powershell": "provided; not run locally; delegated to GitHub CI",
+  "linux": "provided; not run locally; delegated to GitHub CI",
+  "external_services_tested": false,
+  "distribution_contract_tests": {
+    "command": ".venv/bin/python -m pytest tests/test_github.py tests/test_distribution.py -q",
+    "result": "36 passed",
+    "scope": "explicit GitHub MockTransport, full connector package import/export/deduplication, real temporary SQLite/media fixture backup/restore; no paid service or enterprise connection"
+  }
+}
