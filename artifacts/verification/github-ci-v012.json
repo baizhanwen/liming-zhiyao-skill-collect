@@ -1,0 +1,311 @@
+{
+  "recorded_at": "2026-10-27T02:21:30Z",
+  "client_release_date": "2026-10-27",
+  "repository": "baizhanwen/liming-zhiyao-skill-collect",
+  "version": "0.1.2",
+  "status": "passed_three_platform_install_build_core_contract_tests",
+  "verified_head_sha": "a0ce8a901ab520d523d4ea4909549006895fb762",
+  "verified_run_url": "https://github.com/baizhanwen/liming-zhiyao-skill-collect/actions/runs/40437727363",
+  "previous_candidate_ci": "artifacts/verification/github-ci-v012-398f7f8.json",
+  "run": {
+    "conclusion": "success",
+    "headSha": "a0ce8a901ab520d523d4ea4909549006895fb762",
+    "jobs": [
+      {
+        "completedAt": "2026-10-27T02:20:13Z",
+        "conclusion": "success",
+        "databaseId": 121970348426,
+        "name": "Test and build (windows-latest)",
+        "startedAt": "2026-10-27T02:19:11Z",
+        "status": "completed",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/setup-python@v5",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/setup-node@v4",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run astral-sh/setup-uv@v6",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Install locked development dependencies",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Core and connector contract tests",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "macOS/Linux repeatable installation",
+            "status": "completed",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "Windows repeatable installation",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Local diagnostic (does not prove external connections)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run astral-sh/setup-uv@v6",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/setup-node@v4",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/setup-python@v5",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success"
+          }
+        ],
+        "url": "https://github.com/baizhanwen/liming-zhiyao-skill-collect/actions/runs/40437727363/job/121970348426",
+        "test_summary": [
+          "158 passed, 4 skipped, 1 warning in 30.29s"
+        ],
+        "media_dependencies_available_in_diagnostic": false,
+        "test_boundaries": [
+          "No live model, Feishu enterprise credentials or Douyin acquisition in CI.",
+          "Optional FFmpeg/FFprobe-dependent media tests skipped on this runner.",
+          "Symlink-creation test skipped due to Windows permission requirements.",
+          "POSIX-only TIME_WAIT address-reuse test skipped on Windows; Windows occupied-port checks remain in the suite."
+        ]
+      },
+      {
+        "completedAt": "2026-10-27T02:19:34Z",
+        "conclusion": "success",
+        "databaseId": 121970349112,
+        "name": "Test and build (ubuntu-latest)",
+        "startedAt": "2026-10-27T02:19:11Z",
+        "status": "completed",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/setup-python@v5",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/setup-node@v4",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run astral-sh/setup-uv@v6",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Install locked development dependencies",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Core and connector contract tests",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "macOS/Linux repeatable installation",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Windows repeatable installation",
+            "status": "completed",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "Local diagnostic (does not prove external connections)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run astral-sh/setup-uv@v6",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/setup-node@v4",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/setup-python@v5",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success"
+          }
+        ],
+        "url": "https://github.com/baizhanwen/liming-zhiyao-skill-collect/actions/runs/40437727363/job/121970349112",
+        "test_summary": [
+          "160 passed, 2 skipped, 1 warning in 7.88s"
+        ],
+        "media_dependencies_available_in_diagnostic": false,
+        "test_boundaries": [
+          "No live model, Feishu enterprise credentials or Douyin acquisition in CI.",
+          "Optional FFmpeg/FFprobe-dependent media tests skipped on this runner."
+        ]
+      },
+      {
+        "completedAt": "2026-10-27T02:19:47Z",
+        "conclusion": "success",
+        "databaseId": 121970349403,
+        "name": "Test and build (macos-latest)",
+        "startedAt": "2026-10-27T02:19:12Z",
+        "status": "completed",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/setup-python@v5",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/setup-node@v4",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run astral-sh/setup-uv@v6",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Install locked development dependencies",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Core and connector contract tests",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "macOS/Linux repeatable installation",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Windows repeatable installation",
+            "status": "completed",
+            "conclusion": "skipped"
+          },
+          {
+            "name": "Local diagnostic (does not prove external connections)",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run astral-sh/setup-uv@v6",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/setup-node@v4",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/setup-python@v5",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success"
+          }
+        ],
+        "url": "https://github.com/baizhanwen/liming-zhiyao-skill-collect/actions/runs/40437727363/job/121970349403",
+        "test_summary": [
+          "160 passed, 2 skipped, 1 warning in 11.79s"
+        ],
+        "media_dependencies_available_in_diagnostic": false,
+        "test_boundaries": [
+          "No live model, Feishu enterprise credentials or Douyin acquisition in CI.",
+          "Optional FFmpeg/FFprobe-dependent media tests skipped on this runner."
+        ]
+      }
+    ],
+    "status": "completed",
+    "url": "https://github.com/baizhanwen/liming-zhiyao-skill-collect/actions/runs/40437727363"
+  },
+  "acceptance_scope": {
+    "ubuntu": "core contracts + setup/build + local diagnostic passed",
+    "macos": "core contracts + setup/build + local diagnostic passed",
+    "windows": "core contracts + setup.ps1/build + local diagnostic passed",
+    "media": "not verified in CI; optional FFmpeg/FFprobe tests skipped; separate real self-authored 15.3-second media fixture passed locally",
+    "real_model": "not tested in CI; independent real text/vision/transcription evidence exists",
+    "feishu_live": "not tested in CI; separate real 18-step dedicated-table verification passed",
+    "douyin_live": "not tested in CI; automatic media acquisition failed; related webpage AI-summary text continuation separately passed, no original audio/video analysis"
+  }
+}

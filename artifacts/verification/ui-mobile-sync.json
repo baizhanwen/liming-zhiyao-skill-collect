@@ -1,0 +1,73 @@
+{
+  "format_version": 1,
+  "run_started_at": "2026-10-26T10:29:27.301Z",
+  "status": "passed",
+  "assessment": "通过",
+  "evidence_kind": "explicit_feishu_ui_contract_partial_regression",
+  "scope": "真实Chrome与本地工作台界面；飞书记录、预览、导入和同步响应均为明确模拟。不是对真实飞书权限、附件或同步结果的验收。",
+  "test_source": "frontend/tests/workbench.spec.ts",
+  "previous_full_suite_report": "artifacts/verification/ui-minimax.json",
+  "summary": {
+    "suite_defined_tests": 5,
+    "tests_executed_this_run": 1,
+    "passed": 1,
+    "failed": 0,
+    "full_suite_rerun": false,
+    "duration_ms": 8471.076000000001
+  },
+  "scenarios": [
+    {
+      "name": "飞书UI契约：普通导入提示旧包，明确确认后刷新企业附件并呈现保留企业版结果",
+      "status": "passed",
+      "duration_ms": 3608
+    }
+  ],
+  "viewports": [
+    {
+      "width": 1440,
+      "height": 1100,
+      "label": "桌面"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "label": "窄屏"
+    }
+  ],
+  "verified": {
+    "desktop": [
+      "同步预览与附件待刷新提示可见",
+      "明确执行按钮可滚入视口、可用且点击后显示对应结果",
+      "页面scrollWidth为1440，无横向溢出"
+    ],
+    "mobile": [
+      "390px下同步预览按钮可滚入视口并实际点击",
+      "两端冲突提示与处理选择可见，选择控件可操作并成功选择保留企业版本",
+      "明确执行按钮可滚入视口、可用且实际点击，显示对应处理结果",
+      "预览与操作结果状态下页面scrollWidth均为390，无横向溢出"
+    ],
+    "interaction_boundary": [
+      "普通导入与预览不触发模拟同步写入，明确确认后才发出模拟同步请求",
+      "模型请求数为0，未调用真实模型或飞书"
+    ]
+  },
+  "screenshots": {
+    "desktop": "artifacts/verification/ui-sync-desktop-contract.png",
+    "mobile": "artifacts/verification/ui-sync-mobile-contract.png",
+    "content": "自编契约样例，均为模拟飞书的本地UI，不含企业目标标识或私人凭证"
+  },
+  "business_code_changed": false,
+  "layout_fix_required": false,
+  "privacy": {
+    "user_credentials_read": false,
+    "user_configuration_modified": false,
+    "real_model_calls": false,
+    "real_feishu_calls": false,
+    "contains_private_account_identifiers": false
+  },
+  "limits": [
+    "本轮只扩展并重跑既有5项中的飞书UI契约，不声称其他4项已重新运行。",
+    "桌面和窄屏同步页面均为显式模拟飞书接口的界面验证，不替代独立真实API全链验收。",
+    "此前历史报告与截图保持不变。"
+  ]
+}

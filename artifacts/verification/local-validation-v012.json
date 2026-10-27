@@ -56,7 +56,7 @@
     "daily_data_included": false,
     "feishu_live_attempt1_preserved": true
   },
-  "release_state": "Latest MiniMax compatibility patch passed 162 local tests; new source CI and final same-source webpage-summary analysis outcome pending. Independent real Feishu/media historical outcomes preserved.",
+  "release_state": "Final 162-test runtime source passed three-platform CI; independent real Feishu/media and same-source webpage AI-summary text continuation passed. Original Douyin media acquisition remains failed; no original audio/frame analysis.",
   "previous_pytest_runs": [
     {
       "command": ".venv/bin/python -m pytest -q --junitxml=artifacts/verification/pytest-v012.xml",
@@ -87,9 +87,10 @@
   "independent_live_evidence": {
     "feishu": "artifacts/verification/feishu-live.json",
     "media": "artifacts/verification/media-model-live.json",
-    "boundary": "Real service outcomes are independent records; the local pytest/UI/build runs in this report did not call these services."
+    "boundary": "These real service outcomes are separate records; local pytest/UI/build runs in this report did not call those services. DeepSeek media history stays unchanged; later local text configuration selected MiniMax explicitly.",
+    "douyin_summary_text_only": "artifacts/verification/douyin-browser-fallback.json"
   },
-  "ci_evidence": "artifacts/verification/github-ci-v012-398f7f8.json (historical 139-test source); final compatibility source requires a fresh CI record",
+  "ci_evidence": "artifacts/verification/github-ci-v012.json",
   "source_hashes": {
     "backend/__init__.py": "99da7609fb5fa986dd2ad3fe796bf5cfbac0532718bfa5f59ed5d23147fc2acb",
     "backend/connectors/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -109,5 +110,7 @@
     "tests/test_github.py": "63a457254b8ed61e976a38795c506a177eef91abfb28c1526484a7ff201a36fb",
     "tests/test_minimax.py": "10d297501e255828b6360662e6ea2dd143aec70660e4827a7803b3bfc703b363",
     "tests/test_review.py": "2386405f0a1f4d7e54090fdd517dc068d73ec3d9234a4c8c94e7cb8cc4aea647"
-  }
+  },
+  "client_delivery_update_date": "2026-10-27",
+  "historical_sync_candidate_ci": "artifacts/verification/github-ci-v012-398f7f8.json"
 }

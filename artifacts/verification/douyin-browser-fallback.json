@@ -1,0 +1,104 @@
+{
+  "status": "passed_text_summary_continuation_only",
+  "at": "2026-10-26T12:49:06.957682+00:00",
+  "source_share_url": "https://v.douyin.com/CccR9sQGbwg/",
+  "browser_canonical_url": "https://www.douyin.com/video/7700486068218688758",
+  "automated_source_fetch": {
+    "status": "failed",
+    "error_code": "douyin_fetch",
+    "retained_original_task": true
+  },
+  "ordinary_browser": {
+    "page_visible": true,
+    "video_blob_playback_observed": true,
+    "reported_duration_seconds": 144.799,
+    "media_save": "failed",
+    "direct_media_sources_or_subtitle_tracks": false,
+    "material_collected": "visible platform AI chapter summary; explicitly marked AI-generated; not original transcript or full video"
+  },
+  "supplement": {
+    "same_original_task": true,
+    "actual_source_material": true,
+    "fixture_or_invented_transcript": false,
+    "material_sha256": "38635141a8cd75add5941c4d031859c84a7bacce4be4f19231a962ef3782654b",
+    "source_snapshot_sha256": "fea99f6ca7b28b32a09b90525fc7d08f41b202e4e331da27872a09a16e2b9df3",
+    "basis": "text_only",
+    "platform_chapter_timestamps_independently_verified": false
+  },
+  "analysis_attempts": [
+    {
+      "provider": "DeepSeek",
+      "manual_round": 1,
+      "automatic_attempts": 3,
+      "status": "failed",
+      "code": "network"
+    },
+    {
+      "provider": "DeepSeek",
+      "manual_round": 2,
+      "automatic_attempts": 3,
+      "status": "failed",
+      "code": "network"
+    },
+    {
+      "provider": "MiniMax-M3.1-Flash",
+      "reasoning_effort": "provider_default_max",
+      "max_tokens": 3000,
+      "status": "failed",
+      "code": "output_limit",
+      "finish_reason": "length",
+      "usage": {
+        "total_tokens": 4651,
+        "total_characters": 0,
+        "prompt_tokens": 1651,
+        "completion_tokens": 3000,
+        "completion_tokens_details": {
+          "reasoning_tokens": 2542
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 128
+        }
+      },
+      "validation": "failed"
+    },
+    {
+      "provider": "MiniMax-M3.1-Flash",
+      "reasoning_effort": "low",
+      "max_tokens": 3000,
+      "status": "passed",
+      "finish_reason": "stop",
+      "usage": {
+        "total_tokens": 2737,
+        "total_characters": 0,
+        "prompt_tokens": 1651,
+        "completion_tokens": 1086,
+        "completion_tokens_details": {
+          "reasoning_tokens": 67
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 128
+        }
+      },
+      "source_snapshot_reused": true
+    }
+  ],
+  "latest_analysis": {
+    "status": "passed",
+    "model": "MiniMax-M3.1-Flash",
+    "reasoning_effort": "low",
+    "max_tokens": 3000,
+    "basis": "text_only",
+    "source_snapshot_reused": true,
+    "evidence_references_validated": true,
+    "knowledge_saved": true,
+    "explicit_ai_summary_not_original_video_boundary": true
+  },
+  "scope": [
+    "Automatic Douyin download remains unsuccessful",
+    "Same original failed task accepted actual visible platform AI summary and completed text-only analysis",
+    "Collected text is platform AI summary, not human transcript or directly verified speech",
+    "No claim of original video frame or audio analysis",
+    "All earlier network and output-limit failures retained; a probe did not count as structured analysis success"
+  ],
+  "original_video_audio_frames_analyzed": false
+}
