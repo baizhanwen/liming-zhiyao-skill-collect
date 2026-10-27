@@ -4,7 +4,7 @@
 
 一个本地运行的单用户工作台：丢进 GitHub 或抖音链接，或上传视频、字幕，保留来源证据，整理知识和技能，并与已授权的飞书多维表格手动双向同步。展示名保留 `clloect`，技术名为 `liming-zhiyao-skill-collect`。
 
-当前版本 **[v0.1.2预发布](https://github.com/baizhanwen/liming-zhiyao-skill-collect/releases/tag/v0.1.2)**：本机162项测试通过；5项浏览器完整历史结果及标签、390px同步、MiniMax设置的定向复测通过。真实文字分析、15.3秒自制上传视频、飞书专用表18步完整同步均有独立记录。当前用户本机文字已选择MiniMax；既往DeepSeek文字和媒体验收记录保留。抖音自动媒体获取仍失败，相关网页AI章节摘要补到原任务后已完成仅文本分析，原片音画、字幕与完整语义仍未验证。[三平台CI](https://github.com/baizhanwen/liming-zhiyao-skill-collect/actions/runs/40437727363)的核心测试、安装、构建和诊断均通过，具体证据及跳过边界见[验收报告](docs/验收报告.md)。
+当前候选 **v0.1.3**：新生成技能用正文的用途标题作为工作台展示名称，完整技能包仍保留英文标识和目录；本机174项测试与生产构建通过，发布与三平台CI待确认。已授权专用飞书表的空占位行、名称首列、用途说明及目录视图已另行实测整理，应用不会自动清表。上一版[v0.1.2](https://github.com/baizhanwen/liming-zhiyao-skill-collect/releases/tag/v0.1.2)的真实模型、媒体、飞书和抖音降级验收记录保留；原抖音音画与完整语义仍未验证，详见[验收报告](docs/验收报告.md)。
 
 ## 让 AI 帮你安装
 

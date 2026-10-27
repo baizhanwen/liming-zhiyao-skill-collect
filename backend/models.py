@@ -53,7 +53,44 @@ def normalize_generated_skill(value):
         end=body.find('\n---',4)
         body=body[end+4:].lstrip('\r\n')
     header='---\nname: '+json.dumps(name,ensure_ascii=False)+'\ndescription: '+json.dumps(description,ensure_ascii=False)+'\n---\n\n'
-    return {'name':name,'description':description,'body':header+body}
+    title=name
+    fence=None
+    in_comment=False
+    for line in body.splitlines():
+        # Ignore common HTML comments, but leave examples inside code fences
+        # alone. This scans the heading only; the stored body stays unchanged.
+        if fence is None:
+            if in_comment:
+                end=line.find('-->')
+                if end<0:
+                    continue
+                line=line[end+3:]
+                in_comment=False
+            while '<!--' in line:
+                start=line.find('<!--')
+                end=line.find('-->',start+4)
+                if end<0:
+                    line=line[:start]
+                    in_comment=True
+                    break
+                line=line[:start]+line[end+3:]
+        marker=re.match(r' {0,3}(`{3,}|~{3,})(.*)$',line)
+        if marker:
+            if fence is None:
+                fence=(marker[1][0],len(marker[1]))
+            elif marker[1][0]==fence[0] and len(marker[1])>=fence[1] and not marker[2].strip():
+                fence=None
+            continue
+        if fence:
+            continue
+        heading=re.match(r' {0,3}#[ \t]+(.+?)[ \t]*$',line)
+        if heading:
+            candidate=re.sub(r'(?:^|[ \t]+)#+[ \t]*$','',heading[1]).strip()
+            # SkillService limits display names to 150 characters. Fall back
+            # rather than silently truncating a heading or changing the body.
+            title=candidate if 1<=len(candidate)<=150 else name
+            break
+    return {'name':title,'description':description,'body':header+body}
 
 
 def classify_response(response):
@@ -207,7 +244,7 @@ class ModelService:
             raise AppError('output_format','追问响应格式或证据无效')
 
     def skill_draft(self,source,analysis):
-        task='''依据来源已有的可复用操作步骤生成技能草稿。文档中明确的安装/配置/使用步骤可以提炼为手工流程，不要求材料已经运行验证，也不要求必须存在脚本或模板；将未验证写清即可，不能只因没有执行日志就判为不适用。不得编造不存在的命令、参数或脚本。只有纯观点或根本没有可执行步骤时才返回 {"not_applicable":true,"reason":"..."}。否则直接返回 JSON {"name":"英文slug","description":"触发与用途","body":"完整SKILL.md正文"}，不要返回schema或type。body包含名称、触发、输入、前置条件、执行步骤、输出、验收方法、失败处理、固定版本来源与未执行声明；可用Markdown标题，最多8个执行步骤，总正文控制在2200字内。脚本不存在就不引用它。JSON字符串中的换行只转义一次。'''
+        task='''依据来源已有的可复用操作步骤生成技能草稿。文档中明确的安装/配置/使用步骤可以提炼为手工流程，不要求材料已经运行验证，也不要求必须存在脚本或模板；将未验证写清即可，不能只因没有执行日志就判为不适用。不得编造不存在的命令、参数或脚本。只有纯观点或根本没有可执行步骤时才返回 {"not_applicable":true,"reason":"..."}。否则直接返回 JSON {"name":"英文slug","description":"触发与用途","body":"完整SKILL.md正文"}，不要返回schema或type。body以一个描述用途的中文一级标题开始，后续结构使用二级标题，JSON name仍为英文小写slug。body包含名称、触发、输入、前置条件、执行步骤、输出、验收方法、失败处理、固定版本来源与未执行声明；最多8个执行步骤，总正文控制在2200字内。脚本不存在就不引用它。JSON字符串中的换行只转义一次。'''
         summary={k:v for k,v in analysis.items() if k in ('overview','purpose','audience','steps','dependencies','limitations','methods','claims','source_version')}
         content,meta=self.chat([{'role':'system','content':SYSTEM},{'role':'user','content':json.dumps({'task':task,'source':source.get('text','')[:80000],'evidence':source.get('evidence',[]),'analysis':summary},ensure_ascii=False)}],json_output=True)
         try:

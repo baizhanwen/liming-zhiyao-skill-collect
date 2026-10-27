@@ -328,12 +328,91 @@ def test_enterprise_import_preserves_upstream_source(tmp_path):
 
 def test_generated_skill_metadata_is_safe_and_export_folder_matches_name(tmp_path):
     value=normalize_generated_skill({'name':'real-workflow','description':'用于“来源复核”的方法','body':'# 流程\n\n依据真实材料执行。'})
+    assert value['name']=='流程'
     assert value['body'].startswith('---\nname: "real-workflow"\n')
     assert 'description:' in value['body']
     service=SkillService(Store(tmp_path));skill=service.create({**value,'name':'用户修改的展示名称'})
     with zipfile.ZipFile(io.BytesIO(service.export_zip(skill['id']))) as z:
         assert 'real-workflow/SKILL.md' in z.namelist()
     with pytest.raises(AppError):normalize_generated_skill({'name':'Bad--Name','description':'x','body':'test'})
+
+
+@pytest.mark.parametrize('body',['没有一级标题。','## 这是二级标题','```sh\n# 脚本注释不是标题\n```','# ###'])
+def test_generated_skill_without_h1_keeps_slug_as_display_name(body):
+    value=normalize_generated_skill({'name':'source-review','description':'完整触发说明','body':body})
+    assert value['name']=='source-review'
+    assert value['body'].endswith(body)
+
+
+@pytest.mark.parametrize('body',[
+    '<!--\n# 注释里的占位标题\n-->\n# 真正标题',
+    '<!-- # 注释里的占位标题 -->\n# 真正标题',
+    '```html\n<!--\n# 围栏中的示例\n```\n# 真正标题',
+])
+def test_generated_display_title_ignores_common_html_comments_without_changing_body(body):
+    value=normalize_generated_skill({'name':'actual-title','description':'来源用途','body':body})
+    assert value['name']=='真正标题'
+    assert value['body'].startswith('---\nname: "actual-title"\n')
+    assert value['body'].endswith(body)
+
+
+@pytest.mark.parametrize('length',[150,151,201])
+def test_generated_display_title_limit_falls_back_without_truncating_body(tmp_path,length):
+    title='中'*length
+    body='# '+title+'\n\n完整正文不截断。'
+    description='完整用途与触发说明。'
+    value=normalize_generated_skill({'name':'safe-slug','description':description,'body':body})
+    expected=title if length<=150 else 'safe-slug'
+    assert value['name']==expected and value['description']==description
+    assert value['body'].endswith(body)
+    skill=SkillService(Store(tmp_path)).create(value)
+    assert skill['name']==expected and skill['body']==value['body']
+
+
+def test_generated_chinese_title_preserves_raw_reply_slug_description_and_imported_body(tmp_path):
+    description='在需要安装 Easel 并配置内容工作流时使用；'+('保留完整触发条件、限制与说明。'*12)
+    original={'name':'easel-content-workflow','description':description,
+        'body':'---\nname: old-generated-header\ntitle: "# 不是正文标题"\n---\n\n```sh\n# 示例注释\n```\n\n# Easel 安装与内容创作工作流 ###\n\n依据固定来源整理，未执行。'}
+    snapshot=json.loads(json.dumps(original))
+    raw_reply=json.dumps(original,ensure_ascii=False,indent=2)
+    calls=[]
+    def handler(request):
+        calls.append(request)
+        task=json.loads(json.loads(request.content)['messages'][1]['content'])['task']
+        assert 'body以一个描述用途的中文一级标题开始' in task
+        assert '后续结构使用二级标题' in task
+        assert 'JSON name仍为英文小写slug' in task
+        return httpx.Response(200,json={'model':'contract-model','choices':[{'message':{'content':raw_reply}}],
+            'usage':{'completion_tokens':100}})
+    store,_,models=configured(tmp_path/'generated',handler)
+    draft=models.skill_draft({'text':'[契约] 固定来源'},ANALYSIS)
+    assert len(calls)==1 and draft['name']=='Easel 安装与内容创作工作流'
+    assert draft['description']==description and original==snapshot
+    assert draft['body'].startswith('---\nname: "easel-content-workflow"\n')
+    assert 'description: '+json.dumps(description,ensure_ascii=False) in draft['body']
+    assert draft['body'].endswith('# Easel 安装与内容创作工作流 ###\n\n依据固定来源整理，未执行。')
+    assert store.get('model_runs',draft['generation']['model_run_id'])['response']==raw_reply
+    skills=SkillService(store);skill=skills.create(draft)
+    package=skills.export_zip(skill['id'])
+    with zipfile.ZipFile(io.BytesIO(package)) as archive:
+        assert {path.split('/')[0] for path in archive.namelist()}=={'easel-content-workflow'}
+        assert archive.read('easel-content-workflow/SKILL.md')==draft['body'].encode()
+        assert json.loads(archive.read('easel-content-workflow/manifest.json'))['name']==draft['name']
+    imported=SkillService(Store(tmp_path/'imported')).import_zip(package)
+    assert imported['name']==draft['name'] and imported['description']==description
+    assert imported['body']==draft['body'] and imported['content_hash']==skill['content_hash']
+
+
+def test_third_party_skill_import_never_rewrites_frontmatter_or_title(tmp_path):
+    body=b'---\r\nname: upstream-skill\r\ndescription: upstream trigger\r\ncustom: preserve-this\r\n---\r\n\r\n# Upstream title\r\n'
+    data=io.BytesIO()
+    with zipfile.ZipFile(data,'w') as archive:
+        archive.writestr('upstream-skill/SKILL.md',body)
+    skills=SkillService(Store(tmp_path))
+    imported=skills.import_zip(data.getvalue())
+    assert imported['body'].encode()==body and imported['name']=='upstream-skill'
+    restored,_=unpack(skills.export_zip(imported['id']))
+    assert restored['SKILL.md']==body
 
 
 def test_concurrent_draft_requests_do_not_duplicate_provider_calls(tmp_path):

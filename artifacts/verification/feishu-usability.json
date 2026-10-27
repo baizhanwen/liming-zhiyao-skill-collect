@@ -1,0 +1,43 @@
+{
+  "recorded_at": "2026-10-27T11:47:31.991626+08:00",
+  "scope": "真实授权专用飞书表的易用性修复；私有原始响应与截图不公开",
+  "actual_cloud": true,
+  "empty_rows": {
+    "before_total": 11,
+    "strictly_empty_deleted": 10,
+    "skipped_changed_rows": 0,
+    "after_total": 1,
+    "nonempty_row_protected": true,
+    "backup_private": true,
+    "freshly_rechecked_before_each_delete": true
+  },
+  "skill_metadata": {
+    "human_display_name": true,
+    "purpose_context_output_validation_description": true,
+    "category_and_tags_populated": true,
+    "same_record_updated": true,
+    "original_skill_body_and_hash_preserved": true,
+    "status_remains_draft": true,
+    "execution_not_claimed": true,
+    "complete_zip_manifest_matches_metadata": true,
+    "english_slug_preserved": true
+  },
+  "layout": {
+    "primary_field": "名称",
+    "default_mapping_names_and_types_preserved": true,
+    "logical_record_fields_preserved_during_layout_migration": true,
+    "package_sha256_preserved_during_layout_migration": true,
+    "views": {
+      "技能目录": "首位画册；无ZIP封面；名称、简介、分类、标签、状态可见",
+      "技能清单": "名称首列；隐藏ID/版本/哈希/正文；拓宽简介与保存超高行，4行用途完整可读"
+    },
+    "observed_actual_browser": true
+  },
+  "final_preview": "noop",
+  "limits": [
+    "仅清理本次专用表已逐条核对的全空占位记录；应用运行时不自动删除空行或更改表结构",
+    "Easel技能依据文档提炼，仍未实际安装或运行",
+    "本轮未调用付费模型；新草稿展示名称修复另以显式模型契约验证",
+    "本轮未重跑原18步真实同步全链验收；已有历史证据独立保留"
+  ]
+}

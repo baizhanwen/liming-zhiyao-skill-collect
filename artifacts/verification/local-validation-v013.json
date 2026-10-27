@@ -1,0 +1,71 @@
+{
+  "recorded_at": "2026-10-27T03:53:06.655826+00:00",
+  "client_delivery_update_date": "2026-10-27",
+  "version": "0.1.3",
+  "status": "local_candidate_passed_not_committed_or_published",
+  "platform": "Darwin",
+  "python": "3.12.14",
+  "node": "v24.19.0",
+  "pytest": {
+    "command": ".venv/bin/python -m pytest -q --junitxml=artifacts/verification/pytest-v013.xml",
+    "tests": 174,
+    "passed": 174,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "duration_seconds": "9.620",
+    "junit": "artifacts/verification/pytest-v013.xml",
+    "boundary": "Isolated local/core/explicit remote contracts, including synthetic local FFmpeg media; no paid model, live enterprise table or private user media in this run.",
+    "source_hashes_stable": true
+  },
+  "frontend_build": {
+    "command": "npm --prefix frontend run build",
+    "status": "passed",
+    "package_version": "0.1.3",
+    "framework": "Vite 8.3.5",
+    "modules_transformed": 18,
+    "order": "after full pytest finished; no parallel build/test"
+  },
+  "independent_review": {
+    "status": "passed",
+    "display_title_english_slug_separated": true,
+    "existing_skill_exporter_unchanged": true,
+    "raw_reply_description_body_preserved": true,
+    "third_party_import_not_rewritten": true,
+    "html_comment_empty_heading_and_length_regressions_covered": true
+  },
+  "ui_scope": "Name-field hint only; frontend agent build and independent final build passed. No new full Playwright suite or real model generation was run for this candidate.",
+  "prior_development_run_note": "Frontend agent reported one API init failure when core checks raced with Vite dist cleanup; final independent validation ran full pytest then build sequentially, both passed.",
+  "actual_cloud_maintenance_evidence": {
+    "path": "artifacts/verification/feishu-usability.json",
+    "boundary": "Independent root-authorized operational maintenance; not performed by these local tests, not an automatic application cleanup feature."
+  },
+  "source_hashes": {
+    "backend/__init__.py": "b99b3280c5cc291c3eeea856a230239e99bc1853d753ddb15ba5c0f0ee46c056",
+    "backend/connectors/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "backend/connectors/feishu.py": "64190a50370eb747381243556196e5dac2c5855e0f474fe84ab2f5a49547fcd4",
+    "backend/connectors/github.py": "e5c0a7257d920c39dc59230f3a30377e210aa2be0ae667b5b546b2ef17148973",
+    "backend/main.py": "630f14e0b8e04c9d907ff3f4fb81c759581fc2e43cc84ea2795af678d45fea3a",
+    "backend/media.py": "bbcc77abb4194b176b7f61936e75cf8979b3fae0849669b453912fdce0e6bb8d",
+    "backend/models.py": "c0e3a7b95de9cf7ec8fff1c6ef183a778eebf71800ea1ed55a2304d413a79142",
+    "backend/security.py": "e3684788f77204692f1cceb41ca55f6b3b2d1a9017400ebd2c355efe30c13d4f",
+    "backend/skills.py": "0d6aea63a0b70978608788cfeac34fd57cf28c364045b55b69a64097b07b91f6",
+    "backend/store.py": "67019d09dcc95ace93cb3bb1e6faedf42e3a7dda3e219d8ed3df4be1f0fe97a7",
+    "backend/sync.py": "3de0e6c6bfde8c087d52cf7be01663820493b3ec4dd1407febbed80d16e8f5bf",
+    "backend/tasks.py": "88e827cbfc4cb3ba2465bb2ae62a96258904d037d640ad2ecad2b73fdf0c4e03",
+    "tests/test_core.py": "9e31eb063129633c568288bb40c690b309c67dac8e0c8817cb3f0204cf253c3e",
+    "tests/test_distribution.py": "773418439f0ec286589a9503084efb256edbef1a1a9ae324b7343361a1fdaf0f",
+    "tests/test_feishu.py": "d55a12a52e7bb2fa72e8d676b89ded68334a6cc4dedb907226ac413310f56b58",
+    "tests/test_github.py": "63a457254b8ed61e976a38795c506a177eef91abfb28c1526484a7ff201a36fb",
+    "tests/test_minimax.py": "10d297501e255828b6360662e6ea2dd143aec70660e4827a7803b3bfc703b363",
+    "tests/test_review.py": "2386405f0a1f4d7e54090fdd517dc068d73ec3d9234a4c8c94e7cb8cc4aea647"
+  },
+  "privacy": {
+    "credentials_read": false,
+    "user_configuration_modified": false,
+    "real_model_calls": false,
+    "live_feishu_calls": false,
+    "private_user_media_read": false
+  },
+  "release_state": "Awaiting root explicit submit/publish authorization and subsequent source/history scan and three-platform CI; no service operation by this task"
+}
