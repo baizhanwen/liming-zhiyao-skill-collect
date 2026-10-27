@@ -4,7 +4,7 @@
 
 一个本地运行的单用户工作台：丢进 GitHub 或抖音链接，或上传视频、字幕，保留来源证据，整理知识和技能，并与已授权的飞书多维表格手动双向同步。展示名保留 `clloect`，技术名为 `liming-zhiyao-skill-collect`。
 
-当前候选 **v0.1.3**：新生成技能用正文的用途标题作为工作台展示名称，完整技能包仍保留英文标识和目录；本机174项测试与生产构建通过，发布与三平台CI待确认。已授权专用飞书表的空占位行、名称首列、用途说明及目录视图已另行实测整理，应用不会自动清表。上一版[v0.1.2](https://github.com/baizhanwen/liming-zhiyao-skill-collect/releases/tag/v0.1.2)的真实模型、媒体、飞书和抖音降级验收记录保留；原抖音音画与完整语义仍未验证，详见[验收报告](docs/验收报告.md)。
+当前版本 **[v0.1.3预发布](https://github.com/baizhanwen/liming-zhiyao-skill-collect/releases/tag/v0.1.3)**：新生成技能按首个正文用途标题设置工作台展示名称，完整技能包保留英文标识与目录；本机174项测试与[三平台CI](https://github.com/baizhanwen/liming-zhiyao-skill-collect/actions/runs/40447408829)通过，含安装、构建和诊断。已授权专用飞书表的空占位行、名称首列、用途说明与目录视图已有独立维护记录，应用不会自动清表。既往真实模型、媒体、飞书及抖音降级证据保持原样；原抖音音画与完整语义仍未验证，具体范围见[验收报告](docs/验收报告.md)。
 
 ## 让 AI 帮你安装
 

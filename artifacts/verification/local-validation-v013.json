@@ -67,5 +67,17 @@
     "live_feishu_calls": false,
     "private_user_media_read": false
   },
-  "release_state": "Awaiting root explicit submit/publish authorization and subsequent source/history scan and three-platform CI; no service operation by this task"
+  "release_state": "Awaiting root explicit submit/publish authorization and subsequent source/history scan and three-platform CI; no service operation by this task",
+  "publication": {
+    "client_delivery_update_date": "2026-10-27",
+    "version": "0.1.3",
+    "source_commit": "71af249f8954f7af18e1a0bc00fe77c1990ae606",
+    "ci_status": "passed_three_platform_install_build_core_contracts",
+    "ci_url": "https://github.com/baizhanwen/liming-zhiyao-skill-collect/actions/runs/40447408829",
+    "ci_evidence": "artifacts/verification/github-ci-v013.json",
+    "release_url": "https://github.com/baizhanwen/liming-zhiyao-skill-collect/releases/tag/v0.1.3",
+    "candidate_recorded_at_preserved": true,
+    "candidate_status_fields_preserved": true,
+    "boundary": "This publication supplement is separate from the original local candidate recorded_at/status. Local tests made no real model or cloud calls; authorized root cloud maintenance is separately recorded in feishu-usability.json."
+  }
 }
