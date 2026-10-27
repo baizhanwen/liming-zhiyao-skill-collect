@@ -1,0 +1,52 @@
+{
+  "format_version": 1,
+  "run_started_at": "2026-10-26T12:52:00.706Z",
+  "status": "passed",
+  "assessment": "通过",
+  "evidence_kind": "explicit_minimax_reasoning_ui_contract_partial_regression",
+  "scope": "真实 Chrome 与本地工作台界面；设置读取、保存和模型接口均为显式模拟契约。未使用用户凭证，未调用真实 MiniMax。",
+  "test_source": "frontend/tests/workbench.spec.ts",
+  "source_report": "本轮临时目录中的 playwright-report.json 脱敏提取，未重新运行测试",
+  "previous_full_suite_report": "artifacts/verification/ui-minimax.json",
+  "summary": {
+    "suite_defined_tests": 5,
+    "tests_executed_this_run": 1,
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "flaky": 0,
+    "full_suite_rerun": false,
+    "duration_ms": 11260.548
+  },
+  "scenarios": [
+    {
+      "name": "MiniMax提示UI契约：精确官方主机显示原生路径，独立配置不复制模型或密钥",
+      "status": "passed",
+      "duration_ms": 4502,
+      "retry": 0
+    }
+  ],
+  "verified": [
+    "精确 MiniMax 官方主机显示原生 Chat Completions 与 ASR 接口提示；仿冒后缀主机不显示官方提示。",
+    "文字、图片和转写能力不自动复制模型或密钥，不自动保存或发起模型请求。",
+    "精确 MiniMax-M3.1-Flash 模型显示思考深度选择，默认 low，五档值为 low、medium、high、xhigh、max。",
+    "其他模型或仿冒后缀主机隐藏该选项；切换到精确国际主机仍保留手动选择。",
+    "选择更高思考深度不增加原 3000 Token 输出上限，并显示不会自动增加预算或重试的提示。",
+    "明确保存后，模拟设置请求包含所选 reasoning_effort=max 和原 max_tokens=3000，模型请求数为零。"
+  ],
+  "viewports": [
+    {"width": 1440, "height": 1100, "label": "桌面"}
+  ],
+  "privacy": {
+    "user_credentials_read": false,
+    "user_configuration_modified": false,
+    "real_model_calls": false,
+    "contains_private_account_identifiers": false
+  },
+  "limits": [
+    "本轮仅扩展并重跑既有 5 项中的 MiniMax 界面契约，其他 4 项没有在此轮重跑。",
+    "本报告证明界面条件、选择和保存请求，不证明真实 MiniMax 结构化分析已通过，也不代替真实同任务续接。",
+    "后端参数校验、精确主机与模型门控、空正文 output_limit 诊断由独立后端契约覆盖，不由本界面报告代替。",
+    "历史完整报告与已有截图保持不变。"
+  ]
+}

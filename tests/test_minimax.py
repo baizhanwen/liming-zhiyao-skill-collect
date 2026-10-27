@@ -1,8 +1,12 @@
 """Explicit MiniMax ASR transport contracts; no real credentials or model calls."""
 import wave
+import json
 
 import httpx
 import pytest
+from fastapi.testclient import TestClient
+
+from backend.main import create_app
 
 from backend.models import MINIMAX_ASR_MAX_BYTES, ModelService
 from backend.security import AppError
@@ -131,3 +135,141 @@ def test_official_asr_rejects_base_url_containing_an_endpoint_before_network(tmp
         models.probe('transcription')
     assert caught.value.code == 'endpoint'
     assert calls == [] and vault.accessed == []
+
+
+class ContractTextVault:
+    def __init__(self):
+        self.accessed=[]
+
+    def get(self,key):
+        self.accessed.append(key)
+        assert key=='model_text'
+        return 'synthetic-text-key'
+
+    def redact(self,value,limit=None):
+        return value if limit is None else value[:limit]
+
+
+def text_service(tmp_path,handler,base_url='https://api.minimax.cn/v1',model='MiniMax-M3.1-Flash',**options):
+    store=Store(tmp_path)
+    store.put('model_configs',{'id':'text','base_url':base_url,'model':model,'max_tokens':3000,'thinking_mode':'disabled',**options})
+    vault=ContractTextVault()
+    return store,vault,ModelService(store,vault,httpx.Client(transport=httpx.MockTransport(handler)))
+
+
+def text_response(finish_reason='stop',content='[契约] OK'):
+    return httpx.Response(200,json={'model':'contract-text','choices':[{'finish_reason':finish_reason,
+        'message':{'content':content,'reasoning_content':'synthetic-reasoning-must-not-be-persisted'}}],
+        'usage':{'completion_tokens':42}})
+
+
+@pytest.mark.parametrize('base_url,model,expected',[
+    ('https://api.minimax.cn/v1','MiniMax-M3.1-Flash','low'),
+    ('https://api.minimax.io/v1','MiniMax-M3.1-Flash','low'),
+    ('https://api.minimax.cn/v1','MiniMax-M3',None),
+    ('https://api.minimax.cn/v1','MiniMax-M3.1-Flash-Preview',None),
+    ('https://api.minimax.cn/v1','minimax-m3.1-flash',None),
+    ('https://api.minimax.cn.evil.invalid/v1','MiniMax-M3.1-Flash',None),
+    ('https://tenant.api.minimax.cn/v1','MiniMax-M3.1-Flash',None),
+    ('https://compatible.contract.invalid/v1','MiniMax-M3.1-Flash',None),
+])
+def test_minimax_reasoning_default_only_for_exact_official_host_and_model(tmp_path,base_url,model,expected):
+    payloads=[]
+    def handler(request):
+        payloads.append(json.loads(request.content));return text_response()
+    options={} if expected else {'reasoning_effort':'max'}
+    store,vault,models=text_service(tmp_path,handler,base_url,model,**options)
+    answer,meta=models.chat([{'role':'user','content':'contract'}])
+    assert len(payloads)==1 and payloads[0]['max_tokens']==3000
+    assert 'thinking' not in payloads[0], 'MiniMax must not receive the prior DeepSeek disabled setting'
+    if expected:
+        assert payloads[0]['reasoning_effort']==expected and meta['reasoning_effort']==expected
+    else:
+        assert 'reasoning_effort' not in payloads[0] and 'reasoning_effort' not in meta
+    assert answer=='[契约] OK' and vault.accessed==['model_text']
+    assert 'synthetic-reasoning-must-not-be-persisted' not in json.dumps(store.list('model_runs'))
+    assert 'reasoning_content' not in json.dumps(store.list('model_runs'))
+
+
+@pytest.mark.parametrize('effort',['low','medium','high','xhigh','max'])
+def test_minimax_reasoning_user_override_keeps_token_budget(tmp_path,effort):
+    payloads=[]
+    def handler(request):
+        payloads.append(json.loads(request.content));return text_response()
+    _,_,models=text_service(tmp_path,handler,reasoning_effort=effort)
+    _,meta=models.chat([{'role':'user','content':'contract'}])
+    assert len(payloads)==1 and payloads[0]['reasoning_effort']==effort
+    assert payloads[0]['max_tokens']==meta['max_tokens']==3000
+    assert meta['reasoning_effort']==effort
+
+
+@pytest.mark.parametrize('invalid',['none','disabled','provider_default',None,[],{}])
+def test_minimax_invalid_reasoning_stops_before_network(tmp_path,invalid):
+    calls=[]
+    _,vault,models=text_service(tmp_path,lambda request:calls.append(request),reasoning_effort=invalid)
+    with pytest.raises(AppError) as caught:
+        models.chat([{'role':'user','content':'contract'}])
+    assert caught.value.code=='configuration'
+    assert calls==[] and vault.accessed==[]
+
+
+def test_minimax_reasoning_settings_validated_and_saved_without_model_call(tmp_path):
+    calls=[]
+    app=create_app(tmp_path,start_worker=False,model_client=httpx.Client(transport=httpx.MockTransport(lambda request:calls.append(request))))
+    with TestClient(app) as client:
+        original={'id':'text','base_url':'https://api.minimax.cn/v1','model':'MiniMax-M3.1-Flash','max_tokens':3000,
+            'last_test':{'status':'passed'}}
+        app.state.store.put('model_configs',original)
+        for effort in ('low','medium','high','xhigh','max'):
+            response=client.put('/api/settings',json={'models':{'text':{'reasoning_effort':effort}}})
+            assert response.status_code==200
+            value=response.json()['models']['text']
+            assert value['reasoning_effort']==effort and value['max_tokens']==3000
+            assert 'last_test' not in value
+        before=app.state.store.get('model_configs','text')
+        for invalid in ('none','disabled','provider_default',None,[],{}):
+            response=client.put('/api/settings',json={'models':{'text':{'reasoning_effort':invalid}}})
+            assert response.status_code==400 and response.json()['error']['code']=='configuration'
+            assert app.state.store.get('model_configs','text')==before
+    assert calls==[]
+
+
+def test_minimax_output_limit_keeps_diagnostic_without_retry_budget_growth_or_reasoning_storage(tmp_path):
+    calls=[]
+    def handler(request):
+        calls.append(json.loads(request.content));return text_response('length','{"overview":"truncated')
+    store,_,models=text_service(tmp_path,handler)
+    previous=store.put('model_runs',{'id':'previous-contract-limit','response':'previous bounded reply',
+        'finish_reason':'length','validation':'failed'})
+    with pytest.raises(AppError) as caught:
+        models.analyze({'text':'contract source','evidence':[],'snapshot_hash':'contract-snapshot'})
+    assert caught.value.code=='output_limit' and len(calls)==1
+    assert calls[0]['max_tokens']==3000 and calls[0]['reasoning_effort']=='low'
+    assert store.get('model_runs',previous['id'])==previous
+    diagnostic=store.get('model_runs',caught.value.diagnostic_id)
+    assert diagnostic['finish_reason']=='length' and diagnostic['validation']=='failed'
+    assert diagnostic['reasoning_effort']=='low' and diagnostic['source_snapshot_hash']=='contract-snapshot'
+    assert 'synthetic-reasoning-must-not-be-persisted' not in json.dumps(store.list('model_runs'))
+
+
+@pytest.mark.parametrize('content',['',None])
+def test_minimax_thinking_limit_with_empty_content_preserves_usage_and_is_not_protocol_error(tmp_path,content):
+    calls=[]
+    usage={'prompt_tokens':140,'completion_tokens':3000,'total_tokens':3140}
+    def handler(request):
+        calls.append(json.loads(request.content))
+        return httpx.Response(200,json={'model':'MiniMax-M3.1-Flash',
+            'choices':[{'finish_reason':'length','message':{'content':content,
+                'reasoning_content':'synthetic-reasoning-must-not-be-persisted'}}],'usage':usage})
+    store,_,models=text_service(tmp_path,handler)
+    with pytest.raises(AppError) as caught:
+        models.analyze({'text':'contract source','evidence':[],'snapshot_hash':'empty-limit-contract'})
+    assert caught.value.code=='output_limit' and len(calls)==1
+    assert calls[0]['max_tokens']==3000 and calls[0]['reasoning_effort']=='low'
+    diagnostic=store.get('model_runs',caught.value.diagnostic_id)
+    assert diagnostic['response']=='' and diagnostic['finish_reason']=='length'
+    assert diagnostic['usage']==usage and diagnostic['max_tokens']==3000
+    assert diagnostic['validation']=='failed' and diagnostic['validation_errors']==[{'type':'output_limit'}]
+    assert diagnostic['source_snapshot_hash']=='empty-limit-contract'
+    assert 'reasoning_content' not in json.dumps(store.list('model_runs'))
+    assert 'synthetic-reasoning-must-not-be-persisted' not in json.dumps(store.list('model_runs'))

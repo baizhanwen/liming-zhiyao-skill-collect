@@ -1,21 +1,21 @@
 {
-  "recorded_at": "2026-10-26T10:20:03.349104+00:00",
+  "recorded_at": "2026-10-27T02:18:12.622479+00:00",
   "version": "0.1.2",
   "platform": "Darwin",
   "python": "3.12.14",
   "node": "v24.19.0",
   "pytest": {
     "command": ".venv/bin/python -m pytest -q --junitxml=artifacts/verification/pytest-v012.xml",
-    "tests": 139,
-    "passed": 139,
+    "tests": 162,
+    "passed": 162,
     "failed": 0,
     "errors": 0,
     "skipped": 0,
-    "duration_seconds": "8.486",
+    "duration_seconds": "14.200",
     "junit": "artifacts/verification/pytest-v012.xml",
     "warnings": "one upstream Starlette/httpx TestClient deprecation; no test failures",
     "boundary": "Local core/contracts, isolated SQLite/files and local FFmpeg fixture. Model and Feishu tests explicitly simulate remote services; no paid call or enterprise data in this run.",
-    "source_snapshot_notes": "Includes final ACK record_id marked uncertain before confirmation re-read; source finalized before this test process began."
+    "source_snapshot_notes": "Backend/tests source SHA-256 map unchanged throughout this test run; includes final MiniMax official-host/model reasoning_effort and empty-content length diagnostics."
   },
   "frontend_build": {
     "command": "npm --prefix frontend run build",
@@ -37,6 +37,18 @@
     "subsequent_targeted_validation": {
       "report": "artifacts/verification/ui-frame-claim-label.json",
       "boundary": "Only affected frame-label interface test rerun; historical five-test suite not rerun after label change. Sidebar now imports package version; frontend agent rebuilt successfully."
+    },
+    "additional_targeted_mobile_sync": {
+      "report": "artifacts/verification/ui-mobile-sync.json",
+      "tests_executed": 1,
+      "suite_defined_tests": 5,
+      "boundary": "Explicit self-authored Feishu UI response fixture, desktop and 390px; no live enterprise or model calls."
+    },
+    "reasoning_effort_targeted_validation": {
+      "report": "artifacts/verification/ui-minimax-reasoning.json",
+      "tests_executed": 1,
+      "suite_defined_tests": 5,
+      "boundary": "Only affected MiniMax UI contract rerun; no real provider or user configuration calls."
     }
   },
   "privacy": {
@@ -44,7 +56,7 @@
     "daily_data_included": false,
     "feishu_live_attempt1_preserved": true
   },
-  "release_state": "candidate with final sync confirmation fixes; no commit/push/release by this task; third live Feishu verification pending root result",
+  "release_state": "Latest MiniMax compatibility patch passed 162 local tests; new source CI and final same-source webpage-summary analysis outcome pending. Independent real Feishu/media historical outcomes preserved.",
   "previous_pytest_runs": [
     {
       "command": ".venv/bin/python -m pytest -q --junitxml=artifacts/verification/pytest-v012.xml",
@@ -57,6 +69,45 @@
       "junit": "artifacts/verification/pytest-v012-candidate1.xml",
       "warnings": "one upstream Starlette/httpx TestClient deprecation; no test failures",
       "boundary": "Local core/contracts, isolated SQLite/files and local FFmpeg fixture. Model and Feishu tests explicitly simulate remote services; no paid call or enterprise data in this run."
+    },
+    {
+      "command": ".venv/bin/python -m pytest -q --junitxml=artifacts/verification/pytest-v012.xml",
+      "tests": 139,
+      "passed": 139,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "duration_seconds": "8.486",
+      "junit": "artifacts/verification/pytest-v012-sync-candidate.xml",
+      "warnings": "one upstream Starlette/httpx TestClient deprecation; no test failures",
+      "boundary": "Local core/contracts, isolated SQLite/files and local FFmpeg fixture. Model and Feishu tests explicitly simulate remote services; no paid call or enterprise data in this run.",
+      "source_snapshot_notes": "Includes final ACK record_id marked uncertain before confirmation re-read; source finalized before this test process began."
     }
-  ]
+  ],
+  "independent_live_evidence": {
+    "feishu": "artifacts/verification/feishu-live.json",
+    "media": "artifacts/verification/media-model-live.json",
+    "boundary": "Real service outcomes are independent records; the local pytest/UI/build runs in this report did not call these services."
+  },
+  "ci_evidence": "artifacts/verification/github-ci-v012-398f7f8.json (historical 139-test source); final compatibility source requires a fresh CI record",
+  "source_hashes": {
+    "backend/__init__.py": "99da7609fb5fa986dd2ad3fe796bf5cfbac0532718bfa5f59ed5d23147fc2acb",
+    "backend/connectors/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "backend/connectors/feishu.py": "64190a50370eb747381243556196e5dac2c5855e0f474fe84ab2f5a49547fcd4",
+    "backend/connectors/github.py": "e5c0a7257d920c39dc59230f3a30377e210aa2be0ae667b5b546b2ef17148973",
+    "backend/main.py": "630f14e0b8e04c9d907ff3f4fb81c759581fc2e43cc84ea2795af678d45fea3a",
+    "backend/media.py": "bbcc77abb4194b176b7f61936e75cf8979b3fae0849669b453912fdce0e6bb8d",
+    "backend/models.py": "6a054b1fbe7c4fa18ec032efe9d3693341d6aded53747b1ea17cb5204fcb2a6f",
+    "backend/security.py": "e3684788f77204692f1cceb41ca55f6b3b2d1a9017400ebd2c355efe30c13d4f",
+    "backend/skills.py": "0d6aea63a0b70978608788cfeac34fd57cf28c364045b55b69a64097b07b91f6",
+    "backend/store.py": "67019d09dcc95ace93cb3bb1e6faedf42e3a7dda3e219d8ed3df4be1f0fe97a7",
+    "backend/sync.py": "3de0e6c6bfde8c087d52cf7be01663820493b3ec4dd1407febbed80d16e8f5bf",
+    "backend/tasks.py": "88e827cbfc4cb3ba2465bb2ae62a96258904d037d640ad2ecad2b73fdf0c4e03",
+    "tests/test_core.py": "987efbdbe958c822176f96fa8370f73f7b02b0bdff7f51d73e9ef45772dcfb46",
+    "tests/test_distribution.py": "773418439f0ec286589a9503084efb256edbef1a1a9ae324b7343361a1fdaf0f",
+    "tests/test_feishu.py": "d55a12a52e7bb2fa72e8d676b89ded68334a6cc4dedb907226ac413310f56b58",
+    "tests/test_github.py": "63a457254b8ed61e976a38795c506a177eef91abfb28c1526484a7ff201a36fb",
+    "tests/test_minimax.py": "10d297501e255828b6360662e6ea2dd143aec70660e4827a7803b3bfc703b363",
+    "tests/test_review.py": "2386405f0a1f4d7e54090fdd517dc068d73ec3d9234a4c8c94e7cb8cc4aea647"
+  }
 }

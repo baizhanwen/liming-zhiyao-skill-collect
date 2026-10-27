@@ -17,7 +17,7 @@ from pydantic import BaseModel, Field
 from .connectors.github import GitHubConnector, GithubError
 from .connectors.feishu import FeishuConnector, FeishuError, DEFAULT_MAPPING
 from .media import ALLOWED, MAX_UPLOAD
-from .models import ModelService
+from .models import MINIMAX_REASONING_EFFORTS, ModelService
 from .security import AppError, Vault
 from .skills import SkillService
 from .store import Store, now
@@ -139,6 +139,7 @@ def create_app(data_dir=None,start_worker=True,model_client=None,github_factory=
             if 'max_tokens' in c and (type(c['max_tokens']) is not int or not 128<=c['max_tokens']<=6000):raise AppError('configuration','模型输出上限应为 128—6000 的整数')
             if 'json_mode' in c and type(c['json_mode']) is not bool:raise AppError('configuration','JSON mode 必须为布尔值')
             if c.get('thinking_mode') not in (None,'disabled','enabled','provider_default'):raise AppError('configuration','推理模式应为disabled/enabled/provider_default')
+            if 'reasoning_effort' in c and (not isinstance(c['reasoning_effort'],str) or c['reasoning_effort'] not in MINIMAX_REASONING_EFFORTS):raise AppError('configuration','MiniMax 思考深度应为 low/medium/high/xhigh/max')
         for group,key in (('github','token'),('feishu','app_secret')):
             v=value.get(group,{}).get(key,'')
             if not isinstance(v,str) or len(v)>4096:raise AppError('configuration','凭证必须为有效文本')
@@ -149,9 +150,9 @@ def create_app(data_dir=None,start_worker=True,model_client=None,github_factory=
         for cap,c in value.get('models',{}).items():
             if cap not in CAPS:continue
             old=store.get('model_configs',cap) or {'id':cap}
-            for key in ('base_url','model','max_tokens','json_mode','thinking_mode'):
+            for key in ('base_url','model','max_tokens','json_mode','thinking_mode','reasoning_effort'):
                 if key in c:old[key]=c[key]
-            changed=any(old.get(k)!=(store.get('model_configs',cap) or {}).get(k) for k in ('base_url','model','json_mode','max_tokens','thinking_mode'))
+            changed=any(old.get(k)!=(store.get('model_configs',cap) or {}).get(k) for k in ('base_url','model','json_mode','max_tokens','thinking_mode','reasoning_effort'))
             if c.get('api_key'):
                 vault.set('model_'+cap,c['api_key']);changed=True
             if c.get('clear_key'):

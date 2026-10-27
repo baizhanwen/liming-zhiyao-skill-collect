@@ -28,6 +28,16 @@ ASR 将品牌名“利明智耀”误识别为“利明制药”。原始转写�
 
 文字、图片与转写分别填写模型和密钥，并分别测试。本应用不会把文字密钥复制给其他能力，也不会根据地址提示自动改变模型。设置页的模型 ID 只是提示，不代表账户已经有对应权限。点击能力测试会发起真实请求，可能消耗套餐、积分或按量费用。
 
+## M3.1 Flash 的思考深度与输出上限
+
+根据[官方 OpenAI 兼容接口参数说明](https://platform.minimax.cn/docs/api-reference/text-openai-api)，`MiniMax-M3.1-Flash` 必须开启 thinking，不能使用 `thinking.type=disabled` 或 `reasoning_effort=none`。其思考深度有 `low`、`medium`、`high`、`xhigh`、`max` 五档；供应商省略参数时默认 `max`，思考 Token 同样占用 `max_tokens` 上限，可能让最终正文被截断，或在输出正文前已经耗尽预算。
+
+工作台仅在主机名精确为 `api.minimax.cn` / `api.minimax.io`，且模型名精确为 `MiniMax-M3.1-Flash` 时发送 `reasoning_effort`，缺省使用 `low`，适合当前有输出限制的资料提炼。设置页该模型的“高级设置”可手动选择五档；其他主机或模型不会收到这一参数。提高档位可能增加耗时并提前用尽现有输出上限，不会自动提高 Token 预算、变更套餐或触发付费重试。
+
+遇到 `output_limit` 时，原失败回答与本机诊断保留，需要用户明确决定后再继续。`finish_reason=length` 且正文为空字符串或 `null` 时，也会正确记录为输出上限错误，保留实际用量和结束原因；不会误标成协议错误或自动修复重试。工作台不保存供应商返回的 `reasoning_content`，只保存最终正文、实际用量、结束原因及本次使用的思考深度元数据。
+
+本次 reasoning 兼容修复的证据是显式模拟契约：后端定向回归 `tests/test_minimax.py tests/test_core.py` 共 80 项通过，覆盖精确门控、缺省 low、五档选择、非法值拒绝、预算保持，以及正文被截断或为空时的本机诊断；前端构建通过。[本轮 UI 回归记录](../artifacts/verification/ui-minimax-reasoning.json)仅重跑既有 5 项中的 MiniMax 界面契约 1 项并通过，未重跑其余 4 项。上述验证不访问真实模型或用户凭证，不代表 MiniMax 真实结构化分析已通过；真实同任务续接需另有验收证据。
+
 ## 转写适配与限制
 
 - 只有精确主机名 `api.minimax.cn` 和 `api.minimax.io` 自动选择 `speech_to_text`；普通兼容供应商仍请求 `audio/transcriptions`，不会因地址包含“minimax”就改变路径。国内与国际密钥须匹配对应服务地区，国际适配当前仅通过契约测试。

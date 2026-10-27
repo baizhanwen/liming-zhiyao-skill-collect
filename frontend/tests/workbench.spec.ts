@@ -208,9 +208,9 @@ test('模型诊断UI契约：失败回答仅按需读取并单独展开，不发
 });
 
 test('MiniMax提示UI契约：精确官方主机显示原生路径，独立配置不复制模型或密钥',async({page})=>{
- const config={models:{text:{base_url:'https://api.minimax.cn/v1',model:'keep-user-text',key_configured:true},vision:{},transcription:{}},github:{token_configured:false},feishu:{secret_configured:false,field_mapping:{}}};
- let writes=0,modelCalls=0;
- await page.route('**/api/settings',route=>{if(route.request().method()==='PUT')writes++;return route.fulfill({json:config});});
+ let config:any={models:{text:{base_url:'https://api.minimax.cn/v1',model:'keep-user-text',max_tokens:3000,key_configured:true},vision:{},transcription:{}},github:{token_configured:false},feishu:{secret_configured:false,field_mapping:{}}};
+ let writes=0,modelCalls=0;const saved:any[]=[];
+ await page.route('**/api/settings',route=>{if(route.request().method()==='PUT'){writes++;config=route.request().postDataJSON();saved.push(config);}return route.fulfill({json:config});});
  await page.route('**/api/models/**',route=>{modelCalls++;return route.fulfill({status:400,json:{error:{message:'本契约不调用模型'}}});});
  await page.goto('/#settings');
  const textCard=page.locator('.model-card').filter({has:page.getByRole('heading',{name:'文字分析',exact:true})});
@@ -231,4 +231,26 @@ test('MiniMax提示UI契约：精确官方主机显示原生路径，独立配�
  await expect(asrCard.getByLabel('API Key',{exact:true})).toHaveValue('');
  await expect(asrCard.getByRole('button',{name:'测试语音转写',exact:true})).toBeDisabled();
  expect(writes).toBe(0);expect(modelCalls).toBe(0);
+ await textCard.locator('.model-advanced summary').click();
+ await expect(textCard.getByLabel('MiniMax 思考深度',{exact:true})).toHaveCount(0);
+ await textCard.getByLabel('模型名称',{exact:true}).fill('MiniMax-M3.1-Flash');
+ const effort=textCard.getByLabel('MiniMax 思考深度',{exact:true});
+ await expect(effort).toHaveValue('low');
+ await expect(effort.locator('option')).toHaveCount(5);
+ expect(await effort.locator('option').evaluateAll(options=>options.map(option=>(option as HTMLOptionElement).value))).toEqual(['low','medium','high','xhigh','max']);
+ await effort.selectOption('high');
+ await expect(textCard.getByLabel('输出上限（Token）',{exact:true})).toHaveValue('3000');
+ await textCard.getByLabel('模型名称',{exact:true}).fill('MiniMax-M3');
+ await expect(textCard.getByLabel('MiniMax 思考深度',{exact:true})).toHaveCount(0);
+ await textCard.getByLabel('模型名称',{exact:true}).fill('MiniMax-M3.1-Flash');
+ await textCard.getByLabel('Base URL',{exact:true}).fill('https://api.minimax.cn.evil.invalid/v1');
+ await expect(textCard.getByLabel('MiniMax 思考深度',{exact:true})).toHaveCount(0);
+ await textCard.getByLabel('Base URL',{exact:true}).fill('https://api.minimax.io/v1');
+ await expect(effort).toHaveValue('high');await effort.selectOption('max');
+ await expect(textCard).toContainText('不会自动增加预算或重试');
+ await page.getByRole('button',{name:'保存全部设置',exact:true}).click();
+ await expect.poll(()=>writes).toBe(1);
+ await expect(page.getByRole('button',{name:'保存全部设置',exact:true})).toBeEnabled();
+ expect(saved[0].models.text.reasoning_effort).toBe('max');expect(saved[0].models.text.max_tokens).toBe(3000);
+ await expect(effort).toHaveValue('max');expect(modelCalls).toBe(0);
 });
