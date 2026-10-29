@@ -30,10 +30,6 @@ jobs:
       - uses: astral-sh/setup-uv@v6
         with:
           enable-cache: true
-      - name: Install locked development dependencies
-        run: uv sync --frozen --no-python-downloads
-      - name: Core and connector contract tests
-        run: uv run --frozen pytest -q
       - name: macOS/Linux repeatable installation
         if: runner.os != 'Windows'
         run: bash scripts/setup.sh
@@ -41,5 +37,11 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: ./scripts/setup.ps1
+      - name: Restore locked development dependencies after setup
+        # setup intentionally uses --no-dev. Tests need pytest restored after
+        # the frontend build and project Chromium installation are complete.
+        run: uv sync --frozen --no-python-downloads
+      - name: Core and connector contract tests (after browser installation)
+        run: uv run --frozen pytest -q
       - name: Local diagnostic (does not prove external connections)
         run: uv run --no-sync python scripts/doctor.py --json
