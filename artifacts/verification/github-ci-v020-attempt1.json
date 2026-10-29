@@ -1,0 +1,283 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-29T05:42:32.315750+00:00",
+  "version": "0.2.0",
+  "source_commit": "42049357bd3d6beddd1efa42bd3930ad9d8f20e0",
+  "run_id": 40824355906,
+  "url": "https://github.com/baizhanwen/liming-zhiyao-skill-collect/actions/runs/40824355906",
+  "status": "completed",
+  "conclusion": "failure",
+  "jobs": [
+    {
+      "name": "Test and build (macos-latest)",
+      "id": 123283846824,
+      "url": "https://github.com/baizhanwen/liming-zhiyao-skill-collect/actions/runs/40824355906/job/123283846824",
+      "status": "completed",
+      "conclusion": "success",
+      "pytest": {
+        "passed": 385,
+        "failed": 0,
+        "skipped": 3,
+        "summary": "385 passed, 3 skipped, 1 warning in 46.98s"
+      },
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run astral-sh/setup-uv@v6",
+          "conclusion": "success"
+        },
+        {
+          "name": "macOS/Linux repeatable installation",
+          "conclusion": "success"
+        },
+        {
+          "name": "Windows repeatable installation",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Restore locked development dependencies after setup",
+          "conclusion": "success"
+        },
+        {
+          "name": "Core and connector contract tests (after browser installation)",
+          "conclusion": "success"
+        },
+        {
+          "name": "Local diagnostic (does not prove external connections)",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run astral-sh/setup-uv@v6",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-node@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "Test and build (windows-latest)",
+      "id": 123283847017,
+      "url": "https://github.com/baizhanwen/liming-zhiyao-skill-collect/actions/runs/40824355906/job/123283847017",
+      "status": "completed",
+      "conclusion": "failure",
+      "pytest": {
+        "passed": 382,
+        "failed": 1,
+        "skipped": 5,
+        "summary": "1 failed, 382 passed, 5 skipped, 1 warning in 56.77s"
+      },
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run astral-sh/setup-uv@v6",
+          "conclusion": "success"
+        },
+        {
+          "name": "macOS/Linux repeatable installation",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Windows repeatable installation",
+          "conclusion": "success"
+        },
+        {
+          "name": "Restore locked development dependencies after setup",
+          "conclusion": "success"
+        },
+        {
+          "name": "Core and connector contract tests (after browser installation)",
+          "conclusion": "failure"
+        },
+        {
+          "name": "Local diagnostic (does not prove external connections)",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Post Run astral-sh/setup-uv@v6",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Post Run actions/setup-node@v4",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "Test and build (ubuntu-latest)",
+      "id": 123283847037,
+      "url": "https://github.com/baizhanwen/liming-zhiyao-skill-collect/actions/runs/40824355906/job/123283847037",
+      "status": "completed",
+      "conclusion": "success",
+      "pytest": {
+        "passed": 385,
+        "failed": 0,
+        "skipped": 3,
+        "summary": "385 passed, 3 skipped, 1 warning in 12.52s"
+      },
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run astral-sh/setup-uv@v6",
+          "conclusion": "success"
+        },
+        {
+          "name": "macOS/Linux repeatable installation",
+          "conclusion": "success"
+        },
+        {
+          "name": "Windows repeatable installation",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Restore locked development dependencies after setup",
+          "conclusion": "success"
+        },
+        {
+          "name": "Core and connector contract tests (after browser installation)",
+          "conclusion": "success"
+        },
+        {
+          "name": "Local diagnostic (does not prove external connections)",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run astral-sh/setup-uv@v6",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-node@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
+  "windows_failure": {
+    "test": "tests/test_browser_capture_review.py::test_native_connect_deadline_and_cancel_stop_before_resolution[cancelled]",
+    "actual": "Empty response observed during pre-read rejection; no accepted or forwarded CONNECT",
+    "cause": "A Windows socket closed with unread request bytes may reset before the generated HTTP 403 is delivered",
+    "fix_scope": "Test fixture only; directly verify real handler emits 403 before any recv/DNS/dial, and validate real TCP 403 or reset both reject without 200 or dialing",
+    "local_targeted_validation": {
+      "passed": 67,
+      "failed": 0,
+      "duration_seconds": 0.67
+    }
+  },
+  "skip_boundaries": {
+    "all_platforms": [
+      "Two FFmpeg/FFprobe media tests skip when those optional system programs are absent",
+      "One real project-Chromium offline renderer contract also requires FFmpeg and skips without it"
+    ],
+    "windows_additional": [
+      "Symlink fixture creation requires optional Windows developer permissions",
+      "POSIX TIME_WAIT address-reuse test is not a Windows socket contract"
+    ],
+    "windows_observed_total": 5,
+    "notice": "Skip counts are actual pytest summaries. Reasons map to checked-in conditional guards; Windows doctor was skipped after its failing test step.",
+    "conditional_test_guards": [
+      {
+        "test": "tests/test_core.py::test_real_ffmpeg_pipeline_and_contract_audio_vision",
+        "reason": "FFmpeg absent"
+      },
+      {
+        "test": "tests/test_review.py::test_review_fake_mp4_hls_cannot_fetch_loopback_resources",
+        "reason": "FFprobe absent"
+      },
+      {
+        "test": "tests/test_browser_capture.py::test_real_project_renderer_with_explicit_offline_public_fixture",
+        "reason": "Requires FFmpeg as well as project Node/Chromium"
+      },
+      {
+        "test": "tests/test_distribution.py::test_backup_rejects_symlink_media",
+        "reason": "Windows developer-mode permissions are optional; conditional Windows skip"
+      },
+      {
+        "test": "tests/test_distribution.py::test_port_check_allows_immediate_restart_after_time_wait",
+        "reason": "POSIX-only TIME_WAIT reuse behavior; conditional Windows skip"
+      }
+    ]
+  },
+  "scope": "CI installation/build/browser-file setup and local/explicit service contracts only; no real Douyin, model or Feishu business call. Failed attempt retained separately from future corrected runs."
+}

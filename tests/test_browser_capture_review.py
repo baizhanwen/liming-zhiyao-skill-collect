@@ -456,9 +456,24 @@ def test_native_connect_deadline_and_cancel_stop_before_resolution(mode):
     else:
         budget.deadline = time.monotonic() - 1
     with native_proxy(budget=budget, resolver=lambda url: pytest.fail('No resolution after stop')) as (proxy, calls, _):
+        written = []
+
+        class UnreadConnect:
+            def sendall(self, data):
+                written.append(data)
+
+            def recv(self, *args):
+                pytest.fail('Cancellation/deadline must reject before reading CONNECT data')
+
+        # Retain the exact protocol assertion independently of TCP delivery:
+        # Windows can reset a socket closed with unread request bytes, discarding
+        # its just-written 403. The real handler must still produce that 403.
+        capture._ConnectHandler(UnreadConnect(), ('127.0.0.1', 0), proxy)
+        assert b''.join(written).startswith(b'HTTP/1.1 403') and calls == []
         client, response = proxy_client(proxy, 'CONNECT public.contract.invalid:443 HTTP/1.1')
         client.close()
-        assert response.startswith(b'HTTP/1.1 403') and calls == []
+        assert response == b'' or response.startswith(b'HTTP/1.1 403')
+        assert b'200' not in response and calls == [] and proxy.denied >= 2
 
 
 PUBLISHED = 'https://media.contract.invalid/target.mp4?signature=synthetic-signed-value&watermark=1&dup=a&dup=b&empty='
