@@ -4,7 +4,7 @@
 
 一个本地运行的单用户工作台：丢进 GitHub 或抖音链接，或上传视频、字幕，保留来源证据，整理知识和技能，并与已授权的飞书多维表格手动双向同步。展示名保留 `clloect`，技术名为 `liming-zhiyao-skill-collect`。
 
-当前源码 **v0.2.0**：在工作台粘贴抖音分享文字后，项目自动获取原片、分段转写、分析抽样画面并保存知识，不依赖 Codex、已有浏览器登录或人工下载。指定真实分享链接已一次提交完成 **144.8秒原片 → 2段转写 → 8张画面 → 内容分析与知识保存**，约68秒，无补传和手动重试。GitHub 项目关联会核对来源引文，再核验明确仓库地址或检索名称候选；本次转写与8张抽样画面未识别明确项目线索，未强行关联。388项本机测试和生产构建通过，新增三平台CI与独立发行正在核验；历史[v0.1.3](https://github.com/baizhanwen/liming-zhiyao-skill-collect/releases/tag/v0.1.3)保持。详见[验收报告](docs/验收报告.md)与[真实原片脱敏证据](artifacts/verification/douyin-live-e2e-20261029.json)。
+当前版本 **[v0.2.0预发布](https://github.com/baizhanwen/liming-zhiyao-skill-collect/releases/tag/v0.2.0)**：在工作台粘贴抖音分享文字后，项目自动获取原片、分段转写、分析抽样画面并保存知识，不依赖 Codex、已有浏览器登录或人工下载。指定真实分享链接已一次提交完成 **144.8秒原片 → 2段转写 → 8张画面 → 内容分析与知识保存**，约68秒，无补传和手动重试。GitHub 项目关联会核对来源引文，再核验明确仓库地址或检索名称候选；本次转写与8张抽样画面未识别明确项目线索，未强行关联。388项本机测试和生产构建通过，[三平台CI](https://github.com/baizhanwen/liming-zhiyao-skill-collect/actions/runs/40825162452)全绿；安装、构建、浏览器下载与诊断通过，跳过范围单列。详见[验收报告](docs/验收报告.md)与[真实原片脱敏证据](artifacts/verification/douyin-live-e2e-20261029.json)。历史版本与失败记录保留。
 
 ## 让 AI 帮你安装
 
@@ -126,6 +126,6 @@ SKILL_COLLECT_DATA=/absolute/new-data bash scripts/start.sh
 - 同步是有摘要复查的乐观并发，飞书记录接口没有已核实的原子CAS；多人同时写入的最终窗口不能保证强一致。上次创建结果不明时保守停止，不盲目创建副本；未绑定素材不自动删除。
 - 取消停止后续阶段；已发出的请求可能运行到超时并产生供应商费用。进程在外部请求中断时不能保证供应商恰好调用一次，恢复会要求人工继续。
 - 本地检索以FTS5与中文子串为基线；未启用embedding语义检索。没有自动定时同步、企业统一登录或移动端原生应用。
-- v0.1.2的Ubuntu/macOS/Windows核心测试、安装、构建与诊断均在CI通过。CI缺FFmpeg/FFprobe，媒体项未验证；本机macOS媒体测试通过。Windows另跳过需开发者权限的符号链接创建测试及仅适用于POSIX的TIME_WAIT地址复用测试。
+- v0.2.0三平台安装/构建/浏览器下载/诊断CI通过，Ubuntu/macOS各385通过、3跳过，Windows383通过、5跳过。CI缺FFmpeg/FFprobe，2项媒体测试和1项需FFmpeg的实际Chromium离线采集测试未验证；本机388项及真实原片通过。Windows另跳过需开发者权限的符号链接创建测试及仅适用于POSIX的TIME_WAIT地址复用测试，不能推广为Windows/Linux真实抖音联通。
 
 MIT 许可。第三方条款与来源见[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。

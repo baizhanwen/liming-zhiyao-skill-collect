@@ -1,0 +1,288 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-29T05:48:34.641552+00:00",
+  "version": "0.2.0",
+  "source_commit": "ce8bace700a16c7afab4ce2061d3c793961bb773",
+  "runtime_implementation_commit": "42049357bd3d6beddd1efa42bd3930ad9d8f20e0",
+  "run_id": 40825162452,
+  "url": "https://github.com/baizhanwen/liming-zhiyao-skill-collect/actions/runs/40825162452",
+  "status": "completed",
+  "conclusion": "success",
+  "created_at": "2026-10-29T05:44:54Z",
+  "updated_at": "2026-10-29T05:46:57Z",
+  "jobs": [
+    {
+      "name": "Test and build (ubuntu-latest)",
+      "id": 123286420506,
+      "url": "https://github.com/baizhanwen/liming-zhiyao-skill-collect/actions/runs/40825162452/job/123286420506",
+      "started_at": "2026-10-29T05:44:56Z",
+      "completed_at": "2026-10-29T05:45:24Z",
+      "conclusion": "success",
+      "pytest": {
+        "passed": 385,
+        "failed": 0,
+        "skipped": 3,
+        "summary": "385 passed, 3 skipped, 1 warning in 8.60s",
+        "duration_seconds": 8.6
+      },
+      "browser_install": {
+        "locked_runtime": "Playwright 1.64.1 / Chromium",
+        "official_cli_and_file_check_succeeded": true,
+        "download_observed": true,
+        "read_only_diagnostic_succeeded": true
+      },
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run astral-sh/setup-uv@v6",
+          "conclusion": "success"
+        },
+        {
+          "name": "macOS/Linux repeatable installation",
+          "conclusion": "success"
+        },
+        {
+          "name": "Windows repeatable installation",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Restore locked development dependencies after setup",
+          "conclusion": "success"
+        },
+        {
+          "name": "Core and connector contract tests (after browser installation)",
+          "conclusion": "success"
+        },
+        {
+          "name": "Local diagnostic (does not prove external connections)",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run astral-sh/setup-uv@v6",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-node@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "Test and build (macos-latest)",
+      "id": 123286420730,
+      "url": "https://github.com/baizhanwen/liming-zhiyao-skill-collect/actions/runs/40825162452/job/123286420730",
+      "started_at": "2026-10-29T05:44:56Z",
+      "completed_at": "2026-10-29T05:46:14Z",
+      "conclusion": "success",
+      "pytest": {
+        "passed": 385,
+        "failed": 0,
+        "skipped": 3,
+        "summary": "385 passed, 3 skipped, 1 warning in 45.68s",
+        "duration_seconds": 45.68
+      },
+      "browser_install": {
+        "locked_runtime": "Playwright 1.64.1 / Chromium",
+        "official_cli_and_file_check_succeeded": true,
+        "download_observed": true,
+        "read_only_diagnostic_succeeded": true
+      },
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run astral-sh/setup-uv@v6",
+          "conclusion": "success"
+        },
+        {
+          "name": "macOS/Linux repeatable installation",
+          "conclusion": "success"
+        },
+        {
+          "name": "Windows repeatable installation",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Restore locked development dependencies after setup",
+          "conclusion": "success"
+        },
+        {
+          "name": "Core and connector contract tests (after browser installation)",
+          "conclusion": "success"
+        },
+        {
+          "name": "Local diagnostic (does not prove external connections)",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run astral-sh/setup-uv@v6",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-node@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "Test and build (windows-latest)",
+      "id": 123286420850,
+      "url": "https://github.com/baizhanwen/liming-zhiyao-skill-collect/actions/runs/40825162452/job/123286420850",
+      "started_at": "2026-10-29T05:44:56Z",
+      "completed_at": "2026-10-29T05:46:56Z",
+      "conclusion": "success",
+      "pytest": {
+        "passed": 383,
+        "failed": 0,
+        "skipped": 5,
+        "summary": "383 passed, 5 skipped, 1 warning in 62.48s (0:01:02)",
+        "duration_seconds": 62.48
+      },
+      "browser_install": {
+        "locked_runtime": "Playwright 1.64.1 / Chromium",
+        "official_cli_and_file_check_succeeded": true,
+        "download_observed": true,
+        "read_only_diagnostic_succeeded": true
+      },
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run astral-sh/setup-uv@v6",
+          "conclusion": "success"
+        },
+        {
+          "name": "macOS/Linux repeatable installation",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Windows repeatable installation",
+          "conclusion": "success"
+        },
+        {
+          "name": "Restore locked development dependencies after setup",
+          "conclusion": "success"
+        },
+        {
+          "name": "Core and connector contract tests (after browser installation)",
+          "conclusion": "success"
+        },
+        {
+          "name": "Local diagnostic (does not prove external connections)",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run astral-sh/setup-uv@v6",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-node@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
+  "workflow_order": [
+    "platform setup + frontend build + official Chromium install and file check",
+    "restore frozen development dependencies after no-dev setup",
+    "pytest",
+    "read-only local diagnostic"
+  ],
+  "skip_boundaries": {
+    "all_platforms": [
+      "tests/test_core.py::test_real_ffmpeg_pipeline_and_contract_audio_vision: FFmpeg absent",
+      "tests/test_review.py::test_review_fake_mp4_hls_cannot_fetch_loopback_resources: FFprobe absent",
+      "tests/test_browser_capture.py::test_real_project_renderer_with_explicit_offline_public_fixture: needs FFmpeg as well as project Node/Chromium"
+    ],
+    "windows_additional": [
+      "tests/test_distribution.py::test_backup_rejects_symlink_media: optional Windows developer permissions",
+      "tests/test_distribution.py::test_port_check_allows_immediate_restart_after_time_wait: POSIX socket behavior"
+    ],
+    "notice": "Counts are actual runner summaries; conditional reasons map to source guards. Browser download/file diagnosis is not a real video acquisition or model acceptance."
+  },
+  "prior_failed_attempt": {
+    "run_id": 40824355906,
+    "evidence": "artifacts/verification/github-ci-v020-attempt1.json",
+    "fix": "Only the test fixture now verifies generated 403 separately from platform-specific TCP EOF/reset; product security behavior and original-media implementation unchanged"
+  },
+  "business_boundary": "CI runs local and explicit mock contracts, including local native CONNECT/TLS checks. No real Douyin, model, GitHub project match, or Feishu business call. Actual Mac original-media evidence is independent: douyin-live-e2e-20261029.json."
+}
