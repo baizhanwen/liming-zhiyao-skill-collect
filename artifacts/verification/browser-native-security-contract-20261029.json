@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-29T03:47:36.743035+00:00",
+  "client_date": "2026-10-29",
+  "kind": "independent_offline_security_contract",
+  "result": {
+    "passed": 67,
+    "failed": 0,
+    "skipped": 0,
+    "duration_seconds": 0.65,
+    "legacy_broker_cases": 18,
+    "new_native_proxy_and_binding_cases": 49
+  },
+  "command": ".venv/bin/python -m pytest tests/test_browser_capture_review.py -q",
+  "scope": [
+    "Opaque CONNECT forwarding through local socket fixtures",
+    "443 authority, credentials, plain HTTP, private and mixed-address rejection",
+    "FakeIP to fixed TLS DoH contract to numeric public-IP pin, without second hostname lookup",
+    "Resolver failure without direct fallback; numeric IPv4/IPv6 dialing",
+    "Byte, total-connection, active-connection, cancellation and deadline budgets",
+    "Real local end-to-end TLS through CONNECT: synthetic A-only certificate rejects B",
+    "Published URL query values, including duplicates and blanks, preserved; only extra temp accepted",
+    "Observed media URL requested unchanged; raw synthetic cookies/signature values omitted from returned media metadata",
+    "Misleading video MIME with an inspected audio-only track cannot complete original-video acquisition"
+  ],
+  "source_sha256": {
+    "backend/browser_capture.py": "e32859937655746732b0759c684ba7efb32c03d4ae86d7ce30b3565eddca78a5",
+    "backend/security.py": "ab12e9f280bdbcbe15b765b4602d27a618f91dbf1a172d4b5cb6c887e28e840c",
+    "frontend/scripts/capture-douyin.mjs": "42c3179025975b71ecdc2dec327b3b1af65f891bb8c53e886d2fd77079934857",
+    "tests/test_browser_capture_review.py": "dd0c7ca4ecb1d9ba326053a578ac27191afedbac3e362c6973740a8b8c12861e"
+  },
+  "boundaries": {
+    "real_external_network_used": false,
+    "chromium_started_by_this_suite": false,
+    "actual_douyin_media_validated": false,
+    "paid_model_calls": 0,
+    "existing_browser_profile_read": false,
+    "private_user_material_read": false,
+    "production_core_edited_by_reviewer": false
+  },
+  "limitations": [
+    "Socket/DNS origins are explicit local or MockTransport fixtures; these are not public-site connectivity results.",
+    "Chromium native-proxy configuration is code-reviewed; real source retrieval and model analysis require separate task evidence.",
+    "Budget thresholds use small or preset fixtures, not a network load-capacity benchmark.",
+    "Application-wide logging protection is verified separately; this suite checks broker result omission."
+  ]
+}

@@ -529,6 +529,47 @@ class GitHubConnector:
                 'truncated': truncated or len(skill_items) > 40, 'total_found': len(skill_items),
                 'metadata': target['metadata'], 'note': '仅发现所读 Git 树中的 SKILL.md；未执行附属脚本。'}
 
+    def search_repositories(self, query: str, limit: int = 4) -> dict:
+        """General project search, without the Skill discovery query expansion.
+
+        Search hits are candidates from GitHub's index, not proof that a video
+        refers to that repository. This endpoint never downloads source files.
+        """
+        query = query.strip()
+        if not query or len(query) > 240:
+            raise GithubError('query', '搜索词须为 1 到 240 个字符')
+        limit = max(1, min(limit, 12))
+        data = self._request('/search/repositories', {'q': query, 'per_page': limit})
+        if not isinstance(data, dict) or not isinstance(data.get('items', []), list):
+            raise GithubError('protocol', 'GitHub 搜索响应结构无效')
+        items = []
+        seen = set()
+        for item in data.get('items', [])[:limit]:
+            if not isinstance(item, dict) or not isinstance(item.get('full_name'), str):
+                continue
+            repository = item['full_name']
+            # Construct links from a validated repository identity, never trust
+            # a response's html_url as an arbitrary browser or request target.
+            try:
+                parsed = self._parse('https://github.com/' + repository)
+            except GithubError:
+                continue
+            if parsed['kind'] != 'repository' or parsed['repository'] != repository or repository.casefold() in seen:
+                continue
+            seen.add(repository.casefold())
+            license_info = item.get('license')
+            items.append({'repository': repository, 'name': repository,
+                          'url': 'https://github.com/' + repository,
+                          'description': item.get('description') if isinstance(item.get('description'), str) else None,
+                          'stars': item.get('stargazers_count'), 'updated_at': item.get('updated_at'),
+                          'license': license_info.get('spdx_id', 'UNKNOWN') if isinstance(license_info, dict) else 'UNKNOWN',
+                          'kind': 'repository', 'verification_status': 'not_inspected'})
+        return {'query': query, 'effective_query': query, 'items': items,
+                'total_count': data.get('total_count'),
+                'incomplete_results': bool(data.get('incomplete_results', False)),
+                'source': 'https://api.github.com/search/repositories', 'fetched_at': int(time.time()),
+                'notes': ['仅返回 GitHub 索引候选；不能据此确认与视频中的项目相同，未读取或执行仓库代码。']}
+
     def search(self, query: str, limit: int = 6) -> dict:
         query = query.strip()
         if not query or len(query) > 240:

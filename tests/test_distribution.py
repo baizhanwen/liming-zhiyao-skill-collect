@@ -32,6 +32,8 @@ def test_port_check_allows_immediate_restart_after_time_wait():
     assert port_available(port)
 from scripts.backup import BackupError, make_backup, restore_backup
 from scripts.doctor import diagnose
+from scripts.doctor import browser_runtime_check
+from scripts.install_browser import install_browser
 
 
 def fixture_store(tmp_path):
@@ -155,3 +157,103 @@ def test_backup_cli_round_trip(tmp_path):
     p = subprocess.run([sys.executable, 'scripts/backup.py', 'restore', str(archive), '--target', str(restored)], capture_output=True, text=True, check=True)
     assert json.loads(p.stdout)['restored'] is True
     assert Store(restored).get('knowledge', 'card')['title'] == '可恢复的知识'
+
+
+def test_browser_installer_uses_locked_cli_official_hosts_and_preserves_global_env(tmp_path, monkeypatch):
+    import scripts.install_browser as module
+    project = tmp_path / 'project with spaces'
+    cli = project / 'frontend/node_modules/@playwright/test/cli.js'
+    cli.parent.mkdir(parents=True)
+    cli.write_text('// official package CLI contract fixture')
+    runtime = project / 'frontend/scripts/capture-douyin.mjs'
+    runtime.parent.mkdir(parents=True)
+    runtime.write_text('// readonly runtime check fixture')
+    calls = []
+    monkeypatch.setattr(module.shutil, 'which', lambda name: '/contract/node')
+    monkeypatch.setenv('PLAYWRIGHT_DOWNLOAD_HOST', 'https://contract-mirror.invalid')
+    monkeypatch.setenv('PLAYWRIGHT_CHROMIUM_DOWNLOAD_HOST', 'https://contract-chromium.invalid')
+    monkeypatch.setenv('PLAYWRIGHT_FFMPEG_DOWNLOAD_HOST', 'https://contract-ffmpeg.invalid')
+    monkeypatch.setenv('PLAYWRIGHT_BROWSERS_PATH', '/contract/user-cache')
+
+    def run(args, **kwargs):
+        calls.append((args, kwargs))
+        return subprocess.CompletedProcess(args, 0, stdout=json.dumps({'ok': True, 'browser_installed': True}))
+    monkeypatch.setattr(module.subprocess, 'run', run)
+    assert install_browser(project) == 0
+    args, kwargs = calls[0]
+    assert args == ['/contract/node', str(cli), 'install', 'chromium']
+    assert not any(name in kwargs['env'] for name in ('PLAYWRIGHT_DOWNLOAD_HOST', 'PLAYWRIGHT_CHROMIUM_DOWNLOAD_HOST', 'PLAYWRIGHT_FFMPEG_DOWNLOAD_HOST'))
+    assert kwargs['env']['PLAYWRIGHT_BROWSERS_PATH'] == '/contract/user-cache'
+    assert os.environ['PLAYWRIGHT_DOWNLOAD_HOST'] == 'https://contract-mirror.invalid'
+    assert kwargs['cwd'] == project and kwargs['timeout'] == 900
+    assert calls[1][0] == ['/contract/node', str(runtime), '--check-runtime']
+
+
+@pytest.mark.parametrize('outcome', ['failed', 'timeout', 'missing'])
+def test_browser_install_failure_is_visible_without_installing_os_packages(tmp_path, monkeypatch, capsys, outcome):
+    import scripts.install_browser as module
+    cli = tmp_path / 'frontend/node_modules/@playwright/test/cli.js'
+    if outcome != 'missing':
+        cli.parent.mkdir(parents=True)
+        cli.write_text('// contract CLI')
+        runtime = tmp_path / 'frontend/scripts/capture-douyin.mjs'
+        runtime.parent.mkdir(parents=True)
+        runtime.write_text('// readonly runtime check fixture')
+    monkeypatch.setattr(module.shutil, 'which', lambda name: '/contract/node')
+    calls = []
+
+    def run(args, **kwargs):
+        calls.append(args)
+        if outcome == 'timeout':
+            raise subprocess.TimeoutExpired(args, 900)
+        return subprocess.CompletedProcess(args, 1)
+    monkeypatch.setattr(module.subprocess, 'run', run)
+    assert install_browser(tmp_path) == 1
+    if outcome == 'missing':
+        assert calls == []
+    else:
+        assert calls[0][-2:] == ['install', 'chromium']
+    assert 'setup' in capsys.readouterr().err
+
+
+def test_installer_success_without_actual_browser_file_is_not_reported_as_ready(tmp_path, monkeypatch):
+    import scripts.install_browser as module
+    for relative in ('frontend/node_modules/@playwright/test/cli.js', 'frontend/scripts/capture-douyin.mjs'):
+        path = tmp_path / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text('// contract fixture')
+    monkeypatch.setattr(module.shutil, 'which', lambda name: '/contract/node')
+    monkeypatch.setattr(module.subprocess, 'run', lambda args, **kwargs: subprocess.CompletedProcess(
+        args, 0, stdout=json.dumps({'ok': False, 'browser_installed': False})))
+    assert install_browser(tmp_path) == 1
+
+
+@pytest.mark.parametrize('returncode,report,ok', [
+    (0, {'ok': True, 'browser_installed': True, 'playwright_version': '1.64.1'}, True),
+    (0, {'ok': True, 'browser_installed': False}, False),
+    (1, {'ok': False, 'browser_installed': False, 'error': {'message': 'SYNTHETIC_SECRET'}}, False),
+    (0, [], False),
+])
+def test_doctor_browser_runtime_check_is_readonly_and_does_not_echo_errors(tmp_path, monkeypatch, returncode, report, ok):
+    import scripts.doctor as module
+    script = tmp_path / 'frontend/scripts/capture-douyin.mjs'
+    script.parent.mkdir(parents=True)
+    script.write_text('// check-runtime contract fixture')
+    monkeypatch.setattr(module, 'PROJECT', tmp_path)
+    calls = []
+
+    def run(args, **kwargs):
+        calls.append(args)
+        return subprocess.CompletedProcess(args, returncode, stdout=json.dumps(report), stderr='SYNTHETIC_SECRET')
+    monkeypatch.setattr(module.subprocess, 'run', run)
+    result = browser_runtime_check('/contract/node')
+    assert result['ok'] is ok and result['required'] is True
+    assert calls == [['/contract/node', str(script), '--check-runtime']]
+    assert 'SYNTHETIC_SECRET' not in json.dumps(result)
+
+
+def test_doctor_missing_browser_source_does_not_launch_or_download(tmp_path, monkeypatch):
+    import scripts.doctor as module
+    monkeypatch.setattr(module, 'PROJECT', tmp_path)
+    monkeypatch.setattr(module.subprocess, 'run', lambda *args, **kwargs: pytest.fail('No launch/download in doctor'))
+    assert browser_runtime_check('/contract/node')['ok'] is False

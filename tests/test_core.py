@@ -243,7 +243,7 @@ def test_subtitle_time_and_text_basis(tmp_path):
 
 def test_douyin_failed_fetch_supplement_continues_same_task(tmp_path,monkeypatch):
     import backend.tasks as task_module
-    def blocked(*args):raise AppError('douyin_material','[契约] 公开页不可用，请补材料')
+    def blocked(*args,**kwargs):raise AppError('douyin_material','[契约] 公开页不可用，请补材料')
     monkeypatch.setattr(task_module,'douyin_source',blocked)
     store,vault,models=configured(tmp_path/'app')
     runner=TaskRunner(store,vault,models,lambda:None)

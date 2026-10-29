@@ -1,0 +1,53 @@
+{
+  "at": "2026-10-29T05:28:03.593Z",
+  "status": "passed",
+  "evidence_kind": "real_existing_local_service_home_archive_readonly_verification",
+  "checks": [
+    "Real homepage recent skills and knowledge exactly match first three active API records",
+    "Skill archive toggle retains every archived record from actual API",
+    "Knowledge archive toggle retains actual archived record count, including zero if empty"
+  ],
+  "new_task_submissions": 0,
+  "model_calls": 0,
+  "external_calls": 0,
+  "all_browser_requests_get": true,
+  "blocked_requests": 0,
+  "browser_errors": 0,
+  "records_and_archive_flags_unchanged": true,
+  "loaded_script_files": [
+    "/assets/index-DXgQLJJV.js"
+  ],
+  "build": {
+    "command": "npm run build --prefix frontend",
+    "status": "passed",
+    "version": "0.2.0",
+    "vite": "8.3.5"
+  },
+  "limits": [
+    "只读现有本地首页与归档列表，不创建、编辑、归档或删除记录。",
+    "没有新增镜像测试或重跑完整UI套件。",
+    "不属于模型、飞书、抖音原片或GitHub外部业务的重新验收。",
+    "当前真实知识库没有归档条目；未为复验制造新数据，知识混合归档或全归档数据场景未另行运行。"
+  ],
+  "privacy": {
+    "user_credentials_included": false,
+    "user_configuration_included": false,
+    "private_card_names_included": false,
+    "private_screenshots_included": false
+  },
+  "observations": {
+    "active_skills": 1,
+    "archived_skills": 4,
+    "home_recent_skill_count": 1,
+    "home_archived_skill_count": 0,
+    "active_knowledge": 4,
+    "archived_knowledge": 0,
+    "home_recent_knowledge_count": 3,
+    "home_archived_knowledge_count": 0,
+    "archive_skill_cards_visible": 4,
+    "archive_knowledge_cards_visible": 0,
+    "home_mobile_scroll_width": 390
+  },
+  "source_change_scope": "仅Home生成最近知识/技能时先过滤!archived再取前三条，空态基于过滤集合；共享归档数据与入口保持。",
+  "visual_evidence": "真实截图仅保存在Git忽略的artifacts/private目录，不包含于公开证据。"
+}

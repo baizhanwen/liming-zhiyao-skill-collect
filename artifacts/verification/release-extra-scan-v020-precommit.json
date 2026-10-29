@@ -1,0 +1,9 @@
+{
+  "status": "passed",
+  "current_public_files": 145,
+  "reachable_commits": 11,
+  "unique_history_blobs": 213,
+  "explicit_fixture_literal_occurrences": 3,
+  "findings": [],
+  "notice": "Supplement to check_release; matched values never printed. Cookie/auth test literals are explicit synthetic fixtures."
+}

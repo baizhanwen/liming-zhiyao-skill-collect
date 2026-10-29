@@ -27,7 +27,8 @@ else
   if [ ! -x .venv/bin/python ]; then "$PYTHON" -m venv .venv; fi
   .venv/bin/python -m pip install --requirement requirements.txt
 fi
-npm --prefix frontend ci --no-audit --no-fund
+npm --prefix frontend ci --include=dev --no-audit --no-fund
 npm --prefix frontend run build
 .venv/bin/python -c 'from backend.store import Store; s=Store(); print("数据库已初始化：", s.path)'
+.venv/bin/python scripts/install_browser.py
 echo '安装完成。运行 bash scripts/start.sh；无需模型密钥即可进入工作台。'

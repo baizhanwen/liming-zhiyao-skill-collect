@@ -37,10 +37,12 @@ if (Get-Command uv -ErrorAction SilentlyContinue) {
     & ./.venv/Scripts/python.exe -m pip install --requirement requirements.txt
     if ($LASTEXITCODE -ne 0) { throw 'Python 依赖安装失败。' }
 }
-& npm --prefix frontend ci --no-audit --no-fund
+& npm --prefix frontend ci --include=dev --no-audit --no-fund
 if ($LASTEXITCODE -ne 0) { throw '前端依赖安装失败。' }
 & npm --prefix frontend run build
 if ($LASTEXITCODE -ne 0) { throw '前端构建失败。' }
 & ./.venv/Scripts/python.exe -c 'from backend.store import Store; Store()'
 if ($LASTEXITCODE -ne 0) { throw '数据库初始化失败。' }
+& ./.venv/Scripts/python.exe scripts/install_browser.py
+if ($LASTEXITCODE -ne 0) { throw '官方 Chromium 安装失败；请检查官方 Playwright 下载源网络后重跑 setup。' }
 Write-Host '安装完成。运行 pwsh -File scripts/start.ps1；无需模型密钥即可使用工作台。'

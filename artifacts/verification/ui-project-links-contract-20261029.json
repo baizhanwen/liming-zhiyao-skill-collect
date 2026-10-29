@@ -1,0 +1,92 @@
+{
+  "format_version": 1,
+  "run_started_at": "2026-10-29T03:15:28.169Z",
+  "status": "passed",
+  "assessment": "通过",
+  "evidence_kind": "explicit_project_links_ui_contract_partial_regression",
+  "scope": "真实 Chrome 与构建后的工作台；模型、任务、GitHub 查询及仓库打开均为显式接口契约，未外调真实服务。覆盖桌面与390px。",
+  "test_source": "frontend/tests/project-links.spec.ts",
+  "summary": {
+    "known_defined_ui_cases": 7,
+    "historical_full_suite_cases": 5,
+    "tests_executed_this_run": 2,
+    "passed": 2,
+    "failed": 0,
+    "skipped": 0,
+    "flaky": 0,
+    "full_suite_rerun": false,
+    "duration_ms": 8530.178
+  },
+  "scenarios": [
+    {
+      "name": "GitHub项目关联界面契约：桌面证据、候选边界、单独检索与手动分析",
+      "status": "passed",
+      "duration_ms": 3555,
+      "retry": 0
+    },
+    {
+      "name": "GitHub项目关联界面契约：窄屏证据、候选边界、单独检索与手动分析",
+      "status": "passed",
+      "duration_ms": 2390,
+      "retry": 0
+    }
+  ],
+  "privacy": {
+    "contains_user_credentials": false,
+    "contains_user_configuration": false,
+    "contains_real_private_media": false,
+    "real_model_calls": false,
+    "real_github_calls": false,
+    "real_feishu_calls": false
+  },
+  "limits": [
+    "本报告从已执行的临时 Playwright 记录脱敏提取，没有重新运行测试。",
+    "没有重跑历史完整 5 项，也不将两轮各 2 项相加声称最新完整 7 项通过。",
+    "浏览器交互、模型接口替身、仓库打开拦截及本地 CRUD 均不证明指定抖音 URL 自动获取原片、真实 ASR/视觉或真实 GitHub 关联成功。",
+    "所有截图和检查样例为自行编写；model.contract.invalid 是测试地址，不是用户配置。"
+  ],
+  "viewports": [
+    {
+      "width": 1440,
+      "height": 1100,
+      "label": "桌面"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "label": "窄屏"
+    }
+  ],
+  "command": "UI_PORT=8876 UI_ARTIFACT_DIR=<isolated-temp-directory> npm run test:ui --prefix frontend -- --grep 'GitHub项目关联界面契约'",
+  "previous_related_regression": "artifacts/verification/ui-project-links-regression-contract-20261029.json",
+  "checks": {
+    "desktop": "artifacts/verification/ui-project-links-desktop-contract-checks.json",
+    "mobile": "artifacts/verification/ui-project-links-mobile-contract-checks.json"
+  },
+  "screenshots": {
+    "project-links-desktop": {
+      "path": "artifacts/verification/ui-project-links-desktop-contract.png",
+      "sha256": "0407d496cb73f10843073c6bffb92aab559757967fbbd19cce17bc61f92ff107",
+      "content": "明确标注契约样例，无用户原片、配置或私人标识",
+      "capture_scope": "项目关联区域截图，视口尺寸见viewports"
+    },
+    "project-acquisition-desktop": {
+      "path": "artifacts/verification/ui-project-acquisition-desktop-contract.png",
+      "sha256": "79571d9afba43ef6d2f5493cf00ac3fb0ff3710d1c07f6ca1c319eea26f042f3",
+      "content": "明确标注契约样例，无用户原片、配置或私人标识",
+      "capture_scope": "整页截图，视口尺寸见viewports"
+    },
+    "project-links-mobile": {
+      "path": "artifacts/verification/ui-project-links-mobile-contract.png",
+      "sha256": "c0b5ee3aeef320764c31e5bc1707be8e615bb34f10c7511c665ef5b78ee84fd8",
+      "content": "明确标注契约样例，无用户原片、配置或私人标识",
+      "capture_scope": "项目关联区域截图，视口尺寸见viewports"
+    },
+    "project-acquisition-mobile": {
+      "path": "artifacts/verification/ui-project-acquisition-mobile-contract.png",
+      "sha256": "071812c9dbd7eaf7c86f0051417b6c3e6c0e8597b88cc131d00e37ee8b1e18a3",
+      "content": "明确标注契约样例，无用户原片、配置或私人标识",
+      "capture_scope": "整页截图，视口尺寸见viewports"
+    }
+  }
+}

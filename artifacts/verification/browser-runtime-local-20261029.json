@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-29T02:55:16.417080+00:00",
+  "client_date": "2026-10-29",
+  "scope": "macOS local browser runtime installation and read-only diagnostic; no video acquisition acceptance",
+  "runtime": {
+    "package": "@playwright/test",
+    "locked_version": "1.64.1",
+    "browser": "Chromium",
+    "install_command_exit_code": 0,
+    "installed_cache_available": true,
+    "fresh_cache_download_tested": false,
+    "check_runtime_exit_code": 0,
+    "browser_file_exists": true,
+    "browser_launched_by_this_check": false
+  },
+  "contracts": {
+    "pytest": "tests/test_distribution.py",
+    "passed": 25,
+    "failed": 0,
+    "duration_seconds": 0.52,
+    "services": "explicit subprocess fixtures; no paid or platform business requests"
+  },
+  "shell_syntax": {
+    "bash_setup": "passed",
+    "powershell_executed_locally": false
+  },
+  "safety": {
+    "existing_profiles_read": false,
+    "credential_files_read": false,
+    "global_environment_modified": false,
+    "system_package_installation": false,
+    "temporary_npx_packages": false
+  },
+  "limitations": [
+    "Existing matching browser cache was accepted; a fresh-cache download was not separately tested.",
+    "Read-only check confirms executable-file presence only; no browser launch, website, source retrieval, ASR, vision, or analysis is validated by this report.",
+    "Windows and Linux runtime installation remain subject to actual CI/target-machine execution."
+  ]
+}

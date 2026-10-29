@@ -1,0 +1,51 @@
+{
+  "format_version": 1,
+  "run_started_at": "2026-10-29T02:42:47.011Z",
+  "status": "passed",
+  "assessment": "通过",
+  "evidence_kind": "earlier_affected_local_workflow_and_diagnostics_ui_partial_regression",
+  "scope": "较早单独运行的两项受影响回归：一项为隔离临时数据上的真实本地 FastAPI/SQLite/ZIP/字幕待配置业务，一项为显式模型诊断接口契约。无真实外部服务。",
+  "test_source": "frontend/tests/workbench.spec.ts",
+  "summary": {
+    "known_defined_ui_cases": 7,
+    "historical_full_suite_cases": 5,
+    "tests_executed_this_run": 2,
+    "passed": 2,
+    "failed": 0,
+    "skipped": 0,
+    "flaky": 0,
+    "full_suite_rerun": false,
+    "duration_ms": 11301.568
+  },
+  "scenarios": [
+    {
+      "name": "真实本地服务：无配置、编辑、包往返、字幕待配置、错误与窄屏操作",
+      "status": "passed",
+      "duration_ms": 8942,
+      "retry": 0
+    },
+    {
+      "name": "模型诊断UI契约：失败回答仅按需读取并单独展开，不发起模型请求",
+      "status": "passed",
+      "duration_ms": 716,
+      "retry": 0
+    }
+  ],
+  "privacy": {
+    "contains_user_credentials": false,
+    "contains_user_configuration": false,
+    "contains_real_private_media": false,
+    "real_model_calls": false,
+    "real_github_calls": false,
+    "real_feishu_calls": false
+  },
+  "limits": [
+    "本报告从已执行的临时 Playwright 记录脱敏提取，没有重新运行测试。",
+    "没有重跑历史完整 5 项，也不将两轮各 2 项相加声称最新完整 7 项通过。",
+    "浏览器交互、模型接口替身、仓库打开拦截及本地 CRUD 均不证明指定抖音 URL 自动获取原片、真实 ASR/视觉或真实 GitHub 关联成功。",
+    "所有截图和检查样例为自行编写；model.contract.invalid 是测试地址，不是用户配置。"
+  ],
+  "command": "UI_PORT=8876 UI_ARTIFACT_DIR=<isolated-temp-directory> npm run test:ui --prefix frontend -- --grep '真实本地服务|模型诊断UI契约'",
+  "source_revision_scope": "本轮较早的两项回归，早于最新 frames_only 与自动原片主路径文案，不作为这些后续改动的重新全套验收。最新改动对应独立的新两视口契约。",
+  "latest_targeted_report": "artifacts/verification/ui-project-links-contract-20261029.json"
+}

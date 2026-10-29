@@ -1,0 +1,34 @@
+{
+  "status": "passed",
+  "viewport": {
+    "width": 1440,
+    "height": 1100,
+    "label": "桌面"
+  },
+  "evidence_kind": "explicit_ui_contract_only",
+  "checks": [
+    "actual evidence excerpts and recorded time ranges",
+    "explicit repository existence distinct from identity and execution verification",
+    "single and ambiguous name candidates remain unconfirmed",
+    "no-match distinct from lookup error",
+    "user input is not original-video evidence",
+    "invalid URLs and unknown evidence not promoted",
+    "source evidence jump",
+    "manual open intercepted locally",
+    "single lookup without model calls",
+    "text-summary/subtitle/frames-only/legacy/empty/stale states distinct",
+    "automatic acquisition is the primary customer path",
+    "missing Chromium names the stage and cause without claiming success or requiring upload as the primary path",
+    "no horizontal overflow",
+    "one manual repository task uses existing API",
+    "repository task hides media card"
+  ],
+  "api_calls": {
+    "manual_project_lookups": 1,
+    "explicit_task_creates": 1,
+    "model_calls": 0
+  },
+  "real_github_calls": false,
+  "real_model_calls": false,
+  "user_configuration_modified": false
+}

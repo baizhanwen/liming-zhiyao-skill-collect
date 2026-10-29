@@ -1,0 +1,172 @@
+{
+  "recorded_at": "2026-10-29T03:59:15.584440+00:00",
+  "version": "0.2.0",
+  "assessment": "通过",
+  "evidence_kind": "real_configured_workbench_douyin_original_media_e2e",
+  "input": {
+    "kind": "user_confirmed_public_douyin_share_text",
+    "sha256": "951a30eb2692b4dc6afc04172453733f45734f0a00e4474a8749c1285dbe716b",
+    "original_text_and_url_publicly_included": false
+  },
+  "submission": {
+    "entry": "workbench_home_form",
+    "depth": "deep",
+    "submissions": 1,
+    "task_attempts": 1,
+    "uploads": 0,
+    "manual_media_transfer": false,
+    "manual_retry": false,
+    "codex_required_by_project_runtime": false,
+    "runtime_environment": "minimal env -i, project start.sh, independent Chromium; no Codex provider/profile/browser connection",
+    "elapsed_seconds": 68.125
+  },
+  "acquisition": {
+    "requests": 2,
+    "downloaded_bytes": 10847274,
+    "blocked_requests": 0,
+    "renderer_version": "1.64.1",
+    "identity_metadata_sha256": [
+      "1b72114dc7235320571a4d331746946829fa2b07b66306c1a60724becf86ab7d",
+      "242ff4f9ff068f1cb4f380a4ccef37fef3eefdc91f84437a3284de02c1dc3ea5",
+      "38689e236a7c9fb88d08e810f4ac580ed4a65b3b5014af69079168eb167829f3",
+      "9eccdfd9ff72c429eec030331d69fe8a841673746a1a215ab0e3a58b57fad0ae",
+      "d15d6910d49ed6fd70db5e5259dbcbc5c8f5df814144d9f2288108975ba4836e"
+    ],
+    "native_origin_tls": true,
+    "proxy_connections": 37,
+    "proxy_bytes": 11635526,
+    "method": "project_browser",
+    "media_sha256": "c69a3e3e6dd26aa898fbc3e64b3a972527492107ddd602365c7d446c5184a6dd",
+    "media_bytes": 10912568,
+    "probe": {
+      "duration": 144.8,
+      "video": true,
+      "audio": true
+    },
+    "component_media_sha256": [
+      "19d19528a2bc6d71d2751d5ff3d84884bfe1dcfb3923640420d1e1325ac7fb05",
+      "4dac22abeffcac1210c36e83fb63fe39a8952d688f3b035c5a78101589a32af3"
+    ],
+    "source_snapshot_sha256": "fcfdd5a6358b76ac6aa89bef397a2b39873af7dd271d520cf36d20ed0ab2586f",
+    "public_metadata_identity_bound": true,
+    "video_id_match_verified": true,
+    "signed_urls_or_headers_included": false,
+    "original_components_full_coverage": true,
+    "dash_remux": "ffmpeg stream copy, no re-encoding",
+    "final_media_rehashed": true,
+    "ffprobe_streams": [
+      {
+        "codec_type": "video",
+        "codec_name": "h264",
+        "duration": "144.800000",
+        "width": 576,
+        "height": 1024
+      },
+      {
+        "codec_type": "audio",
+        "codec_name": "aac",
+        "duration": "144.798186",
+        "width": null,
+        "height": null
+      }
+    ]
+  },
+  "processing": {
+    "duration_seconds": 144.8,
+    "audio_chunks": 2,
+    "transcribed_chunks": 2,
+    "transcription_nonempty": true,
+    "transcription_model": "asr-1.0",
+    "transcription_usage": "not returned; not estimated",
+    "frame_samples": [
+      9.05,
+      27.15,
+      45.25,
+      63.35,
+      81.45,
+      99.55,
+      117.65,
+      135.75
+    ],
+    "vision_model": "MiniMax-M3.1-Flash",
+    "vision_usage": {
+      "total_tokens": 4920,
+      "total_characters": 0,
+      "prompt_tokens": 3105,
+      "completion_tokens": 1815,
+      "completion_tokens_details": {
+        "reasoning_tokens": 307
+      },
+      "prompt_tokens_details": {
+        "cached_tokens": 128
+      }
+    },
+    "text_model": "MiniMax-M3.1-Flash",
+    "text_usage": {
+      "total_tokens": 6836,
+      "total_characters": 0,
+      "prompt_tokens": 5507,
+      "completion_tokens": 1329,
+      "completion_tokens_details": {
+        "reasoning_tokens": 121
+      },
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "model_provider": "https://api.minimax.cn/v1",
+    "analysis_finish_reason": "stop",
+    "basis": "transcript_and_frames",
+    "claims_count": 8,
+    "claim_reference_ids_valid": true,
+    "knowledge_saved_and_source_hash_matches": true,
+    "raw_runs_saved_privately": true
+  },
+  "project_association": {
+    "assessment": "通过",
+    "scope": "automatic grounded extraction completed for actual original source; no clear GitHub/project identifier found",
+    "status": "none",
+    "project_mentions": 0,
+    "github_queries": 0,
+    "same_repository_claimed": false,
+    "positive_video_mention_to_live_github_match": "未验证; this original contains no grounded identifier; positive/ambiguous/rate-limited branches covered by explicit contracts only"
+  },
+  "human_review": {
+    "frames_checked_seconds": [
+      63.35,
+      135.75
+    ],
+    "frame_content": "article generation UI; phone preview and style controls",
+    "transcript_scope": "two contiguous 120-second range segments ending at 144.8 seconds",
+    "source_model_interpretation_boundary": "original audio and eight sampled images; no full-frame viewing or exact word timestamps",
+    "no_forced_easel_association": true
+  },
+  "stage_sequence": [
+    "fetch",
+    "fetch",
+    "media",
+    "transcription",
+    "transcription",
+    "vision",
+    "analysis",
+    "project_links",
+    "save",
+    "complete"
+  ],
+  "limits": [
+    "Single fixed public Douyin source on this Mac and network; arbitrary links/login/CAPTCHA/private/deleted sources are not guaranteed",
+    "Eight sampled frames are not continuous visual inspection; transcript cloud/Claude proper-name error retained",
+    "Video demonstrates a third-party prototype; its source code, deployment and actual push/publish behavior were not executed",
+    "No model subscription entitlement or cost estimated from this sample",
+    "Original media, transcript, raw model responses, user configuration and screenshots are private and excluded from Git"
+  ],
+  "real_external_calls": {
+    "douyin": true,
+    "minimax_asr": 2,
+    "minimax_vision": 1,
+    "minimax_text": 1,
+    "github_this_task": 0,
+    "feishu_this_task": 0
+  },
+  "private_evidence_retained": true
+}

@@ -1,0 +1,95 @@
+{
+  "ok": true,
+  "platform": "Darwin",
+  "checks": [
+    {
+      "name": "Python",
+      "required": true,
+      "ok": true,
+      "detail": "3.12.14"
+    },
+    {
+      "name": "fastapi",
+      "required": true,
+      "ok": true,
+      "detail": "0.162.0"
+    },
+    {
+      "name": "uvicorn",
+      "required": true,
+      "ok": true,
+      "detail": "0.41.0"
+    },
+    {
+      "name": "httpx",
+      "required": true,
+      "ok": true,
+      "detail": "0.28.1"
+    },
+    {
+      "name": "pydantic",
+      "required": true,
+      "ok": true,
+      "detail": "2.14.1"
+    },
+    {
+      "name": "python-multipart",
+      "required": true,
+      "ok": true,
+      "detail": "0.0.32"
+    },
+    {
+      "name": "cryptography",
+      "required": true,
+      "ok": true,
+      "detail": "47.0.0"
+    },
+    {
+      "name": "Node.js",
+      "required": true,
+      "ok": true,
+      "detail": "v24.19.0"
+    },
+    {
+      "name": "匿名原片采集 Chromium",
+      "required": true,
+      "ok": true,
+      "detail": "Playwright 1.64.1 / Chromium 文件存在；未启动或访问网站。"
+    },
+    {
+      "name": "前端构建",
+      "required": true,
+      "ok": true,
+      "detail": "bundled frontend build exists"
+    },
+    {
+      "name": "ffmpeg",
+      "required": false,
+      "ok": true,
+      "detail": "已找到"
+    },
+    {
+      "name": "ffprobe",
+      "required": false,
+      "ok": true,
+      "detail": "已找到"
+    },
+    {
+      "name": "Git公开仓库降级读取",
+      "required": false,
+      "ok": true,
+      "detail": "已找到Git"
+    },
+    {
+      "name": "资料库",
+      "required": true,
+      "ok": true,
+      "detail": "SQLite 完整性正常"
+    }
+  ],
+  "notice": "诊断只检查本地环境；不证明模型、GitHub、飞书或视频来源已真实联通。",
+  "recorded_at": "2026-10-29T05:28:53.105752+00:00",
+  "version": "0.2.0",
+  "assessment": "通过",
+  "scope": "Read-only local runtime and SQLite integrity; no external model, Feishu, GitHub or media fetching"
+}

@@ -15,6 +15,31 @@ from pathlib import Path
 PROJECT = Path(__file__).resolve().parents[1]
 
 
+def browser_runtime_check(node=None):
+    """Read package/binary metadata only; no browser launch or network request."""
+    script = PROJECT / 'frontend/scripts/capture-douyin.mjs'
+    check = {'name': '匿名原片采集 Chromium', 'required': True, 'ok': False}
+    if not (node or shutil.which('node')):
+        return {**check, 'detail': '缺少 Node.js；请从 https://nodejs.org/ 安装后运行 setup。'}
+    if not script.is_file():
+        return {**check, 'detail': '缺少项目采集脚本；请核对完整源码并重跑 setup。'}
+    try:
+        result = subprocess.run([node or shutil.which('node'), str(script), '--check-runtime'],
+                                capture_output=True, text=True, timeout=10, check=False, cwd=PROJECT)
+        data = json.loads(result.stdout)
+        if not isinstance(data, dict):
+            raise ValueError('Invalid runtime report')
+        available = result.returncode == 0 and data.get('ok') is True and data.get('browser_installed') is True
+        if available:
+            version = data.get('playwright_version')
+            version = version[:32] if isinstance(version, str) else '已锁定'
+            return {**check, 'ok': True, 'detail': f'Playwright {version} / Chromium 文件存在；未启动或访问网站。'}
+    except (OSError, subprocess.SubprocessError, ValueError):
+        pass
+    return {**check, 'detail': '项目 Playwright 或配套 Chromium 不可用；运行 setup 自动下载官方浏览器。'
+                               'Linux 额外系统库要求见 https://playwright.dev/docs/browsers；诊断不会提权安装。'}
+
+
 def diagnose(data=None):
     root = Path(data or os.environ.get('SKILL_COLLECT_DATA', PROJECT / 'data')).resolve()
     checks = []
@@ -38,6 +63,7 @@ def diagnose(data=None):
         pass
     checks.append({'name': 'Node.js', 'required': True, 'ok': (major == 20 and minor >= 19) or (major == 22 and minor >= 12) or major >= 23,
                    'detail': version or '未找到；https://nodejs.org/'})
+    checks.append(browser_runtime_check(node))
     checks.append({'name': '前端构建', 'required': True, 'ok': (PROJECT / 'frontend/dist/index.html').is_file(),
                    'detail': 'frontend/dist/index.html'})
     for binary in ('ffmpeg', 'ffprobe'):

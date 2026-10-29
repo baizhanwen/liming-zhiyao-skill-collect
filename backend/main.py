@@ -1,5 +1,6 @@
 import hashlib
 import io
+import logging
 import os
 import shutil
 import uuid
@@ -35,6 +36,11 @@ class TaskInput(BaseModel):
 
 
 def create_app(data_dir=None,start_worker=True,model_client=None,github_factory=None,connector_factory=None):
+    # These clients log full signed request URLs at INFO and headers at DEBUG.
+    # Keep private platform/session data out of service logs even when the host
+    # application enables verbose logging for its own operational diagnostics.
+    for logger in ('httpx','httpcore'):
+        logging.getLogger(logger).setLevel(logging.WARNING)
     store=Store(data_dir)
     vault=Vault(store.root)
     skills=SkillService(store)
@@ -258,6 +264,9 @@ def create_app(data_dir=None,start_worker=True,model_client=None,github_factory=
 
     @app.post('/api/tasks/{id}/cancel')
     def cancel(id:str):return runner.cancel(id)
+
+    @app.post('/api/tasks/{id}/project-links')
+    def refresh_project_links(id:str):return runner.refresh_project_links(id)
 
     async def save_upload(file):
         suffix=Path(file.filename or '').suffix.lower()

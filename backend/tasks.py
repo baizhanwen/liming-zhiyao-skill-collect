@@ -1,5 +1,6 @@
 import hashlib
 import json
+import re
 import threading
 import time
 from pathlib import Path
@@ -7,6 +8,7 @@ from urllib.parse import urlsplit
 
 from .media import douyin_source, extract_url, prepare_media, subtitle_source
 from .security import AppError
+from .project_links import resolve_project_links
 from .store import now
 
 TERMINAL = {'succeeded','failed','cancelled','waiting_config','waiting_material'}
@@ -20,6 +22,7 @@ class TaskRunner:
         self.thread=None
         self.mutex=threading.RLock()
         self.active_ids=set()
+        self.project_lookup_ids=set()
 
     def recover(self):
         for task in self.store.list('tasks'):
@@ -44,9 +47,26 @@ class TaskRunner:
         if not input.strip() and not uploads:
             raise AppError('input','请粘贴来源链接或上传文件')
         key=idempotency_key or hashlib.sha256((input.strip()+'|'+depth+'|'+json.dumps(uploads or [])).encode()).hexdigest()
+        automatic_video=False
+        if not uploads:
+            try:
+                host=urlsplit(extract_url(input)).hostname or ''
+                automatic_video=host in ('douyin.com','iesdouyin.com') or host.endswith(('.douyin.com','.iesdouyin.com'))
+            except AppError:pass
         with self.mutex:
-            old=next((t for t in self.store.list('tasks') if t.get('idempotency_key')==key and t['status']!='cancelled'),None)
-            if old:return old
+            matches=[t for t in self.store.list('tasks') if t.get('idempotency_key')==key and t['status']!='cancelled']
+            # A prior supplement changes the material, not the original URL's
+            # default dedup key. Never return a text-only success as a new
+            # automatic-video request; preserve it as a separate historical task.
+            if automatic_video and not idempotency_key:
+                matches=[t for t in matches if not t.get('uploads') and (
+                    not t.get('source') or (t['source'].get('platform')=='douyin'
+                    and t['source'].get('media_path') and t['source'].get('basis') not in ('text_only','subtitles')))]
+            old=next(iter(matches),None)
+            if old:
+                if automatic_video and not idempotency_key and old['status'] in ('failed','waiting_material','waiting_config'):
+                    return self.retry(old['id'])
+                return old
             task=self.store.put('tasks',{'input':input[:8000],'title':input[:100] or '上传材料','depth':depth,'status':'queued','stage':'queued','attempts':0,'stages':[],'uploads':uploads or [],'idempotency_key':key,'error':None})
         self.wake.set();return task
 
@@ -95,11 +115,51 @@ class TaskRunner:
             if t['status'] in ('running','queued'):raise AppError('task_busy','请先取消或等待当前处理结束',status=409)
             if t['status']=='succeeded':raise AppError('task_complete','该任务已完成；新材料请创建新任务，以保留原分析与知识',status=409)
             t.setdefault('uploads',[]).append(upload)
-            for k in ('source','media','analysis','vision_result','transcripts','media_complete','skill_id'):
+            for k in ('source','media','analysis','vision_result','transcripts','media_complete','skill_id','project_links'):
                 t.pop(k,None)
             t.update(status='queued',error=None,attempts=0)
             self.store.put('tasks',t)
         self.wake.set();return t
+
+    def _project_links(self,source,analysis):
+        result=resolve_project_links(source,analysis,self.github_factory)
+        if analysis.get('project_mention_warnings'):
+            result.setdefault('errors',[]).append({'code':'project_mentions_format',
+                'message':'部分项目线索格式无效或超量；未重复调用文字模型，对应线索未检索。','retryable':False})
+            result.setdefault('warnings',[]).append('主分析已保留；项目识别存在格式限制，不能据此断言视频未提及项目。')
+            result['status']='partial' if result.get('status') in ('found','partial') else 'unavailable'
+        return {**result,'source_snapshot_hash':source.get('snapshot_hash'),'basis':source.get('basis'),
+                'checked_at':now()}
+
+    def refresh_project_links(self,id):
+        """Retry read-only repository lookup without repeating paid media/model stages."""
+        with self.mutex:
+            task=self.store.get('tasks',id)
+            if not task:raise AppError('not_found','未找到任务',status=404)
+            if id in self.active_ids or id in self.project_lookup_ids:
+                raise AppError('task_busy','项目检索正在进行，请等待当前操作结束',status=409)
+            if task.get('status')!='succeeded' or not task.get('analysis') or not task.get('source'):
+                raise AppError('analysis_missing','请先完成视频或相关材料分析',status=409)
+            source=task['source']
+            if source.get('basis')=='source_files':
+                raise AppError('project_source','仓库来源无需再次按视频检索项目',status=409)
+            self.project_lookup_ids.add(id)
+        try:
+            result=self._project_links(source,task['analysis'])
+            with self.mutex:
+                current=self.store.get('tasks',id)
+                if (current.get('source') or {}).get('snapshot_hash')!=source.get('snapshot_hash'):
+                    raise AppError('source_changed','材料已变化，请在新分析完成后重新检索',status=409)
+                current['project_links']=result
+                current.setdefault('stages',[]).append({'stage':'project_links',
+                    'status':'failed' if result.get('status')=='unavailable' else 'succeeded',
+                    'message':'项目检索已结束；结果与限制单独保存，未重复调用转写、视觉或文字模型','at':now()})
+                current=self.store.put('tasks',current)
+                knowledge=self.store.get('knowledge',current.get('knowledge_id',id))
+                if knowledge:self.store.put('knowledge',{**knowledge,'project_links':result})
+                return current
+        finally:
+            with self.mutex:self.project_lookup_ids.discard(id)
 
     def _loop(self):
         while not self.stop.is_set():
@@ -135,6 +195,16 @@ class TaskRunner:
                 message=self.vault.redact(getattr(e,'message','内部处理失败，请查看诊断与任务阶段'))
                 task['error']={'code':code,'message':message,'retryable':retryable,'stage':task['stage']}
                 if getattr(e,'diagnostic_id',None):task['error']['diagnostic_id']=e.diagnostic_id
+                capture=getattr(e,'capture_diagnostic',None)
+                if isinstance(capture,dict):
+                    safe={k:capture[k] for k in ('requests','downloaded_bytes','blocked_requests',
+                        'media_responses','complete_bound_media','proxy_connections','proxy_bytes',
+                        'proxy_denied') if type(capture.get(k)) is int}
+                    for name in ('http_status_counts','error_counts'):
+                        if isinstance(capture.get(name),dict):
+                            safe[name]={str(k):v for k,v in capture[name].items() if
+                                re.fullmatch(r'[A-Za-z0-9_]{1,48}',str(k)) and type(v) is int}
+                    task['error']['capture_diagnostic']=safe
                 task.setdefault('stages',[]).append({'stage':task['stage'],'status':'failed','message':message,'at':now(),'attempt':retry+1})
                 if retryable and retry<2:
                     task['attempts']+=1
@@ -171,7 +241,9 @@ class TaskRunner:
                         if hasattr(connector,'close'):connector.close()
                     source['basis']='source_files'
                 else:
-                    source=douyin_source(url,folder)
+                    self.stage(id,'fetch','自动读取抖音原片；由项目采集器处理，无需 Codex 或手动下载')
+                    source=douyin_source(url,folder,cancelled=lambda:self.stop.is_set() or
+                        (self.store.get('tasks',id) or {}).get('status')=='cancelled')
             source['original_input']=task['input']
             source['acquired_at']=now()
             source['snapshot_hash']=hashlib.sha256(json.dumps(source,sort_keys=True,ensure_ascii=False).encode()).hexdigest()
@@ -208,7 +280,7 @@ class TaskRunner:
                 source=dict(source)
                 source['text']+='\n画面观察：\n'+vision['text']
                 source['evidence']=[e for e in source.get('evidence',[]) if e['id']!='frames-observation']+[{'id':'frames-observation','excerpt':vision['text'],'time':', '.join(str(f['time'])+'s' for f in prepared['frames']),'kind':'model_frame_observation','model':vision['model']}]
-                source['basis']=('subtitles_and_frames' if has_subtitles else 'transcript_and_frames')
+                source['basis']=('subtitles_and_frames' if has_subtitles else 'transcript_and_frames' if transcripts else 'frames_only')
             else:
                 source.setdefault('limitations',[]).append('未配置视觉模型，未分析视频画面')
             if not source.get('text','').strip():
@@ -223,8 +295,16 @@ class TaskRunner:
             analysis=self.models.analyze(source)
             self.store.put('analyses',{'id':id,**analysis})
             self.checkpoint(id,analysis=analysis)
+        task=self.store.get('tasks',id)
+        project_links=task.get('project_links')
+        if source.get('basis')!='source_files' and not project_links:
+            self.stage(id,'project_links','根据保存的证据识别并检索 GitHub 项目；候选不代表已确认对应')
+            project_links=self._project_links(source,analysis)
+            self.checkpoint(id,project_links=project_links)
         self.stage(id,'save','保存分析与知识卡片')
         # Stable task ID makes saving idempotent across process restarts.
         knowledge=self.store.get('knowledge',id) or self.store.put('knowledge',{'id':id,'title':source.get('title','来源知识'),'summary':analysis['overview'],'body':'\n\n'.join(analysis.get('steps',[])),'analysis':analysis,'evidence':source.get('evidence',[]),'source_id':id,'task_id':id,'tags':[],'category':'未分类','archived':False})
+        if project_links and knowledge.get('project_links')!=project_links:
+            self.store.put('knowledge',{**knowledge,'project_links':project_links})
         self.stage(id,'complete','分析和知识卡片已保存','succeeded')
         self.checkpoint(id,status='succeeded',knowledge_id=knowledge['id'],error=None,ended_at=now())

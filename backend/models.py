@@ -30,6 +30,12 @@ class Claim(BaseModel):
     kind: Literal['source_claim','code_observation','inference'] = 'source_claim'
 
 
+class ProjectMention(BaseModel):
+    name: str = Field(min_length=1,max_length=120)
+    evidence_ids: list[str] = Field(min_length=1,max_length=6)
+    quote: str = Field(min_length=1,max_length=600)
+
+
 class Analysis(BaseModel):
     model_config = ConfigDict(extra='ignore')
     overview: str = Field(min_length=1,max_length=8000)
@@ -40,6 +46,7 @@ class Analysis(BaseModel):
     limitations: list[str]
     methods: list[str]
     claims: list[Claim] = []
+    project_mentions: list[ProjectMention] = Field(default_factory=list,max_length=3)
 
 
 def normalize_generated_skill(value):
@@ -198,8 +205,8 @@ class ModelService:
         ids={e['id'] for e in evidence}
         prompt={'task':'基于材料分析用途、适用对象、执行步骤、依赖、限制与可提炼的方法。claims 必须关联证据 id。',
                 'output_schema':Analysis.model_json_schema(),'source':{'title':source.get('title'),'text':source.get('text','')[:100000],'evidence':evidence[:80],'basis':source.get('basis','source_files')}}
-        prompt['format_instruction']='直接输出包含overview/purpose/audience/steps/dependencies/limitations/methods/claims的分析对象，不要输出schema本身。overview最多350字；每个列表最多8项，每项最多100字；claims最多8条。控制在约2000输出token内。'
-        prompt['output_example']={'overview':'资料用途的概述','purpose':'具体用途','audience':'适合谁','steps':['按材料描述的第一步'],'dependencies':['实际依赖或未知'],'limitations':['材料限制与未验证之处'],'methods':['可复用方法'],'claims':[{'text':'有来源支持的观点','evidence_ids':[evidence[0]['id']] if evidence else [],'kind':'source_claim' if evidence else 'inference'}]}
+        prompt['format_instruction']='直接输出包含overview/purpose/audience/steps/dependencies/limitations/methods/claims/project_mentions的分析对象，不要输出schema本身。overview最多350字；每个列表最多8项，每项最多100字；claims最多8条。若音频、字幕或抽样画面材料明确提到开源/GitHub项目，project_mentions最多3条，每条包含name、evidence_ids、quote；quote须为所引证据excerpt的逐字摘录，name须实际出现在quote中，保留原拼写，不凭常识纠正转写或补全仓库名。不确定的名称不填，没有线索时填[]；普通产品名不等于开源仓库，不要因为出现Claude或Codex就猜一个GitHub项目。不要编造owner/repo或URL。控制在约2200输出token内。'
+        prompt['output_example']={'overview':'资料用途的概述','purpose':'具体用途','audience':'适合谁','steps':['按材料描述的第一步'],'dependencies':['实际依赖或未知'],'limitations':['材料限制与未验证之处'],'methods':['可复用方法'],'claims':[{'text':'有来源支持的观点','evidence_ids':[evidence[0]['id']] if evidence else [],'kind':'source_claim' if evidence else 'inference'}],'project_mentions':[]}
         messages=[{'role':'system','content':SYSTEM},{'role':'user','content':json.dumps(prompt,ensure_ascii=False)}]
         for attempt in range(max_repairs+1):
             try:
@@ -210,12 +217,27 @@ class ModelService:
                     self.store.put('model_runs',{**run,'validation':'failed','source_snapshot_hash':source.get('snapshot_hash'),'validation_errors':[{'type':error.code}]})
                 raise
             try:
-                result=Analysis.model_validate(json.loads(re.sub(r'^```(?:json)?\s*|\s*```$','',content.strip()))).model_dump()
+                parsed=json.loads(re.sub(r'^```(?:json)?\s*|\s*```$','',content.strip()))
+                mention_warnings=[]
+                if isinstance(parsed,dict):
+                    # Optional lookup hints must not cause another paid analysis
+                    # call when the actual content analysis is otherwise valid.
+                    raw_mentions=parsed.get('project_mentions',[])
+                    mentions=[]
+                    if not isinstance(raw_mentions,list):
+                        mention_warnings.append({'code':'project_mentions_format'})
+                    else:
+                        if len(raw_mentions)>3:mention_warnings.append({'code':'project_mentions_limit'})
+                        for index,item in enumerate(raw_mentions[:3]):
+                            try:mentions.append(ProjectMention.model_validate(item).model_dump())
+                            except ValidationError:mention_warnings.append({'index':index,'code':'project_mention_format'})
+                    parsed={**parsed,'project_mentions':mentions}
+                result=Analysis.model_validate(parsed).model_dump()
                 if any(not set(c['evidence_ids'])<=ids for c in result['claims']):
                     raise ValueError('unrecognized evidence')
                 if any(c['kind']!='inference' and not c['evidence_ids'] for c in result['claims']):
                     raise ValueError('claim lacks evidence')
-                result.update(meta,evidence=evidence,basis=source.get('basis','source_files'),validation='not_executed',source_snapshot_hash=source.get('snapshot_hash'),source_version=source.get('version'))
+                result.update(meta,evidence=evidence,basis=source.get('basis','source_files'),validation='not_executed',source_snapshot_hash=source.get('snapshot_hash'),source_version=source.get('version'),project_mention_warnings=mention_warnings)
                 run=self.store.get('model_runs',meta['model_run_id'])
                 self.store.put('model_runs',{**run,'validation':'passed','source_snapshot_hash':source.get('snapshot_hash')})
                 return result
@@ -299,7 +321,7 @@ class ModelService:
         return self._transcription_result(result)
 
     def vision(self,frames):
-        content=[{'type':'text','text':'逐帧描述实际可见内容和文字，不推断未出现的内容。每条注明给定秒数；不能访问或听到完整视频。'}]
+        content=[{'type':'text','text':'逐帧描述实际可见内容和文字，不推断未出现的内容。每条注明给定秒数；不能访问或听到完整视频。若画面实际出现项目名、GitHub地址或owner/repo，请逐字转录并注明对应取样时间；辨认不清就写无法辨认，不凭常识补全或猜测网址。'}]
         for frame in frames:
             content += [{'type':'text','text':f"时间 {frame['time']} 秒"},{'type':'image_url','image_url':{'url':'data:image/jpeg;base64,'+base64.b64encode(frame['path'].read_bytes()).decode(),'detail':'low'}}]
         return self.chat([{'role':'system','content':SYSTEM},{'role':'user','content':content}],cap='vision')
