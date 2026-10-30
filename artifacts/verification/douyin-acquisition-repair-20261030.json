@@ -152,19 +152,20 @@
     "visual_observation_names_can_be_misread": true
   },
   "deployment_and_data": {
-    "all_existing_entities_unchanged": true,
     "credential_file_metadata_unchanged": true,
     "service_version": "0.2.2",
-    "counts": {
-      "tasks": 6,
-      "knowledge": 4,
-      "skills": 1
-    },
     "minimal_start_environment": true,
     "existing_entities_other_than_resumed_task_unchanged_after_completion": true,
     "new_knowledge_records": 1,
     "user_configuration_modified": false,
-    "feishu_business_calls": 0
+    "feishu_business_calls": 0,
+    "all_existing_entities_unchanged_at_restart_before_resume": true,
+    "counts_before_resume": {
+      "tasks": 6,
+      "knowledge": 4,
+      "skills": 1
+    },
+    "measurement_phase_note": "Restart checks and counts_before_resume precede the one authorized task retry; completion adds source/model/analysis/knowledge entities and changes only the original task among pre-existing entities."
   },
   "human_review": {
     "sample_frames_checked_seconds": [

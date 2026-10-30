@@ -34,5 +34,11 @@
     "frontend/package.json": "04b7f5dd4d183753b395ab499dfd45fbd0f8dc82631302b2b665da0edbfcc148",
     "frontend/package-lock.json": "dc5f58ef32dd92e90c38a896f8ec4f933f8d4a4b33da6c614d1753a403f2ab65"
   },
-  "publication": "未验证; GitHub source/CI/release verified separately after push"
+  "publication": {
+    "assessment": "通过",
+    "source_commit": "7f7521097df47faf962d7ad89e508b2e0fc70994",
+    "ci_evidence": "artifacts/verification/github-ci-v022.json",
+    "release_evidence": "artifacts/verification/github-release-v022.json",
+    "subsequent_main_changes": "Documentation and public evidence only; released product code, tests and dependencies unchanged."
+  }
 }

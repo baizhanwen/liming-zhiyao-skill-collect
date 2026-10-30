@@ -1,0 +1,20 @@
+{
+  "recorded_at": "2026-10-30T09:45:51.617Z",
+  "version": "0.2.2",
+  "assessment": "通过",
+  "evidence_kind": "github_release_and_tag_readback",
+  "repository": "baizhanwen/liming-zhiyao-skill-collect",
+  "release_id": 428861767,
+  "tag": "v0.2.2",
+  "url": "https://github.com/baizhanwen/liming-zhiyao-skill-collect/releases/tag/v0.2.2",
+  "draft": false,
+  "prerelease": true,
+  "published_at": "2026-10-30T09:45:03Z",
+  "tag_object": "f7661e1d47921c38b24c4fd2d17c6458d54208d6",
+  "target_commit": "7f7521097df47faf962d7ad89e508b2e0fc70994",
+  "ci_run": 41035193798,
+  "ci_conclusion": "success",
+  "source_distribution": "GitHub source zip/tar for verified tag; no bundled runtime, user database, media or credentials",
+  "latest_release_forced": false,
+  "prior_tags_overwritten": false
+}
