@@ -287,3 +287,87 @@ def test_real_project_renderer_with_explicit_offline_public_fixture(tmp_path):
     assert Path(result['media_paths'][0]).is_file()
     assert 'signature' not in json.dumps(result) and 'synthetic-fixture' not in json.dumps(result)
     assert {host for host, _, _ in seen} == {'v.douyin.com', 'www.douyin.com', 'cdn.contract.invalid', 'media-final.contract.invalid'}
+
+
+PLAYER_PUBLISHED = (MEDIA + '&dup=first&dup=second&empty=')
+PLAYER_OBSERVED = PLAYER_PUBLISHED + '&__vid=' + VIDEO_ID + '&temp=1'
+
+
+@pytest.mark.parametrize('observed,allowed', [
+    (PLAYER_PUBLISHED, True),
+    (PLAYER_PUBLISHED + '&temp=synthetic-cache', True),
+    (PLAYER_OBSERVED, True),
+    (PLAYER_PUBLISHED + '&temp=1&__vid=' + VIDEO_ID, True),
+    (PLAYER_PUBLISHED + '&__vid=' + VIDEO_ID, False),
+    (PLAYER_OBSERVED.replace('__vid=' + VIDEO_ID, '__vid=9999999999999999999'), False),
+    (PLAYER_OBSERVED.replace('__vid=' + VIDEO_ID, '__vid='), False),
+    (PLAYER_OBSERVED + '&__vid=' + VIDEO_ID, False),
+    (PLAYER_OBSERVED + '&__vid=', False),
+    (PLAYER_OBSERVED + '&auth=synthetic', False),
+    (PLAYER_OBSERVED + '&testst=123', False),
+    (PLAYER_OBSERVED.replace('signature=synthetic-private-query&', ''), False),
+    (PLAYER_OBSERVED.replace('signature=synthetic-private-query', 'signature=changed'), False),
+    (PLAYER_OBSERVED + '&signature=synthetic-private-query', False),
+    (PLAYER_OBSERVED.replace('&watermark=1', ''), False),
+    (PLAYER_OBSERVED.replace('watermark=1', 'watermark=0'), False),
+    (PLAYER_OBSERVED + '&watermark=1', False),
+    (PLAYER_OBSERVED.replace('&dup=second', ''), False),
+    (PLAYER_OBSERVED.replace('dup=first&dup=second', 'dup=second&dup=first'), False),
+    (PLAYER_OBSERVED + '&dup=third', False),
+    (PLAYER_OBSERVED.replace('&empty=', ''), False),
+    (PLAYER_OBSERVED.replace('&empty=', '&empty=changed'), False),
+    (PLAYER_OBSERVED.replace('cdn.contract.invalid', 'other.contract.invalid'), False),
+    (PLAYER_OBSERVED.replace('/fixture.mp4', '/recommendation.mp4'), False),
+    (PLAYER_OBSERVED.replace('https:', 'http:'), False),
+    (PLAYER_OBSERVED.replace('cdn.contract.invalid', 'cdn.contract.invalid:8443'), False),
+    (PLAYER_OBSERVED.replace('cdn.contract.invalid', 'user:synthetic@cdn.contract.invalid'), False),
+])
+def test_player_video_id_variant_preserves_published_identity_and_parameters(tmp_path, observed, allowed):
+    """A browser-added item ID cannot replace the official metadata association."""
+    service = broker(tmp_path, lambda request: httpx.Response(404))
+    try:
+        metadata = {'aweme_detail': {'aweme_id': VIDEO_ID, 'video': {
+            'play_addr': {'url_list': [PLAYER_PUBLISHED]}}}}
+        service._bind_json(json.dumps(metadata).encode(), PAGE)
+        assert service._bound(observed) is allowed
+    finally:
+        service.close()
+
+
+def test_player_video_id_without_metadata_does_not_start_a_download(tmp_path):
+    requests = []
+    service = broker(tmp_path, lambda request: requests.append(str(request.url)) or httpx.Response(404))
+    try:
+        reply = service.handle({'type': 'observed_media', 'id': 21,
+                                'url': PLAYER_OBSERVED, 'headers': {}})
+        assert not service._bound(PLAYER_OBSERVED)
+        assert not reply['capture_ready'] and requests == []
+        assert service.requests == 0 and service.entries == {}
+    finally:
+        service.close()
+
+
+def test_player_video_id_variant_downloads_the_observed_url_unchanged(tmp_path):
+    binary = b'explicit-synthetic-target-video-bytes'
+    requests = []
+
+    def origin(request):
+        requests.append(str(request.url))
+        return httpx.Response(200, content=binary, headers={'Content-Type': 'video/mp4'})
+
+    service = broker(tmp_path, origin)
+    try:
+        metadata = {'aweme_detail': {'aweme_id': VIDEO_ID, 'video': {
+            'play_addr': {'url_list': [PLAYER_PUBLISHED]}}}}
+        service._bind_json(json.dumps(metadata).encode(), PAGE)
+        reply = service.handle({'type': 'observed_media', 'id': 22,
+                                'url': PLAYER_OBSERVED, 'headers': {}})
+        assert reply['capture_ready'] is True and requests == [PLAYER_OBSERVED]
+        output = service.finish([], VIDEO_ID)
+        assert len(output) == 1 and output[0]['complete'] is True
+        assert output[0]['coverage'] == [[0, len(binary)]]
+        assert output[0]['size'] == len(binary)
+        assert output[0]['sha256'] == hashlib.sha256(binary).hexdigest()
+        assert 'synthetic-private-query' not in json.dumps(output)
+    finally:
+        service.close()

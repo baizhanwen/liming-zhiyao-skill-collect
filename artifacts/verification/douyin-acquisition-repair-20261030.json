@@ -1,0 +1,188 @@
+{
+  "recorded_at": "2026-10-30T09:37:00.086357+00:00",
+  "version": "0.2.2",
+  "assessment": "通过",
+  "evidence_kind": "real_existing_failed_douyin_task_resumed_by_deployed_project",
+  "root_cause": {
+    "official_target_metadata_present": true,
+    "observed_url_preserved_all_published_parameters": true,
+    "previous_matcher_rejected_extra_video_id_with_temp": true,
+    "previous_isolated_budget_seconds": 60,
+    "previous_isolated_result": "douyin_browser_timeout",
+    "previous_complete_download_requests": 0,
+    "repair": "Allow only observed temp+__vid with exactly one __vid equal to requested target; published host/path/query preserved; GET exact observed URL.",
+    "testst_not_added_to_production_allowlist": true,
+    "no_signature_generation_or_captcha_bypass": true
+  },
+  "isolated_experiment": {
+    "runtime_patch": true,
+    "budget_seconds": 75,
+    "elapsed_seconds": 15.676,
+    "models_called": 0,
+    "user_task_mutations": 0,
+    "accepted_actual_extra_keys": [
+      "__vid",
+      "temp"
+    ],
+    "single_video_id_equal_to_requested": true,
+    "full_coverage_and_sha256_independently_checked": true,
+    "not_used_as_input_to_workbench_task": true
+  },
+  "submission": {
+    "entry": "local_project_retry_endpoint_for_same_existing_failed_task",
+    "retries_submitted_after_deployment": 1,
+    "attempts_this_resume": 1,
+    "prior_failure_history_preserved": true,
+    "uploads": 0,
+    "manual_media_transfer": false,
+    "codex_required_by_project_runtime": false,
+    "runtime_environment": "minimal env -i; project scripts/start.sh; independent fresh Chromium; no user profile",
+    "automatic_acquisition_seconds": 16.909,
+    "resume_to_completion_seconds": 62.607,
+    "historical_task_clock_includes_prior_attempts_and_waits": true
+  },
+  "acquisition": {
+    "requests": 1,
+    "downloaded_bytes": 2681568,
+    "blocked_requests": 0,
+    "renderer_version": "1.64.1",
+    "identity_metadata_sha256": [
+      "04615f58c5d523dd28d60df0f957e9facf5b34ab0ff454ca63f1da2195f3e415"
+    ],
+    "native_origin_tls": true,
+    "proxy_connections": 49,
+    "proxy_bytes": 14112363,
+    "method": "project_browser",
+    "media_sha256": "fa20fd4633af639f3d446145081e5c7dfa7272e2fbbf9f514747863ceaabe86a",
+    "media_bytes": 2681568,
+    "probe": {
+      "duration": 36.687007,
+      "video": true,
+      "audio": true
+    },
+    "component_media_sha256": [
+      "fa20fd4633af639f3d446145081e5c7dfa7272e2fbbf9f514747863ceaabe86a"
+    ],
+    "source_snapshot_sha256": "d2023ecadb754486a26e54524535d77dc95b66543b8558093be2143aa9a0e3c0",
+    "final_media_rehashed": true,
+    "complete_coverage_validated_by_executed_product_path": true,
+    "ffprobe_streams": [
+      {
+        "codec_type": "audio",
+        "codec_name": "aac",
+        "duration": "36.687007",
+        "width": null,
+        "height": null
+      },
+      {
+        "codec_type": "video",
+        "codec_name": "h264",
+        "duration": "36.666667",
+        "width": 1920,
+        "height": 1080
+      }
+    ],
+    "original_urls_title_video_id_and_task_id_included": false,
+    "signed_urls_cookie_headers_or_credentials_included": false
+  },
+  "processing": {
+    "duration_seconds": 36.687007,
+    "audio_chunks": 1,
+    "transcribed_chunks": 1,
+    "transcription_nonempty": true,
+    "transcription_model": "asr-1.0",
+    "transcription_usage": "not returned; not estimated",
+    "frame_samples_seconds": [
+      4.59,
+      13.76,
+      22.93,
+      32.1
+    ],
+    "vision_model": "MiniMax-M3.1-Flash",
+    "vision_usage": {
+      "total_tokens": 3270,
+      "total_characters": 0,
+      "prompt_tokens": 1581,
+      "completion_tokens": 1689,
+      "completion_tokens_details": {
+        "reasoning_tokens": 320
+      },
+      "prompt_tokens_details": {
+        "cached_tokens": 128
+      }
+    },
+    "text_model": "MiniMax-M3.1-Flash",
+    "text_usage": {
+      "total_tokens": 6452,
+      "total_characters": 0,
+      "prompt_tokens": 4779,
+      "completion_tokens": 1673,
+      "completion_tokens_details": {
+        "reasoning_tokens": 216
+      },
+      "prompt_tokens_details": {
+        "cached_tokens": 128
+      }
+    },
+    "model_provider": "https://api.minimax.cn/v1",
+    "basis": "transcript_and_frames",
+    "claims_count": 8,
+    "claim_reference_ids_valid": true,
+    "knowledge_saved_and_source_hash_matches": true,
+    "third_party_project_install_or_execution": false
+  },
+  "project_association": {
+    "assessment": "通过",
+    "scope": "Real evidence-grounded names automatically searched on GitHub; returned candidates and ambiguity, no same-project confirmation.",
+    "project_mentions": 3,
+    "github_queries": 3,
+    "github_successful_queries": 3,
+    "link_statuses": [
+      "ambiguous",
+      "ambiguous",
+      "ambiguous"
+    ],
+    "candidate_counts": [
+      4,
+      4,
+      4
+    ],
+    "same_repository_claimed": false,
+    "exact_video_project_repository_identification": "未验证",
+    "visual_observation_names_can_be_misread": true
+  },
+  "deployment_and_data": {
+    "all_existing_entities_unchanged": true,
+    "credential_file_metadata_unchanged": true,
+    "service_version": "0.2.2",
+    "counts": {
+      "tasks": 6,
+      "knowledge": 4,
+      "skills": 1
+    },
+    "minimal_start_environment": true,
+    "existing_entities_other_than_resumed_task_unchanged_after_completion": true,
+    "new_knowledge_records": 1,
+    "user_configuration_modified": false,
+    "feishu_business_calls": 0
+  },
+  "human_review": {
+    "sample_frames_checked_seconds": [
+      4.59,
+      13.76,
+      22.93,
+      32.1
+    ],
+    "scope": "Four sampled frames checked for actual source continuity and visible content; not frame-by-frame or word-accuracy certification.",
+    "actual_workbench_result_visible_at_desktop_and_390px": true,
+    "390px_document_width": 390,
+    "390px_horizontal_overflow": false,
+    "raw_screenshots_media_transcripts_responses_kept_private": true
+  },
+  "boundaries": [
+    "One requested public video on current macOS/network/account configuration; not a universal acquisition success rate.",
+    "Previous failed attempts remain historical failures. New retry independently fetched media; no copied diagnostic file or webpage summary.",
+    "ASR and visual model outputs can contain name/OCR errors; candidates require review.",
+    "DouK-Downloader was reviewed only; not installed or run on this source."
+  ]
+}

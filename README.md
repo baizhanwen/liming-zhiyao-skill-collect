@@ -4,7 +4,7 @@
 
 一个本地运行的单用户工作台：丢进 GitHub 或抖音链接，或上传视频、字幕，保留来源证据，整理知识和技能，并与已授权的飞书多维表格手动双向同步。展示名保留 `clloect`，技术名为 `liming-zhiyao-skill-collect`。
 
-当前版本 **[v0.2.1预发布](https://github.com/baizhanwen/liming-zhiyao-skill-collect/releases/tag/v0.2.1)**：任务详情顶部显示阶段、总历时、步骤用时、累计尝试次数和实际处理计数；状态刷新失败、等待较久和取消尚未结束分别说明。状态读取不制造活动心跳，模型等待不显示虚构百分比。本机444项测试、最终6项进度界面契约和独立7项既有界面回归通过；[三平台CI](https://github.com/baizhanwen/liming-zhiyao-skill-collect/actions/runs/41022780767)全绿。当前真实超时任务已只读复验，原失败保留，未自动重新提交。详见[进度维护验收](docs/验收报告.md)；下述0.2.0原片实测保持历史身份。
+当前维护版本 **0.2.2**：修复播放器额外目标视频ID导致媒体地址被拒绝的问题，全部原参数保持且下载使用实际观察地址。原失败任务在项目中重新自动取得36.687秒音画，完成1段转写、4帧视觉、文字分析、GitHub候选查询与知识保存，本轮约62.6秒；旧失败历史保留。473项本机测试、生产构建及真实桌面/390px结果查看通过。三平台CI与独立发行由最终发布步骤核对，见[验收报告](docs/验收报告.md)。原[v0.2.1预发布](https://github.com/baizhanwen/liming-zhiyao-skill-collect/releases/tag/v0.2.1)保持；下述0.2.0实测也保留历史身份。
 
 **[v0.2.0原片实测记录](https://github.com/baizhanwen/liming-zhiyao-skill-collect/releases/tag/v0.2.0)**：在工作台粘贴抖音分享文字后，项目自动获取原片、分段转写、分析抽样画面并保存知识，不依赖 Codex、已有浏览器登录或人工下载。指定真实分享链接已一次提交完成 **144.8秒原片 → 2段转写 → 8张画面 → 内容分析与知识保存**，约68秒，无补传和手动重试。GitHub 项目关联会核对来源引文，再核验明确仓库地址或检索名称候选；本次转写与8张抽样画面未识别明确项目线索，未强行关联。该版本388项本机测试与生产构建、[当时三平台CI](https://github.com/baizhanwen/liming-zhiyao-skill-collect/actions/runs/40825162452)通过；新增进度补丁没有重跑真实模型或声称其他链接成功。见[原片脱敏证据](artifacts/verification/douyin-live-e2e-20261029.json)。
 

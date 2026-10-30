@@ -257,10 +257,15 @@ class _Broker:
                         parsed.scheme, parsed.hostname, parsed.port or 443, parsed.path):
                     continue
                 expected = parse_qs(published.query, keep_blank_values=True)
-                # The real public player adds only a cache-busting `temp` key.
+                # Observed public-player variants add `temp`, sometimes with
+                # `__vid` exactly naming the requested video. These additions
+                # never establish identity without matching official metadata.
                 # Every published parameter/value, duplicate and blank remains
                 # mandatory; the complete observed URL is used unchanged for GET.
-                if set(query) - set(expected) <= {'temp'} and all(query.get(key) == values for key, values in expected.items()):
+                if not all(query.get(key) == values for key, values in expected.items()):
+                    continue
+                additions = set(query) - set(expected)
+                if additions <= {'temp'} or (additions == {'temp', '__vid'} and query['__vid'] == [self.video_id]):
                     return True
         except ValueError:
             return False

@@ -1,0 +1,38 @@
+{
+  "recorded_at": "2026-10-30T09:37:00.086357+00:00",
+  "version": "0.2.2",
+  "assessment": "通过",
+  "evidence_kind": "local_tests_build_diagnostic_and_independent_real_task_evidence",
+  "pytest": {
+    "tests": "473",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "9.995",
+    "new_explicit_mock_player_variant_cases": 29,
+    "hostname_only_redacted": true,
+    "public_xml": "artifacts/verification/pytest-v022.xml"
+  },
+  "frontend_build": {
+    "passed": true,
+    "modules": 22,
+    "frontend_logic_changed": false
+  },
+  "dependency_change": "project version only; locked third-party dependency versions unchanged",
+  "doctor": {
+    "passed": true,
+    "scope": "local readiness only"
+  },
+  "real_pipeline_evidence": "artifacts/verification/douyin-acquisition-repair-20261030.json",
+  "git_base": "0f3a3157f7060cf48ed5a515f67dc33423e02396",
+  "source_sha256": {
+    "backend/browser_capture.py": "eaf871d8e1e8204ebb77b5c3e88178fde45c4b38bc0c153d9b00114324c4c4ff",
+    "tests/test_browser_capture.py": "65a326630b5788f7e937d7c4bae886fabae584eb3326c276b2c524f82a49e07b",
+    "backend/__init__.py": "410d328d9427bd733b25e2cb6446565fa3665543eed65491396397178f7f82e8",
+    "pyproject.toml": "58751ccf2fd9906747f1e753b05786589ca566745eb994fd990c03579b517826",
+    "uv.lock": "c07dec9c160e80e8776c8a363d6340a70d5cd993b22969a2a5e79aef04920fd8",
+    "frontend/package.json": "04b7f5dd4d183753b395ab499dfd45fbd0f8dc82631302b2b665da0edbfcc148",
+    "frontend/package-lock.json": "dc5f58ef32dd92e90c38a896f8ec4f933f8d4a4b33da6c614d1753a403f2ab65"
+  },
+  "publication": "未验证; GitHub source/CI/release verified separately after push"
+}
