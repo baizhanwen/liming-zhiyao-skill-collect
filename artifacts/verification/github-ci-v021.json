@@ -1,0 +1,314 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-30T07:57:21.781Z",
+  "version": "0.2.1",
+  "source_commit": "cabbd2459975ef361480cae7a51a031b867f1607",
+  "run_id": 41022780767,
+  "url": "https://github.com/baizhanwen/liming-zhiyao-skill-collect/actions/runs/41022780767",
+  "status": "completed",
+  "conclusion": "success",
+  "created_at": "2026-10-30T07:52:45Z",
+  "updated_at": "2026-10-30T07:54:53Z",
+  "jobs": [
+    {
+      "name": "Test and build (macos-latest)",
+      "id": 123953744304,
+      "url": "https://github.com/baizhanwen/liming-zhiyao-skill-collect/actions/runs/41022780767/job/123953744304",
+      "conclusion": "success",
+      "pytest": {
+        "passed": 441,
+        "failed": 0,
+        "skipped": 3,
+        "warnings": 1,
+        "duration_seconds": 44.22,
+        "summary": "441 passed, 3 skipped, 1 warning in 44.22s"
+      },
+      "installation": {
+        "frozen_dependencies": true,
+        "production_frontend_build": true,
+        "official_chromium_download_observed": true,
+        "locked_playwright": "1.64.1",
+        "chromium_file_diagnostic_passed": true,
+        "system_ffmpeg": false,
+        "system_ffprobe": false,
+        "internal_playwright_ffmpeg_is_not_system_media_runtime": true
+      },
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run astral-sh/setup-uv@v6",
+          "conclusion": "success"
+        },
+        {
+          "name": "macOS/Linux repeatable installation",
+          "conclusion": "success"
+        },
+        {
+          "name": "Windows repeatable installation",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Restore locked development dependencies after setup",
+          "conclusion": "success"
+        },
+        {
+          "name": "Core and connector contract tests (after browser installation)",
+          "conclusion": "success"
+        },
+        {
+          "name": "Local diagnostic (does not prove external connections)",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run astral-sh/setup-uv@v6",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-node@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "Test and build (windows-latest)",
+      "id": 123953744525,
+      "url": "https://github.com/baizhanwen/liming-zhiyao-skill-collect/actions/runs/41022780767/job/123953744525",
+      "conclusion": "success",
+      "pytest": {
+        "passed": 439,
+        "failed": 0,
+        "skipped": 5,
+        "warnings": 1,
+        "duration_seconds": 56.97,
+        "summary": "439 passed, 5 skipped, 1 warning in 56.97s"
+      },
+      "installation": {
+        "frozen_dependencies": true,
+        "production_frontend_build": true,
+        "official_chromium_download_observed": true,
+        "locked_playwright": "1.64.1",
+        "chromium_file_diagnostic_passed": true,
+        "system_ffmpeg": false,
+        "system_ffprobe": false,
+        "internal_playwright_ffmpeg_is_not_system_media_runtime": true
+      },
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run astral-sh/setup-uv@v6",
+          "conclusion": "success"
+        },
+        {
+          "name": "macOS/Linux repeatable installation",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Windows repeatable installation",
+          "conclusion": "success"
+        },
+        {
+          "name": "Restore locked development dependencies after setup",
+          "conclusion": "success"
+        },
+        {
+          "name": "Core and connector contract tests (after browser installation)",
+          "conclusion": "success"
+        },
+        {
+          "name": "Local diagnostic (does not prove external connections)",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run astral-sh/setup-uv@v6",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-node@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "name": "Test and build (ubuntu-latest)",
+      "id": 123953744526,
+      "url": "https://github.com/baizhanwen/liming-zhiyao-skill-collect/actions/runs/41022780767/job/123953744526",
+      "conclusion": "success",
+      "pytest": {
+        "passed": 441,
+        "failed": 0,
+        "skipped": 3,
+        "warnings": 1,
+        "duration_seconds": 10.78,
+        "summary": "441 passed, 3 skipped, 1 warning in 10.78s"
+      },
+      "installation": {
+        "frozen_dependencies": true,
+        "production_frontend_build": true,
+        "official_chromium_download_observed": true,
+        "locked_playwright": "1.64.1",
+        "chromium_file_diagnostic_passed": true,
+        "system_ffmpeg": false,
+        "system_ffprobe": false,
+        "internal_playwright_ffmpeg_is_not_system_media_runtime": true
+      },
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run astral-sh/setup-uv@v6",
+          "conclusion": "success"
+        },
+        {
+          "name": "macOS/Linux repeatable installation",
+          "conclusion": "success"
+        },
+        {
+          "name": "Windows repeatable installation",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Restore locked development dependencies after setup",
+          "conclusion": "success"
+        },
+        {
+          "name": "Core and connector contract tests (after browser installation)",
+          "conclusion": "success"
+        },
+        {
+          "name": "Local diagnostic (does not prove external connections)",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run astral-sh/setup-uv@v6",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-node@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
+  "workflow_order": [
+    "platform setup: locked dependencies, frontend production build, official Chromium download and file check",
+    "restore locked development dependencies after no-dev setup",
+    "pytest local and explicit connector contracts",
+    "read-only local diagnostic"
+  ],
+  "skip_boundaries": {
+    "all_platforms": [
+      "tests/test_core.py::test_real_ffmpeg_pipeline_and_contract_audio_vision: system FFmpeg absent",
+      "tests/test_review.py::test_review_fake_mp4_hls_cannot_fetch_loopback_resources: system FFprobe absent",
+      "tests/test_browser_capture.py::test_real_project_renderer_with_explicit_offline_public_fixture: system FFmpeg required in addition to project Node/Chromium"
+    ],
+    "windows_additional": [
+      "tests/test_distribution.py::test_backup_rejects_symlink_media: Windows optional symlink permissions",
+      "tests/test_distribution.py::test_port_check_allows_immediate_restart_after_time_wait: POSIX socket reuse semantics"
+    ],
+    "reason_method": "Actual passed/skipped counts come from runner summaries; individual reasons map to committed skip guards and the actual runtime diagnostic. No skip or assertion was added to obtain this run."
+  },
+  "business_boundary": {
+    "new_original_media_calls": 0,
+    "new_model_calls": 0,
+    "new_feishu_calls": 0,
+    "new_github_project_calls": 0,
+    "actual_recent_user_acquisition_result": "three prior attempts timed out; retained without claiming success",
+    "ci_scope": "Local and explicit mocked contracts; installation/browser file checks are not a renderer launch or original-media acceptance. UI contracts and actual local deployment readonly checks are independent reports.",
+    "local_pytest": {
+      "passed": 444,
+      "failed": 0,
+      "skipped": 0,
+      "report": "pytest-v021-release.xml"
+    },
+    "ui_reports": [
+      "ui-task-progress-contract-v021.json",
+      "ui-regression-v021.json"
+    ],
+    "deployment_report": "task-progress-production-readonly-v021.json"
+  },
+  "publication_at_recording": {
+    "tag_created": false,
+    "release_created": false,
+    "final_docs_pending": true
+  }
+}

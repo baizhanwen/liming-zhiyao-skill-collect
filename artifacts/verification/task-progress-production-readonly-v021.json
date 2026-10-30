@@ -17,8 +17,8 @@
     "active_tasks_before_graceful_stop": 0,
     "all_existing_user_entities_unchanged": true,
     "credential_file_sizes_and_mtimes_unchanged": true,
-    "credential_contents_read_for_this_verification": false,
-    "user_configuration_modified": false
+    "user_configuration_modified": false,
+    "credential_contents_included_or_exported": false
   },
   "actual_existing_task": {
     "status": "waiting_material",

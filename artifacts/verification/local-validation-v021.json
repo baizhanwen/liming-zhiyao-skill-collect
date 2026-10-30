@@ -79,5 +79,13 @@
     "uv.lock": "6bc5abfe958c329c05a1edebd945dad7f6fa7b771337da4f0f4d209b91b1aaa4"
   },
   "source_note": "Final backend differed after 443 only by retry counter correctness and safe wording; final444 includes both; frontend final separate build/UI contract done after pytest; no subsequent runtime changes",
-  "release_state": "not_committed_or_published_yet"
+  "release_state": "not_committed_or_published_yet",
+  "publication": {
+    "accepted_source_commit": "cabbd2459975ef361480cae7a51a031b867f1607",
+    "ci_url": "https://github.com/baizhanwen/liming-zhiyao-skill-collect/actions/runs/41022780767",
+    "ci_evidence": "artifacts/verification/github-ci-v021.json",
+    "ci_status": "passed_three_platforms_with_documented_skips",
+    "release_url": "https://github.com/baizhanwen/liming-zhiyao-skill-collect/releases/tag/v0.2.1",
+    "boundary": "Actual CI complete; release created and read back as final publication action. Candidate timestamps and statuses above preserved."
+  }
 }

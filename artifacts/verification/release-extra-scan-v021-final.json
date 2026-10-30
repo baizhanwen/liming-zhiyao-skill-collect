@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "at": "2026-10-30T08:02:23.975380+00:00",
+  "version": "0.2.1",
+  "phase": "final_docs_before_tag_and_release",
+  "status": "passed",
+  "accepted_source_commit": "cabbd2459975ef361480cae7a51a031b867f1607",
+  "head_before_docs_commit": "cabbd2459975ef361480cae7a51a031b867f1607",
+  "source_files_scanned": 174,
+  "reachable_commits_scanned": 16,
+  "unique_history_blobs": 339,
+  "rules": [
+    "literal_auth_cookie_or_config",
+    "enterprise_identifier",
+    "jwt",
+    "signed_remote_url",
+    "local_absolute_path"
+  ],
+  "matched_occurrences": {
+    "local_absolute_path": 38,
+    "signed_remote_url": 185,
+    "literal_auth_cookie_or_config": 91
+  },
+  "reviewed_classification_counts": {
+    "legacy_public_node_runtime_reference": 3,
+    "known_public_workspace_reference": 35,
+    "explicit_fixture_or_placeholder": 272,
+    "explicit_mock_oauth_token": 4
+  },
+  "findings": [],
+  "runtime_dependency_tests_ci_trees_match_accepted_source": true,
+  "public_inventory_sha256_excluding_this_pair_of_scan_reports": "0c0b1655f9db5117bfe226e21eaca25dcd17d63537eb0c90b95a8cd9138ef1f5",
+  "scope_note": "Current tracked/untracked nonignored public set and all reachable history. Matched values omitted. Explicit fixtures, known public workspace paths and the historical public Node runtime reference are classified separately. Known-pattern and literal review cannot guarantee all secret formats. No private/data material included.",
+  "publication_boundary": "Only documentation and public verification evidence differs from accepted CI source; new independent prerelease will retain all old tags. No business call or production restart in publication work."
+}
