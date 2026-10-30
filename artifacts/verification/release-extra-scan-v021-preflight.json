@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "at": "2026-10-30T07:41:27.036574+00:00",
+  "version": "0.2.1",
+  "status": "passed",
+  "phase": "preflight_only_not_publication_approval",
+  "head_before_candidate": "f1221f6d22754dda6447cd2fc4d46ea5f649bac7",
+  "current_public_files_at_supplementary_snapshot": 162,
+  "reachable_commits": 15,
+  "unique_history_blobs": 302,
+  "rules": [
+    "literal_auth_cookie_or_config",
+    "enterprise_identifier",
+    "jwt",
+    "signed_remote_url",
+    "other_user_absolute_path"
+  ],
+  "matched_occurrences": {
+    "literal_auth_cookie_or_config": 89,
+    "enterprise_identifier": 0,
+    "jwt": 0,
+    "signed_remote_url": 136,
+    "other_user_absolute_path": 42
+  },
+  "explicit_fixture_or_known_public_occurrences": 256,
+  "additional_reviewed_occurrences": {
+    "historical_public_node_runtime_path": 3,
+    "public_https_url_path_component": 4,
+    "explicit_mock_oauth_token_fixture": 4
+  },
+  "unresolved_findings": [],
+  "private_payload_paths_in_public_set": 0,
+  "remote_read_only_preflight": {
+    "repository": "baizhanwen/liming-zhiyao-skill-collect",
+    "visibility": "public",
+    "default_branch": "main",
+    "can_push": true,
+    "remote_main": "f1221f6d22754dda6447cd2fc4d46ea5f649bac7",
+    "v0_2_1_tag_found": false,
+    "v0_2_1_release_found": false,
+    "scope_changed": false
+  },
+  "latest_local_pytest": {
+    "report": "pytest-v021-release.xml",
+    "tests": 444,
+    "errors": 0,
+    "failures": 0,
+    "skipped": 0,
+    "seconds": 9.357,
+    "progress_modules": {
+      "test_task_progress": 22,
+      "test_github_progress": 19,
+      "test_media_progress": 15
+    },
+    "external_business_calls": 0
+  },
+  "history_preserved": [
+    "pytest-v021.xml",
+    "pytest-v021-final.xml"
+  ],
+  "boundaries": [
+    "No matched literal value, cookie, signature, account material, private media, or user task content is included in this report.",
+    "The historical local Node executable path is tooling metadata, not a private material path; its value is omitted.",
+    "The /home/ match in the Feishu document belongs to a public HTTPS drive URL, not a local filesystem.",
+    "Known-pattern scanning and literal review are not a guarantee against all secret formats.",
+    "Frontend final validation, local deployment verification, final publication scan, exact-source CI and release are separate pending records.",
+    "No commit, push, tag, release, runtime restart, model, Feishu or original-media request was performed by this preflight."
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "application_version": "0.2.1",
+  "kind": "independent_local_ui_regression",
+  "result": "通过",
+  "run": {
+    "started_at": "2026-10-30T07:37:36.150Z",
+    "duration_ms": 16763,
+    "passed": 7,
+    "failed": 0,
+    "skipped": 0,
+    "flaky": 0,
+    "tests": [
+      {
+        "name": "GitHub项目关联界面契约：桌面证据、候选边界、单独检索与手动分析",
+        "status": "passed",
+        "duration_ms": 2629,
+        "attempts": 1
+      },
+      {
+        "name": "GitHub项目关联界面契约：窄屏证据、候选边界、单独检索与手动分析",
+        "status": "passed",
+        "duration_ms": 2238,
+        "attempts": 1
+      },
+      {
+        "name": "真实本地服务：无配置、编辑、包往返、字幕待配置、错误与窄屏操作",
+        "status": "passed",
+        "duration_ms": 6979,
+        "attempts": 1
+      },
+      {
+        "name": "飞书UI契约：普通导入提示旧包，明确确认后刷新企业附件并呈现保留企业版结果",
+        "status": "passed",
+        "duration_ms": 1140,
+        "attempts": 1
+      },
+      {
+        "name": "模型高级设置UI契约：输出上限整数校验与DeepSeek官方host专属推理选项",
+        "status": "passed",
+        "duration_ms": 632,
+        "attempts": 1
+      },
+      {
+        "name": "模型诊断UI契约：失败回答仅按需读取并单独展开，不发起模型请求",
+        "status": "passed",
+        "duration_ms": 697,
+        "attempts": 1
+      },
+      {
+        "name": "MiniMax提示UI契约：精确官方主机显示原生路径，独立配置不复制模型或密钥",
+        "status": "passed",
+        "duration_ms": 626,
+        "attempts": 1
+      }
+    ]
+  },
+  "build": {
+    "javascript": "index-CLgWwhR4.js",
+    "css": "index-Dv1BBRwq.css",
+    "relationship_to_final": "早于最后的累计尝试次数/本轮尝试显示及相应断言；本报告不冒充index-ro9q8Tb4.js的7项重新运行"
+  },
+  "scope": {
+    "real_local_temp_service_tests": 1,
+    "explicit_ui_contract_tests": 6,
+    "production_user_data_read_or_modified": false,
+    "real_model_calls": false,
+    "real_feishu_calls": false,
+    "real_github_calls": false,
+    "real_media_acquisition": false
+  },
+  "boundary": "1项临时本地CRUD、ZIP往返、字幕待配置和窄屏真实UI；其余6项显式模拟GitHub关联、飞书同步与模型设置/诊断。所有数据与凭证仅为自编测试资料，不代表外部服务验收。",
+  "final_progress_run": "ui-task-progress-contract-v021.json",
+  "not_a_single_combined_13_test_run": true
+}

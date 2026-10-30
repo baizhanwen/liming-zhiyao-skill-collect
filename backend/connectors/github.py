@@ -18,6 +18,8 @@ from urllib.parse import quote, unquote, urlparse
 
 import httpx
 
+from ..security import AppError
+
 
 class GithubError(Exception):
     def __init__(self, code: str, message: str, retryable: bool = False):
@@ -229,12 +231,40 @@ class GitHubConnector:
     MAX_PACKAGE = 8 * 1024 * 1024
     MAX_PACKAGE_FILES = 100
     MAX_TREE = 30000
+    _PROGRESS_PHASES = frozenset(('github_metadata', 'github_tree', 'github_files', 'github_fallback'))
+    _PROGRESS_METRICS = frozenset(('completed', 'total', 'files_read', 'files_total'))
 
     def __init__(self, token: str = '', *, client: httpx.Client | None = None):
         self.token = token
         self.client = client or httpx.Client(timeout=httpx.Timeout(25, connect=10), follow_redirects=False)
         self._owns_client = client is None
         self._cache: dict = {}
+        self._progress_callback = None
+
+    def set_progress_callback(self, callback):
+        """Optional observer receiving a new, privacy-limited event dictionary.
+
+        completed counts checked candidates; files_read counts UTF-8 files
+        actually retained in the snapshot, matching metadata.files_read. No
+        timer or network-wait heartbeat is emitted by this connector.
+        """
+        self._progress_callback = callback if callable(callback) else None
+
+    def _emit_progress(self, phase, **metrics):
+        callback = self._progress_callback
+        if callback is None or phase not in self._PROGRESS_PHASES:
+            return
+        event = {'phase': phase, **{key: value for key, value in metrics.items()
+                 if key in self._PROGRESS_METRICS and type(value) is int and value >= 0}}
+        try:
+            callback(event)
+        except AppError as error:
+            if error.code == 'cancelled':
+                raise
+        except Exception:
+            # Telemetry failure cannot repeat network requests or change source
+            # acceptance. Cancellation remains an explicit control signal.
+            pass
 
     def close(self):
         if self._owns_client:self.client.close()
@@ -389,11 +419,16 @@ class GitHubConnector:
             # cause a second anonymous authentication attempt.
             if self.token or exc.code not in ('rate_limit', 'network', 'timeout'):
                 raise
+            self._emit_progress('github_fallback', completed=0, total=1)
             return self._snapshot_public_git(url, depth, exc.code)
 
     def _snapshot_api(self, url: str, depth: str = 'quick') -> dict:
+        self._emit_progress('github_metadata', completed=0, total=1)
         target = self.normalize(url)
+        self._emit_progress('github_metadata', completed=1, total=1)
+        self._emit_progress('github_tree', completed=0, total=1)
         tree, truncated = self._tree(target)
+        self._emit_progress('github_tree', completed=1, total=1)
         target['metadata']['transport'] = 'github_api'
         return self._read_snapshot(target, tree, truncated, depth, self._text_file)
 
@@ -403,6 +438,7 @@ class GitHubConnector:
             reader = _PublicGit(Path(temporary), parsed['repository'])
             revision, scope, default = reader.resolve(parsed)
             sha = reader.fetch(revision)
+            self._emit_progress('github_fallback', completed=1, total=1)
             target = {**parsed, 'version': sha, 'path': scope, 'original_url': url, 'url': f'https://github.com/{parsed["repository"]}' +
                       (f'/{parsed["kind"]}/{sha}/{quote(scope)}' if scope else ''),
                       'metadata': {'description': None, 'stars': None, 'updated_at': None, 'license': 'UNKNOWN',
@@ -410,7 +446,9 @@ class GitHubConnector:
                                    'transport': 'public_git', 'fallback_reason': reason,
                                    'fallback_note': 'GitHub API 受限，已通过匿名公开 Git 读取固定版本；未使用本机 GitHub 凭证。',
                                    'git_disk_budget_bytes': reader.MAX_DISK, 'git_deadline_seconds': reader.MAX_SECONDS}}
+            self._emit_progress('github_tree', completed=0, total=1)
             tree, truncated = reader.tree(sha, self.MAX_TREE)
+            self._emit_progress('github_tree', completed=1, total=1)
             def text_file(t, item):
                 self._safe_path(item['path'])
                 raw = reader.blob(item, self.MAX_FILE)
@@ -461,14 +499,18 @@ class GitHubConnector:
             code = next((i for i in candidates if score(i)[0] == 4), None)
             if code and not any(score(i)[0] == 4 for i in selected):
                 selected[-1:] = [code]
+        count = len(selected)
+        self._emit_progress('github_files', completed=0, total=count, files_read=0, files_total=count)
         if not selected:
             raise GithubError('no_content', '该范围没有可读取的文字文件')
         files, total = [], 0
-        for item in selected:
+        for index, item in enumerate(selected, 1):
             f = text_reader(target, item)
             if f and total + len(f['content']) <= (150000 if depth == 'deep' else 60000):
                 files.append(f)
                 total += len(f['content'])
+            self._emit_progress('github_files', completed=index, total=count,
+                                files_read=len(files), files_total=count)
         if not files:
             raise GithubError('no_content', '该范围没有可读取的 UTF-8 文字文件')
         evidence = [{'id': f'G{i + 1}', 'path': f['path'], 'url': f['url'], 'excerpt': f['content'][:1200],

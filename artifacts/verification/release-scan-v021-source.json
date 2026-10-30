@@ -1,0 +1,7 @@
+{
+  "status": "passed",
+  "source_files_scanned": 171,
+  "reachable_commits_scanned": 15,
+  "findings": [],
+  "scope": "known credential patterns, forbidden paths, source and all reachable history; not a guarantee against all secret formats"
+}

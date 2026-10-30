@@ -241,14 +241,14 @@ def create_app(data_dir=None,start_worker=True,model_client=None,github_factory=
         return skills.import_zip(github_call('skill_package',url,path))
 
     @app.get('/api/tasks')
-    def tasks():return store.list('tasks')
+    def tasks():return runner.present_many(store.list('tasks'))
 
     @app.post('/api/tasks')
     def task_create(value:TaskInput,idempotency_key:str|None=Header(default=None)):
-        return runner.create(value.input,value.depth,idempotency_key=idempotency_key)
+        return runner.present(runner.create(value.input,value.depth,idempotency_key=idempotency_key))
 
     @app.get('/api/tasks/{id}')
-    def task_detail(id:str):return get_task(id)
+    def task_detail(id:str):return runner.present(get_task(id))
 
     @app.get('/api/tasks/{id}/diagnostics')
     def task_diagnostics(id:str):
@@ -260,10 +260,10 @@ def create_app(data_dir=None,start_worker=True,model_client=None,github_factory=
         return {'runs':runs,'privacy_note':'模型回答可能包含来源资料，仅存本机数据库。不会写入服务日志、技能导出或公开验收材料；私人数据备份会包含这些记录。'}
 
     @app.post('/api/tasks/{id}/retry')
-    def retry(id:str):return runner.retry(id)
+    def retry(id:str):return runner.present(runner.retry(id))
 
     @app.post('/api/tasks/{id}/cancel')
-    def cancel(id:str):return runner.cancel(id)
+    def cancel(id:str):return runner.present(runner.cancel(id))
 
     @app.post('/api/tasks/{id}/project-links')
     def refresh_project_links(id:str):return runner.refresh_project_links(id)

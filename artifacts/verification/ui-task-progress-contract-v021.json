@@ -1,0 +1,107 @@
+{
+  "schema_version": 1,
+  "application_version": "0.2.1",
+  "kind": "explicit_ui_contract",
+  "result": "通过",
+  "run": {
+    "started_at": "2026-10-30T07:40:19.643Z",
+    "duration_ms": 37132,
+    "passed": 6,
+    "failed": 0,
+    "skipped": 0,
+    "flaky": 0,
+    "tests": [
+      {
+        "name": "进度契约：1440px顶部进度、真实计数、排队与取消范围",
+        "status": "passed",
+        "duration_ms": 2256,
+        "attempts": 1
+      },
+      {
+        "name": "进度契约：390px顶部进度、真实计数、排队与取消范围",
+        "status": "passed",
+        "duration_ms": 2092,
+        "attempts": 1
+      },
+      {
+        "name": "进度契约：列表失败不阻塞详情、读取不重叠、断连保留并恢复",
+        "status": "passed",
+        "duration_ms": 3763,
+        "attempts": 1
+      },
+      {
+        "name": "进度契约：换任务与同ID重开不会被迟到响应覆盖或停止轮询",
+        "status": "passed",
+        "duration_ms": 3692,
+        "attempts": 1
+      },
+      {
+        "name": "进度契约：live状态读取超时可见，计时在断连时不倒退",
+        "status": "passed",
+        "duration_ms": 11903,
+        "attempts": 1
+      },
+      {
+        "name": "进度契约：旧接口无live状态读取超时可见，计时在断连时不倒退",
+        "status": "passed",
+        "duration_ms": 11914,
+        "attempts": 1
+      }
+    ]
+  },
+  "build": {
+    "command": "npm --prefix frontend run build",
+    "result": "通过",
+    "javascript": "index-ro9q8Tb4.js",
+    "css": "index-Dv1BBRwq.css"
+  },
+  "environment": {
+    "platform": "macOS",
+    "browser": "Google Chrome via Playwright",
+    "viewports": [
+      {
+        "width": 1440,
+        "height": 1100
+      },
+      {
+        "width": 390,
+        "height": 844
+      }
+    ],
+    "service": "isolated temporary FastAPI process; task/status responses explicitly intercepted",
+    "user_data_read_or_modified": false,
+    "real_model_calls": false,
+    "real_github_or_feishu_calls": false,
+    "real_media_acquisition": false
+  },
+  "checks": [
+    "首页活动任务及任务详情顶部进度；导航/打开任务回到顶部，轮询不滚动；390px无横向溢出",
+    "当前阶段、任务历时、本步骤用时、最近成功刷新、真实活动年龄分别呈现",
+    "仅呈现来源返回的计数；网页代理总流量与实际取回数据区分；无总体百分比",
+    "累计已尝试4次常驻，与本轮尝试2/3独立；不把累计次数硬设为3次上限",
+    "准备抽样画面与完整视频候选文案不暗示视觉分析完成",
+    "等待较久不判定卡死；模型等待文案仅用于对应模型服务",
+    "waiting_material明确来源获取未完成，不显示运行中的当前阶段标题",
+    "排队位置、取消后主计时冻结、取消在途等待、后台停止各自明确",
+    "列表失败不阻塞详情；同类状态读取不重叠；断连保留旧结果并可恢复",
+    "切换任务与同ID重开后，迟到响应不覆盖新选择，轮询继续",
+    "live与旧接口无live的读取超时可见；断连计时不倒退且冻结；旧接口首次未确认快照时用时显示未知"
+  ],
+  "screenshots": [
+    {
+      "file": "ui-task-progress-desktop-contract-v021.png",
+      "width": 1440,
+      "sha256": "b77201f3e4d1dafb43638f77e8ef460b3dc7be5729e7fe4f8ca7c158ea2461fe",
+      "contains": "explicit contract sample only"
+    },
+    {
+      "file": "ui-task-progress-mobile-contract-v021.png",
+      "width": 390,
+      "sha256": "362930eb3672a93ce06fefe4a68479fec30446a3e9087a0aeab7f0ca07ff3e59",
+      "contains": "explicit contract sample only"
+    }
+  ],
+  "scope_note": "本报告为最后构建对应的6项显式界面契约；任务、供应商与计数均为自编契约样例。不能替代真实来源获取、转写、视觉、文字分析或外部联通验收。",
+  "regression_note": "此前独立7项在index-CLgWwhR4.js构建通过，早于最后仅尝试次数显示与相应断言调整；见ui-regression-v021.json。没有宣称13项在同一最终构建全套运行。",
+  "history_note": "较早5项/6项候选运行及原公开历史报告未覆盖；当前定义为既有7项与新增6项，共13项。"
+}

@@ -14,6 +14,28 @@ from .security import AppError, fetch_public
 MAX_UPLOAD = 100*1024*1024
 MAX_DURATION = 1200
 ALLOWED = {'.mp4','.mov','.mkv','.webm','.m4v','.mp3','.wav','.m4a','.srt','.vtt','.txt'}
+_PROGRESS_PHASES = {'public_page', 'browser', 'validating_media', 'merging_media', 'audio_chunks', 'frames'}
+_PROGRESS_COUNTS = {'completed', 'total', 'requests', 'downloaded_bytes', 'proxy_connections',
+                    'proxy_bytes', 'media_responses', 'complete_bound_media'}
+
+
+def _progress_count(value):
+    return type(value) is int and 0 <= value <= 2**63 - 1
+
+
+def _notify_progress(callback, phase, **counts):
+    """Observability is optional; cancellation remains a business control signal."""
+    if callback is None or phase not in _PROGRESS_PHASES:
+        return
+    event = {'phase': phase, **{key: value for key, value in counts.items()
+                             if key in _PROGRESS_COUNTS and _progress_count(value)}}
+    try:
+        callback(event)
+    except AppError as exc:
+        if exc.code == 'cancelled':
+            raise
+    except Exception:
+        pass
 
 
 def extract_url(text):
@@ -74,27 +96,32 @@ def inspect_video(path):
     return {'duration':duration,'video':any(s['codec_type']=='video' for s in info['streams']),'audio':any(s['codec_type']=='audio' for s in info['streams'])}
 
 
-def prepare_media(path,folder,depth='quick'):
+def prepare_media(path,folder,depth='quick',*,progress_callback=None):
+    _notify_progress(progress_callback, 'validating_media', completed=0, total=1)
     meta=inspect_video(path)
+    _notify_progress(progress_callback, 'validating_media', completed=1, total=1)
     folder.mkdir(parents=True,exist_ok=True)
     chunks=[]
     if meta['audio']:
-        for index,start in enumerate(range(0,int(meta['duration'])+1,120)):
-            if start>=meta['duration']:
-                break
+        starts=[start for start in range(0,int(meta['duration'])+1,120) if start<meta['duration']]
+        _notify_progress(progress_callback, 'audio_chunks', completed=0, total=len(starts))
+        for index,start in enumerate(starts):
             target=folder/f'audio-{index}.wav'
             if not target.exists():
                 run_media(['ffmpeg','-nostdin','-v','error','-y','-protocol_whitelist','file,pipe','-format_whitelist','mov,matroska,webm,wav,mp3','-i',str(path),'-ss',str(start),'-t','120','-vn','-ar','16000','-ac','1',str(target)])
             chunks.append({'path':str(target),'time':start})
+            _notify_progress(progress_callback, 'audio_chunks', completed=len(chunks), total=len(starts))
     frames=[]
     if meta['video']:
         count=4 if depth=='quick' else 8
+        _notify_progress(progress_callback, 'frames', completed=0, total=count)
         for i in range(count):
             at=round(meta['duration']*(i+0.5)/count,2)
             target=folder/f'frame-{i}.jpg'
             if not target.exists():
                 run_media(['ffmpeg','-nostdin','-v','error','-y','-protocol_whitelist','file,pipe','-format_whitelist','mov,matroska,webm,wav,mp3','-ss',str(at),'-i',str(path),'-frames:v','1','-vf','scale=640:-2',str(target)])
             frames.append({'path':str(target),'time':at})
+            _notify_progress(progress_callback, 'frames', completed=len(frames), total=count)
     return {**meta,'chunks':chunks,'frames':frames}
 
 
@@ -212,11 +239,36 @@ def _published_media(page, video_id):
     return candidates[:4]
 
 
-def _browser_douyin_source(url, folder, video_id, cancelled=None):
+def _browser_douyin_source(url, folder, video_id, cancelled=None, *, progress_callback=None):
     """Product-owned rendering fallback; metadata alone can never be a source."""
     from .browser_capture import capture_douyin
-    captured=capture_douyin(f'https://www.douyin.com/video/{video_id}',folder,
-        video_id=video_id,timeout=180,max_bytes=MAX_UPLOAD,cancelled=cancelled)
+    _notify_progress(progress_callback, 'browser')
+    last_browser_event = None
+
+    def browser_progress(raw):
+        nonlocal last_browser_event
+        if not isinstance(raw, dict):
+            return
+        counters = {key: raw[key] for key in ('requests', 'downloaded_bytes', 'proxy_connections', 'proxy_bytes')
+                    if _progress_count(raw.get(key))}
+        responses = raw.get('response_status_counts')
+        if isinstance(responses, dict) and all(_progress_count(value) for value in responses.values()):
+            count = sum(responses.values())
+            if _progress_count(count):
+                counters['requests'] = count
+        for source, target in (('observed_media', 'media_responses'), ('complete_media', 'complete_bound_media')):
+            if _progress_count(raw.get(source)):
+                counters[target] = raw[source]
+        if not counters:
+            return
+        if counters != last_browser_event:
+            _notify_progress(progress_callback, 'browser', **counters)
+            last_browser_event = counters
+
+    options = {'video_id': video_id, 'timeout': 180, 'max_bytes': MAX_UPLOAD, 'cancelled': cancelled}
+    if progress_callback is not None:
+        options['progress_callback'] = browser_progress
+    captured=capture_douyin(f'https://www.douyin.com/video/{video_id}',folder,**options)
     if str(captured.get('observed_video_id'))!=str(video_id):
         raise AppError('douyin_browser_identity','自动采集的视频标识与分享链接不一致')
     resolved=captured.get('resolved_url','')
@@ -228,7 +280,9 @@ def _browser_douyin_source(url, folder, video_id, cancelled=None):
     records={str(Path(item['path']).resolve()):item for item in captured.get('media_files',[])
         if isinstance(item,dict) and isinstance(item.get('path'),str)}
     root=folder.resolve(); assets=[]
-    for value in paths[:8]:
+    selected_paths=paths[:8]
+    _notify_progress(progress_callback, 'validating_media', completed=0, total=len(selected_paths))
+    for index,value in enumerate(selected_paths):
         try:
             path=Path(value)
             if path.is_symlink() or not path.resolve().is_relative_to(root) or not path.is_file():continue
@@ -244,13 +298,21 @@ def _browser_douyin_source(url, folder, video_id, cancelled=None):
             reported=captured.get('reported_duration')
             if isinstance(reported,(int,float)) and reported>0 and abs(probe['duration']-reported)>max(1,reported*.02):continue
             assets.append({'path':path,'size':size,'sha256':digest,'probe':probe})
-        except (AppError,OSError,ValueError,TypeError):continue
+        except AppError as exc:
+            if exc.code == 'cancelled':
+                raise
+            continue
+        except (OSError,ValueError,TypeError):continue
+        finally:
+            _notify_progress(progress_callback, 'validating_media', completed=index+1, total=len(selected_paths))
     complete=next((item for item in assets if item['probe']['video'] and item['probe']['audio']),None)
     components=[]
     part=folder/'douyin.mp4.part'
     try:
         if complete:
+            _notify_progress(progress_callback, 'merging_media', completed=0, total=1)
             shutil.copyfile(complete['path'],part)
+            _notify_progress(progress_callback, 'merging_media', completed=1, total=1)
             components=[complete['sha256']]
         else:
             video=next((item for item in assets if item['probe']['video']),None)
@@ -260,20 +322,26 @@ def _browser_douyin_source(url, folder, video_id, cancelled=None):
             if audio:
                 if abs(video['probe']['duration']-audio['probe']['duration'])>max(1,video['probe']['duration']*.02):
                     raise AppError('douyin_browser_material','采集音画时长不一致，未合成为原片分析')
+                _notify_progress(progress_callback, 'merging_media', completed=0, total=1)
                 run_media(['ffmpeg','-nostdin','-v','error','-y','-protocol_whitelist','file,pipe',
                     '-format_whitelist','mov,matroska,webm,wav,mp3','-i',str(video['path']),
                     '-protocol_whitelist','file,pipe','-format_whitelist','mov,matroska,webm,wav,mp3',
                     '-i',str(audio['path']),'-map','0:v:0','-map','1:a:0','-c','copy',
                     '-movflags','+faststart','-f','mp4',str(part)])
+                _notify_progress(progress_callback, 'merging_media', completed=1, total=1)
                 components=[video['sha256'],audio['sha256']]
             else:
+                _notify_progress(progress_callback, 'merging_media', completed=0, total=1)
                 shutil.copyfile(video['path'],part)
+                _notify_progress(progress_callback, 'merging_media', completed=1, total=1)
                 components=[video['sha256']]
         if part.stat().st_size>MAX_UPLOAD:
             raise AppError('douyin_browser_material','自动取得的原视频超过100MB限制')
+        _notify_progress(progress_callback, 'validating_media', completed=0, total=1)
         probe=inspect_video(part)
         if not probe['video']:
             raise AppError('douyin_browser_material','未验证到原视频轨，不以页面信息作为成功')
+        _notify_progress(progress_callback, 'validating_media', completed=1, total=1)
         final=folder/'douyin.mp4';part.replace(final)
         # Only explicitly safe counters/digests leave the transient renderer.
         meta=captured.get('acquisition',{})
@@ -291,7 +359,7 @@ def _browser_douyin_source(url, folder, video_id, cancelled=None):
         part.unlink(missing_ok=True)
 
 
-def douyin_source(url, folder, *, cancelled=None):
+def douyin_source(url, folder, *, cancelled=None, progress_callback=None):
     parsed=urlsplit(url)
     if not _douyin_host(parsed.hostname or ''):
         raise AppError('unsupported_source', '当前仅支持 GitHub、抖音链接和文件上传')
@@ -302,12 +370,18 @@ def douyin_source(url, folder, *, cancelled=None):
     folder = Path(folder)
     pages, tried, video_id = [url], set(), _video_id(url)
     last_error = None
+    responses = downloaded_bytes = 0
+    _notify_progress(progress_callback, 'public_page', completed=0, requests=0, downloaded_bytes=0)
     for page_url in pages:
         if page_url in tried:
             continue
         tried.add(page_url)
         try:
             payload, final, _ = fetch_public(page_url, headers={'User-Agent': _MOBILE_UA})
+            responses += 1
+            downloaded_bytes += len(payload)
+            _notify_progress(progress_callback, 'public_page', completed=responses,
+                             requests=responses, downloaded_bytes=downloaded_bytes)
             if not _douyin_host(urlsplit(final).hostname or ''):
                 raise AppError('douyin_material', '抖音分享页跳转到不支持的来源，请补传原视频')
             resolved_id = _video_id(final)
@@ -326,11 +400,17 @@ def douyin_source(url, folder, *, cancelled=None):
                 path = folder / 'douyin.mp4.part'
                 try:
                     media, media_final, _ = fetch_public(media_url, MAX_UPLOAD, headers={'User-Agent': _MOBILE_UA})
+                    responses += 1
+                    downloaded_bytes += len(media)
+                    _notify_progress(progress_callback, 'public_page', completed=responses,
+                                     requests=responses, downloaded_bytes=downloaded_bytes)
                     folder.mkdir(parents=True, exist_ok=True)
                     path.write_bytes(media)
+                    _notify_progress(progress_callback, 'validating_media', completed=0, total=1)
                     probe = inspect_video(path)
                     if not probe['video']:
                         raise AppError('douyin_material', '公开媒体不是视频，不能替代原片分析')
+                    _notify_progress(progress_callback, 'validating_media', completed=1, total=1)
                     final_path = folder / 'douyin.mp4'
                     path.replace(final_path)
                     clean_final = urlunsplit((*urlsplit(final)[:3], '', ''))
@@ -345,16 +425,22 @@ def douyin_source(url, folder, *, cancelled=None):
                         result['limitations'] = ['原视频未发现音轨，不能进行原音转写']
                     return result
                 except AppError as exc:
+                    if exc.code == 'cancelled':
+                        raise
                     last_error = exc
                 except Exception:
                     last_error = AppError('douyin_fetch', '公开媒体下载未完成，请补传原视频', True)
                 finally:
                     path.unlink(missing_ok=True)
         except AppError as exc:
+            if exc.code == 'cancelled':
+                raise
             last_error = exc
         except Exception:
             last_error = AppError('douyin_fetch', '抖音公开页获取未完成，请检查网络或补传视频', True)
     if video_id:
+        if progress_callback is not None:
+            return _browser_douyin_source(url,folder,video_id,cancelled=cancelled,progress_callback=progress_callback)
         return _browser_douyin_source(url,folder,video_id,cancelled=cancelled)
     if last_error:
         raise AppError('douyin_fetch', '项目未能解析此抖音原视频，请检查网络或平台访问限制；没有用网页摘要代替原片', last_error.retryable)

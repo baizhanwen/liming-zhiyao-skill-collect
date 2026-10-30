@@ -4,6 +4,8 @@ import { api, rows, display, formatDate, statuses, stageNames } from './api';
 import type { Doc } from './api';
 import { version as appVersion } from '../package.json';
 import ProjectLinks from './ProjectLinks';
+import TaskProgress, { formatElapsedSeconds, initialTaskRefresh } from './TaskProgress';
+import type { TaskRefreshState } from './TaskProgress';
 
 type Page='home'|'tasks'|'discover'|'knowledge'|'skills'|'enterprise'|'settings';
 const navigation:{id:Page;label:string;icon:string}[]=[{id:'home',label:'工作台',icon:'grid'},{id:'discover',label:'发现 Skill',icon:'compass'},{id:'knowledge',label:'知识库',icon:'book'},{id:'skills',label:'个人技能',icon:'layers'},{id:'enterprise',label:'企业技能',icon:'cloud'},{id:'tasks',label:'任务记录',icon:'activity'}];
@@ -43,15 +45,82 @@ export default function App(){
   const [menu,setMenu]=useState(false),[status,setStatus]=useState<Doc>({}),[settings,setSettings]=useState<Doc>({models:{},github:{},feishu:{}}),[tasks,setTasks]=useState<Doc[]>([]),[knowledge,setKnowledge]=useState<Doc[]>([]),[skills,setSkills]=useState<Doc[]>([]);
   const [selectedTask,setSelectedTask]=useState<Doc|null>(null),[selectedKnowledge,setSelectedKnowledge]=useState<Doc|null>(null),[selectedSkill,setSelectedSkill]=useState<Doc|null>(null);
   const [busy,setBusy]=useState(''),[toast,setToast]=useState<{message:string;error?:boolean}|null>(null),[boot,setBoot]=useState(true);
+  const [taskConnection,setTaskConnection]=useState<TaskRefreshState>(initialTaskRefresh),[listConnection,setListConnection]=useState<TaskRefreshState>(initialTaskRefresh),[detailRefreshKey,setDetailRefreshKey]=useState(0);
+  const mounted=useRef(true),selectionEpoch=useRef(0),selectionId=useRef<string|null>(null),detailController=useRef<AbortController|null>(null),listController=useRef<AbortController|null>(null),listPromise=useRef<Promise<Doc[]>|null>(null);
   const notify=useCallback((message:string,error=false)=>setToast({message,error}),[]);
-  const navigate=(next:Page)=>{setPage(next);location.hash=next;setMenu(false);setSelectedTask(null);setSelectedKnowledge(null);setSelectedSkill(null);};
+  const clearSelectedTask=()=>{selectionEpoch.current++;selectionId.current=null;detailController.current?.abort();setSelectedTask(null);setTaskConnection(initialTaskRefresh);};
+  const readTaskList=useCallback(():Promise<Doc[]>=>{
+    if(listPromise.current)return listPromise.current;
+    const controller=new AbortController();listController.current=controller;let timedOut=false;
+    const timeout=setTimeout(()=>{timedOut=true;controller.abort();},10000);
+    const pending=(async()=>{
+      setListConnection(previous=>({...previous,pending:true,lastAttemptAt:Date.now()}));
+      try{
+        const value=await api('/tasks',undefined,undefined,{signal:controller.signal});
+        if(!Array.isArray(value)&&!Array.isArray(value?.tasks)&&!Array.isArray(value?.items))throw new Error('任务列表响应无效');
+        const items=rows(value);
+        if(mounted.current){setTasks(items);setListConnection({pending:false,lastSuccessAt:Date.now(),lastAttemptAt:Date.now(),error:null,failures:0,failureStartedAt:null});}
+        return items;
+      }catch(error:any){
+        if(mounted.current)setListConnection(previous=>({...previous,pending:false,error:timedOut?'读取本地状态超时':error.name==='TypeError'?'无法连接本地服务':error.message||'无法读取任务列表',failures:previous.failures+1,failureStartedAt:previous.error?previous.failureStartedAt:Date.now()}));
+        throw error;
+      }finally{clearTimeout(timeout);if(listController.current===controller)listController.current=null;listPromise.current=null;}
+    })();
+    listPromise.current=pending;return pending;
+  },[]);
+  useEffect(()=>{mounted.current=true;return()=>{mounted.current=false;selectionEpoch.current++;detailController.current?.abort();listController.current?.abort();};},[]);
+  const navigate=(next:Page)=>{setPage(next);location.hash=next;setMenu(false);clearSelectedTask();setSelectedKnowledge(null);setSelectedSkill(null);window.scrollTo(0,0);};
   useEffect(()=>{const fn=()=>{const next=location.hash.slice(1) as Page;if(titles[next])setPage(next);};window.addEventListener('hashchange',fn);return()=>window.removeEventListener('hashchange',fn);},[]);
-  const refresh=useCallback(async()=>{const results=await Promise.allSettled([api('/status'),api('/settings'),api('/tasks'),Promise.all([api('/knowledge'),api('/knowledge?archived=true')]).then(v=>v.flatMap(rows)),Promise.all([api('/skills'),api('/skills?archived=true')]).then(v=>v.flatMap(rows))]);const setters=[setStatus,setSettings,(x:any)=>setTasks(rows(x)),(x:any)=>setKnowledge(rows(x)),(x:any)=>setSkills(rows(x))];results.forEach((r,i)=>{if(r.status==='fulfilled')setters[i](r.value);});if(results[0].status==='rejected')notify('无法连接本地服务。请确认启动脚本仍在运行。',true);setBoot(false);},[notify]);
+  const refresh=useCallback(async()=>{
+    const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),10000);
+    const get=(path:string)=>api(path,undefined,undefined,{signal:controller.signal});
+    try{
+      const results=await Promise.allSettled([get('/status'),get('/settings'),readTaskList(),Promise.all([get('/knowledge'),get('/knowledge?archived=true')]).then(values=>values.flatMap(rows)),Promise.all([get('/skills'),get('/skills?archived=true')]).then(values=>values.flatMap(rows))]);
+      if(!mounted.current)return;
+      const setters=[setStatus,setSettings,(_value:any)=>{},(value:any)=>setKnowledge(rows(value)),(value:any)=>setSkills(rows(value))];
+      results.forEach((result,index)=>{if(result.status==='fulfilled')setters[index](result.value);});
+      if(results[0].status==='rejected')notify('无法连接本地服务。请确认启动脚本仍在运行。',true);
+      setBoot(false);
+    }finally{clearTimeout(timeout);}
+  },[notify,readTaskList]);
   useEffect(()=>{void refresh();},[refresh]);
   useEffect(()=>{if(!toast)return;const t=setTimeout(()=>setToast(null),7000);return()=>clearTimeout(t);},[toast]);
-  useEffect(()=>{const timer=setInterval(async()=>{try{setTasks(rows(await api('/tasks')));if(selectedTask){const t=await api('/tasks/'+selectedTask.id);setSelectedTask(t);if(['success','succeeded','completed'].includes(t.status)&&!['success','succeeded','completed'].includes(selectedTask.status))void refresh();}}catch{/* The next explicit request reports errors. */}},2500);return()=>clearInterval(timer);},[selectedTask?.id,selectedTask?.status,refresh]);
+  useEffect(()=>{
+    let disposed=false;let timer:ReturnType<typeof setTimeout>;
+    const poll=async()=>{try{await readTaskList();}catch{/* Persistent list feedback is rendered below. */}finally{if(!disposed)timer=setTimeout(poll,2500);}};
+    timer=setTimeout(poll,2500);return()=>{disposed=true;clearTimeout(timer);};
+  },[readTaskList]);
+  useEffect(()=>{
+    const id=selectedTask?.id;if(!id)return;
+    const epoch=selectionEpoch.current;let disposed=false;let timer:ReturnType<typeof setTimeout>|undefined;let controller:AbortController|null=null;
+    let completed=['success','succeeded','completed'].includes(selectedTask.status);
+    const poll=async()=>{
+      controller=new AbortController();const current=controller;detailController.current=current;let timedOut=false;let failed=false;
+      setTaskConnection(previous=>({...previous,pending:true,lastAttemptAt:Date.now()}));
+      const timeout=setTimeout(()=>{timedOut=true;current.abort();},10000);
+      const stillSelected=()=>!disposed&&mounted.current&&selectionEpoch.current===epoch&&selectionId.current===id;
+      try{
+        const value=await api('/tasks/'+id,undefined,undefined,{signal:current.signal});
+        if(!stillSelected())return;
+        if(value?.id!==id)throw new Error('任务详情响应与当前选择不一致');
+        setSelectedTask(previous=>previous?.id===id?value:previous);
+        setTaskConnection({pending:false,lastSuccessAt:Date.now(),lastAttemptAt:Date.now(),error:null,failures:0,failureStartedAt:null});
+        const nextCompleted=['success','succeeded','completed'].includes(value.status);
+        if(nextCompleted&&!completed)void refresh();completed=nextCompleted;
+      }catch(error:any){
+        if(!stillSelected())return;failed=true;
+        setTaskConnection(previous=>({...previous,pending:false,error:timedOut?'读取任务状态超时':error.name==='TypeError'?'无法连接本地服务':error.message||'无法读取当前任务状态',failures:previous.failures+1,failureStartedAt:previous.error?previous.failureStartedAt:Date.now()}));
+      }finally{
+        clearTimeout(timeout);if(detailController.current===current)detailController.current=null;
+        if(stillSelected())timer=setTimeout(poll,failed?5000:2500);
+      }
+    };
+    void poll();return()=>{disposed=true;if(timer)clearTimeout(timer);controller?.abort();};
+  },[selectedTask?.id,detailRefreshKey,refresh]);
   async function run(label:string,fn:()=>Promise<any>,success?:string){setBusy(label);try{const result=await fn();if(success)notify(success);return result;}catch(error:any){notify(error.message||'操作失败，请查看连接配置。',true);return undefined;}finally{setBusy('');}}
-  const openTask=async(id:string)=>{const t=await run('task',()=>api('/tasks/'+id));if(t){setSelectedTask(t);setPage('tasks');location.hash='tasks';}};
+  const openTask=(id:string)=>{selectionEpoch.current++;selectionId.current=id;detailController.current?.abort();setTaskConnection(initialTaskRefresh);setDetailRefreshKey(value=>value+1);setSelectedTask(tasks.find(task=>task.id===id)||{id,title:'正在读取任务详情',status:'unknown',stages:[]});setPage('tasks');location.hash='tasks';window.scrollTo(0,0);};
+  const applyTaskUpdate=(task:Doc)=>{if(task.id===selectionId.current){setSelectedTask(task);setTaskConnection(previous=>({...previous,lastSuccessAt:Date.now(),error:null,failures:0,failureStartedAt:null}));setDetailRefreshKey(value=>value+1);}};
+  const refreshSelectedTask=()=>setDetailRefreshKey(value=>value+1);
   const openSkill=async(id:string)=>{const s=await run('skill',()=>api('/skills/'+id));if(s){setSelectedSkill(s);setPage('skills');location.hash='skills';}};
   const analyzeRepository=async(url:string)=>{const t=await run('analyze-repository',()=>api('/tasks',{input:url,depth:'quick'}));if(t)await openTask(t.id);};
   const counts={tasks:tasks.length,knowledge:knowledge.filter(k=>!k.archived).length,skills:skills.filter(k=>!k.archived).length,...status.counts};
@@ -68,8 +137,8 @@ export default function App(){
       <header className="topbar"><div className="breadcrumbs"><button className="icon-button mobile-menu" aria-label="打开导航" onClick={()=>setMenu(true)}><Icon name="menu"/></button><span>工作空间</span><Icon name="chevron" size={13}/><strong>{titles[page]}</strong></div><div className="topbar-right"><span className="privacy-label"><span className="status-dot"/> 本地运行</span><button className="avatar" onClick={()=>navigate('settings')} aria-label="设置">利</button></div></header>
       <div className="page-content">
       {boot?<div className="loading-page"><span className="spinner"/> 正在连接本地工作空间…</div>:<>
-      {page==='home'&&<Home tasks={tasks} knowledge={knowledge} skills={skills} counts={counts} modelReady={modelReady} onNavigate={navigate} openTask={openTask} openSkill={openSkill} run={run} busy={busy} refresh={refresh} notify={notify}/>}
-      {page==='tasks'&&(selectedTask?<TaskDetail task={selectedTask} setTask={setSelectedTask} run={run} busy={busy} onBack={()=>setSelectedTask(null)} onSettings={()=>navigate('settings')} refresh={refresh} openSkill={openSkill} notify={notify} onAnalyzeRepository={analyzeRepository} modelProvider={settings.models?.text?.base_url||''} modelName={settings.models?.text?.model||''}/>:<><PageHeading eyebrow="YOUR ACTIVITY" title="每一次探索，都有迹可循" description="任务和已获取材料会保留。遇到限制，可以补充材料后继续。"/><TaskList tasks={tasks} onOpen={openTask}/></>)}
+      {page==='home'&&<Home listConnection={listConnection} refreshTaskList={()=>void readTaskList().catch(()=>{})} tasks={tasks} knowledge={knowledge} skills={skills} counts={counts} modelReady={modelReady} onNavigate={navigate} openTask={openTask} openSkill={openSkill} run={run} busy={busy} refresh={refresh} notify={notify}/>}
+      {page==='tasks'&&(selectedTask?<TaskDetail task={selectedTask} setTask={applyTaskUpdate} connection={taskConnection} refreshTask={refreshSelectedTask} run={run} busy={busy} onBack={clearSelectedTask} onSettings={()=>navigate('settings')} refresh={refresh} openSkill={openSkill} notify={notify} onAnalyzeRepository={analyzeRepository} modelProvider={settings.models?.text?.base_url||''} modelName={settings.models?.text?.model||''}/>:<><PageHeading eyebrow="YOUR ACTIVITY" title="每一次探索，都有迹可循" description="任务和已获取材料会保留。遇到限制，可以补充材料后继续。"/><TaskList tasks={tasks} onOpen={openTask} connection={listConnection} onRefresh={()=>void readTaskList().catch(()=>{})}/></>)}
       {page==='discover'&&<Discover run={run} busy={busy} refresh={refresh} openSkill={openSkill} onAnalyze={analyzeRepository}/>}
       {page==='knowledge'&&<Knowledge items={knowledge} selected={selectedKnowledge} select={setSelectedKnowledge} run={run} busy={busy} refresh={refresh} openTask={openTask} notify={notify}/>}
       {page==='skills'&&<Skills items={skills} selected={selectedSkill} select={setSelectedSkill} run={run} busy={busy} refresh={refresh} notify={notify}/>}
@@ -84,27 +153,39 @@ export default function App(){
 }
 type Runner=(label:string,fn:()=>Promise<any>,success?:string)=>Promise<any>;
 function PageHeading({eyebrow,title,description,actions}:{eyebrow?:string;title:string;description?:string;actions?:ReactNode}){return <div className="page-heading"><div>{eyebrow&&<div className="eyebrow">{eyebrow}</div>}<h1>{title}</h1>{description&&<p>{description}</p>}</div>{actions&&<div className="heading-actions">{actions}</div>}</div>;}
-function Home({tasks,knowledge,skills,counts,modelReady,onNavigate,openTask,openSkill,run,busy,refresh,notify}:{tasks:Doc[];knowledge:Doc[];skills:Doc[];counts:Doc;modelReady:boolean;onNavigate:(p:Page)=>void;openTask:(id:string)=>void;openSkill:(id:string)=>void;run:Runner;busy:string;refresh:()=>Promise<any>;notify:(m:string,e?:boolean)=>void}){
+function Home({tasks,knowledge,skills,counts,modelReady,onNavigate,openTask,openSkill,run,busy,refresh,notify,listConnection,refreshTaskList}:{listConnection:TaskRefreshState;refreshTaskList:()=>void;tasks:Doc[];knowledge:Doc[];skills:Doc[];counts:Doc;modelReady:boolean;onNavigate:(p:Page)=>void;openTask:(id:string)=>void;openSkill:(id:string)=>void;run:Runner;busy:string;refresh:()=>Promise<any>;notify:(m:string,e?:boolean)=>void}){
   const [input,setInput]=useState(''),[depth,setDepth]=useState('quick'),[file,setFile]=useState<File|null>(null);const fileRef=useRef<HTMLInputElement>(null);
   const recentKnowledge=knowledge.filter(item=>!item.archived).slice(0,3),recentSkills=skills.filter(item=>!item.archived).slice(0,3);
+  const activeTask=tasks.find(task=>task.status==='running')||tasks.find(task=>['queued','pending'].includes(task.status))||tasks.find(task=>task.status==='cancelled'&&task.live?.worker_active);
   async function submit(){if(!input.trim()&&!file)return;const task=await run('submit',async()=>{if(file){const form=new FormData();form.append('file',file);form.append('input',input);form.append('depth',depth);return api('/uploads',form);}return api('/tasks',{input:input.trim(),depth});});if(task){await refresh();openTask(task.id);}}
   return <><div className="home-intro"><div className="eyebrow"><span className="tiny-spark">✳</span> YOUR NEXT SKILL STARTS HERE</div><h1>把看到的，<br className="mobile-only"/>变成做得到的<span className="heading-dot">。</span></h1><p>刷到的 Skill 太多，来不及学？<br/>让利明智耀 AI 帮你看懂、整理，积累成自己的技能库。</p></div>
+    {activeTask&&<TaskProgress task={activeTask} connection={listConnection} stageLabel={taskStageName(activeTask.stage,activeTask)} compact onOpen={()=>openTask(activeTask.id)} onRefresh={refreshTaskList}/>}
     <section className="composer-card"><div className="composer-tabs"><span className="composer-tab active"><Icon name="link" size={16}/> 链接与分享文案</span><span className="source-hint">GitHub / 抖音 / 视频 / 字幕</span></div><textarea aria-label="链接或分享文案" placeholder={"丢进一个 GitHub 或抖音链接，开始理解它…\n也可以直接粘贴完整的抖音分享文案"} value={input} onChange={e=>setInput(e.target.value)}/>{file&&<div className="file-chip"><Icon name="file" size={16}/>{file.name}<small>{(file.size/1024/1024).toFixed(2)} MB</small><button aria-label="移除文件" onClick={()=>{setFile(null);if(fileRef.current)fileRef.current.value='';}}><Icon name="close" size={14}/></button></div>}<div className="composer-bottom"><button className="upload-button" onClick={()=>fileRef.current?.click()}><Icon name="plus" size={17}/> 上传视频或字幕</button><input ref={fileRef} hidden type="file" accept=".mp4,.mov,.mkv,.webm,.m4v,.mp3,.wav,.m4a,.srt,.vtt,.txt" onChange={e=>setFile(e.target.files?.[0]||null)}/><div className="composer-actions"><select aria-label="分析深度" value={depth} onChange={e=>setDepth(e.target.value)}><option value="quick">快速了解</option><option value="deep">深入分析</option></select><Button variant="primary" onClick={()=>void submit()} disabled={!!busy||(!input.trim()&&!file)}>{busy==='submit'?<span className="spinner"/>:'开始探索'}<Icon name="arrow" size={17}/></Button></div></div></section>
     <div className="composer-note"><Icon name="info" size={14}/><span>配置模型后，粘贴抖音链接，由本工作台自动尝试获取原片 → 转写音轨 → 分析抽样画面 → 内容分析 → 关联 GitHub 项目，无需 Codex。访问受限时会显示具体阶段与原因。</span></div>
     {!modelReady&&<div className="setup-banner"><span className="banner-icon"><Icon name="settings"/></span><div><strong>接入你的 AI，让探索更进一步</strong><p>配置模型后即可分析内容。现在也能搜索、导入和管理技能。</p></div><Button onClick={()=>onNavigate('settings')}>配置模型<Icon name="arrow" size={15}/></Button></div>}
     <div className="stats-grid">{[{key:'knowledge',label:'知识卡片',icon:'book',note:'让信息留下来'},{key:'skills',label:'个人技能',icon:'layers',note:'让方法用起来'},{key:'tasks',label:'探索记录',icon:'activity',note:'每一步可追溯'}].map(s=><button className="stat-card" key={s.key} onClick={()=>onNavigate(s.key==='tasks'?'tasks':s.key as Page)}><span><Icon name={s.icon}/>{s.label}</span><strong>{counts[s.key]||0}</strong><small>{s.note}<Icon name="chevron" size={14}/></small></button>)}</div>
-    <SectionHeading title="最近的探索" hint="从一个链接，积累一点新能力" action={<button className="text-button" onClick={()=>onNavigate('tasks')}>全部记录 <Icon name="arrow" size={15}/></button>}/><TaskList tasks={tasks.slice(0,4)} onOpen={openTask} compact/>
+    <SectionHeading title="最近的探索" hint="从一个链接，积累一点新能力" action={<button className="text-button" onClick={()=>onNavigate('tasks')}>全部记录 <Icon name="arrow" size={15}/></button>}/><TaskList tasks={tasks.slice(0,4)} onOpen={openTask} compact connection={listConnection} onRefresh={refreshTaskList}/>
     <div className="recent-grid"><section><SectionHeading title="最近知识"/><div className="small-stack">{recentKnowledge.map(k=><button key={k.id} onClick={()=>onNavigate('knowledge')}><span className="round-icon"><Icon name="book" size={18}/></span><div><strong>{k.title}</strong><p>{k.summary||k.body?.slice(0,70)}</p></div><Icon name="chevron" size={15}/></button>)}{!recentKnowledge.length&&<div className="quiet-empty">知识还在路上，先从感兴趣的链接开始。</div>}</div></section><section><SectionHeading title="最近技能"/><div className="small-stack">{recentSkills.map(s=><button key={s.id} onClick={()=>openSkill(s.id)}><span className="round-icon mint"><Icon name="layers" size={18}/></span><div><strong>{s.name}</strong><p>{s.description||statuses[s.status]||'已保存技能'}</p></div><Icon name="chevron" size={15}/></button>)}{!recentSkills.length&&<div className="quiet-empty">你的第一个可复用技能，即将诞生。</div>}</div></section></div>
     <details className="ai-install"><summary><Icon name="compass" size={16}/> 想让 AI 帮你安装这个工作台？</summary><p>把本项目的 GitHub 链接交给 AI，并说：</p><blockquote>请读取仓库 README 和 AGENTS.md，在本机安装并启动利明智耀.skill clloect，完成诊断。保留我的配置和数据；模型与飞书授权由我在本地设置。</blockquote><button className="text-button" onClick={()=>{void navigator.clipboard?.writeText('请读取仓库 README 和 AGENTS.md，在本机安装并启动利明智耀.skill clloect，完成诊断。保留我的配置和数据；模型与飞书授权由我在本地设置。').then(()=>notify('安装提示词已复制。')).catch(()=>notify('浏览器不允许复制，请直接选择文字。',true));}}>复制提示词</button></details>
   </>;
 }
 function SectionHeading({title,hint,action}:{title:string;hint?:string;action?:ReactNode}){return <div className="section-heading"><div><h2>{title}</h2>{hint&&<p>{hint}</p>}</div>{action}</div>;}
-function TaskList({tasks,onOpen,compact=false}:{tasks:Doc[];onOpen:(id:string)=>void;compact?:boolean}){if(!tasks.length)return <div className="panel"><Empty icon="compass" title="准备好下一次探索了吗？" description="提交一个链接或一份材料，这里会记录真实的处理过程。"/></div>;return <div className={'task-list panel '+(compact?'compact':'')}>{tasks.map(t=><button key={t.id} className="task-row" onClick={()=>onOpen(t.id)}><span className={'source-icon '+((t.kind||t.source?.platform)==='github'?'':'mint')}><Icon name={(t.kind||t.source?.platform)==='github'?'link':'video'}/></span><div className="task-row-copy"><strong>{t.title||t.input||'上传材料'}</strong><span>{taskStageName(t.stage, t)||t.kind||'内容探索'}<i>·</i>{formatDate(t.updated_at||t.created_at)}</span></div>{t.demo&&<Badge value="demo">演示样例</Badge>}<Badge value={t.status}>{taskResultLabel(t)}</Badge><Icon name="chevron" size={16}/></button>)}</div>;}
-function TaskDetail({task,setTask,run,busy,onBack,onSettings,refresh,openSkill,notify,onAnalyzeRepository,modelProvider,modelName}:{task:Doc;setTask:(d:Doc)=>void;run:Runner;busy:string;onBack:()=>void;onSettings:()=>void;refresh:()=>Promise<any>;openSkill:(id:string)=>void;notify:(m:string,e?:boolean)=>void;onAnalyzeRepository:(url:string)=>void;modelProvider:string;modelName:string}){
+function TaskList({tasks,onOpen,compact=false,connection,onRefresh}:{tasks:Doc[];onOpen:(id:string)=>void;compact?:boolean;connection?:TaskRefreshState;onRefresh?:()=>void}){
+  return <>{connection?.error&&<div className="task-list-connection" role="alert">任务列表刷新失败：{connection.error}。{connection.lastSuccessAt?`上次成功刷新于 ${new Date(connection.lastSuccessAt).toLocaleTimeString('zh-CN',{hour12:false})}，保留上次记录。`:'尚未取得任务列表。'}{onRefresh&&<button className="text-button" type="button" onClick={onRefresh} disabled={connection.pending}>刷新任务列表</button>}</div>}
+    {!tasks.length?<div className="panel">{connection&&(connection.pending||!connection.lastSuccessAt)?<p className="task-loading-notice">{connection.error?'任务记录尚未刷新，请检查本地服务连接。':'正在读取任务记录…'}</p>:<Empty icon="compass" title="准备好下一次探索了吗？" description="提交一个链接或一份材料，这里会记录真实的处理过程。"/>}</div>
+      :<div className={'task-list panel '+(compact?'compact':'')}>{tasks.map(task=><button key={task.id} className="task-row" onClick={()=>onOpen(task.id)}>
+        <span className={'source-icon '+((task.kind||task.source?.platform)==='github'?'':'mint')}><Icon name={(task.kind||task.source?.platform)==='github'?'link':'video'}/></span>
+        <div className="task-row-copy"><strong>{task.title||task.input||'上传材料'}</strong><span>{taskStageName(task.stage,task)||task.kind||'内容探索'}<i>·</i>{typeof task.live?.elapsed_seconds==='number'?<span className="task-list-live-clock">历时 {formatElapsedSeconds(task.live.elapsed_seconds)}</span>:formatDate(task.updated_at||task.created_at)}</span>
+          {['running','queued'].includes(task.status)&&task.live?.detail&&<small className="task-list-live">{task.live.detail}{typeof task.live.queue_position==='number'&&task.live.queue_position>0?` · 队列第 ${task.live.queue_position} 位`:''}</small>}
+          {task.status==='cancelled'&&task.live?.worker_active===true&&<small className="task-list-live">取消已请求，等待当前请求结束</small>}</div>
+        {task.demo&&<Badge value="demo">演示样例</Badge>}<Badge value={task.status}>{taskResultLabel(task)}</Badge><Icon name="chevron" size={16}/></button>)}</div>}
+  </>;
+}
+function TaskDetail({task,setTask,run,busy,onBack,onSettings,refresh,openSkill,notify,onAnalyzeRepository,modelProvider,modelName,connection,refreshTask}:{connection:TaskRefreshState;refreshTask:()=>void;task:Doc;setTask:(d:Doc)=>void;run:Runner;busy:string;onBack:()=>void;onSettings:()=>void;refresh:()=>Promise<any>;openSkill:(id:string)=>void;notify:(m:string,e?:boolean)=>void;onAnalyzeRepository:(url:string)=>void;modelProvider:string;modelName:string}){
   const [tab,setTab]=useState('overview'),[question,setQuestion]=useState(''),[answers,setAnswers]=useState<Doc[]>([]),[diagnostics,setDiagnostics]=useState<Doc|null>(null),[highlightedEvidence,setHighlightedEvidence]=useState('');useEffect(()=>{setDiagnostics(null);setTab('overview');setHighlightedEvidence('');},[task.id]);useEffect(()=>{if(tab==='source'&&highlightedEvidence){const element=document.getElementById('task-evidence-'+highlightedEvidence);element?.scrollIntoView({block:'center'});element?.focus({preventScroll:true});}},[tab,highlightedEvidence]);const fileRef=useRef<HTMLInputElement>(null);const analysis=task.analysis||{},source=task.source||{},evidence=source.evidence||analysis.evidence||[];
   async function action(name:string){const result=await run(name,()=>api('/tasks/'+task.id+'/'+name,{}));if(result){if(name==='skill'){await refresh();openSkill(result.id||result.skill?.id);}else if(name==='knowledge'){await refresh();notify('已保存到知识库。');}else {setTask(result);if(name==='project-links')await refresh();}}}
   const waitConfig=['waiting_config','needs_config','awaiting_config'].includes(task.status),waitMaterial=['waiting_material','needs_material','awaiting_material'].includes(task.status);
-  return <><button className="back-button" onClick={onBack}><Icon name="back" size={16}/> 返回任务记录</button><PageHeading eyebrow="EXPLORATION DETAIL" title={task.title||'内容探索'} description={task.input||source.url} actions={<Badge value={task.status}>{taskResultLabel(task)}</Badge>}/>
+  return <><button className="back-button" onClick={onBack}><Icon name="back" size={16}/> 返回任务记录</button><TaskProgress task={task} connection={connection} stageLabel={taskStageName(task.stage,task)} onRefresh={refreshTask}/><PageHeading eyebrow="EXPLORATION DETAIL" title={task.title||'内容探索'} description={task.input||source.url} actions={<Badge value={task.status}>{taskResultLabel(task)}</Badge>}/>
     <div className="task-actions"><Button onClick={()=>void action('retry')} disabled={!!busy||task.status==='running'}>重试 / 继续</Button><Button variant="danger-quiet" onClick={()=>void action('cancel')} disabled={!!busy||['success','succeeded','completed','cancelled'].includes(task.status)}>取消任务</Button><Button onClick={()=>fileRef.current?.click()} disabled={!!busy}><Icon name="upload" size={16}/> 备用：补传视频或字幕</Button><input ref={fileRef} type="file" hidden accept=".mp4,.mov,.mkv,.webm,.mp3,.wav,.m4a,.srt,.vtt,.txt" onChange={async e=>{const file=e.target.files?.[0];if(file){const f=new FormData();f.append('file',file);const t=await run('upload',()=>api('/tasks/'+task.id+'/upload',f));if(t)setTask(t);}e.target.value='';}}/></div>
     {(waitConfig||waitMaterial||task.error)&&<div className={'notice '+(waitMaterial?'':'warning')}><Icon name="info"/><div><strong>{waitConfig?'需要配置模型后继续':waitMaterial?'自动获取尚未完成，任务已保留':'任务遇到了问题'}</strong><p>当前阶段：{taskStageName(task.error?.stage||task.stage,task)||'等待处理'}</p><p>{task.error?.message||display(task.error)||'请检查设置中的对应能力。'}</p>{waitMaterial&&<p>本次尚未完成自动原片分析。请先根据原因处理后重试；补传仅作备用降级，不代表自动获取已成功。</p>}{waitConfig&&<button className="text-button" onClick={onSettings}>前往模型设置 <Icon name="arrow" size={14}/></button>}<JsonDetails value={{stage:task.stage,error:task.error,attempts:task.attempts}}/>{task.error&&(['analysis','vision','transcription'].includes(task.error?.stage||task.stage)||task.error.diagnostic_id)&&<div className="local-model-diagnostics"><button className="text-button" disabled={!!busy} onClick={async()=>{const result=await run('model-diagnostics',()=>api('/tasks/'+task.id+'/diagnostics'));if(result)setDiagnostics(result);}}>查看本机模型诊断 <Icon name="info" size={13}/></button>{diagnostics&&<div className="local-diagnostic-result"><p className="footnote">{diagnostics.privacy_note||'模型回答和校验细节仅在本机查看，不进入日志或公开验收材料。'}</p>{!(diagnostics.runs||[]).length?<p className="muted">此任务尚无可查看的模型回答记录。</p>:(diagnostics.runs||[]).map((record:Doc,i:number)=><details className="diagnostic-run" key={record.id||i}><summary>{record.model||'未记录模型'} · {record.finish_reason||'未记录结束原因'} · {record.validation||'校验结果待查看'}</summary><dl><dt>结束原因</dt><dd>{record.finish_reason||'未记录'}</dd><dt>校验状态</dt><dd>{display(record.validation)||'未记录'}</dd></dl>{record.validation_errors&&<JsonDetails title="查看校验原因" value={record.validation_errors}/>}<JsonDetails title="查看供应商实际用量" value={record.usage}/><JsonDetails title="展开本机原始模型回答" value={record.response}/></details>)}</div>}</div>}</div></div>}
     <div className="task-detail-grid"><section className="panel task-main"><div className="tab-bar">{[['overview','分析结果'],['source','来源与证据'],['ask','继续追问']].map(([id,label])=><button className={tab===id?'active':''} onClick={()=>setTab(id)} key={id}>{label}{id==='source'&&evidence.length>0&&<small>{evidence.length}</small>}</button>)}</div>

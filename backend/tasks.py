@@ -3,6 +3,7 @@ import json
 import re
 import threading
 import time
+import uuid
 from pathlib import Path
 from urllib.parse import urlsplit
 
@@ -10,6 +11,7 @@ from .media import douyin_source, extract_url, prepare_media, subtitle_source
 from .security import AppError
 from .project_links import resolve_project_links
 from .store import now
+from .task_progress import PHASE_DETAILS, STAGE_PHASES, live_snapshot, safe_observation, safe_progress_record
 
 TERMINAL = {'succeeded','failed','cancelled','waiting_config','waiting_material'}
 
@@ -23,13 +25,87 @@ class TaskRunner:
         self.mutex=threading.RLock()
         self.active_ids=set()
         self.project_lookup_ids=set()
+        self.active_threads={}
+        self.run_tokens={}
+        self.step_tokens={}
+        self.progress_writes={}
+
+    def present_many(self,tasks):
+        """Attach an ephemeral server observation; never write on a status read."""
+        observed=now()
+        pending=[t['id'] for t in reversed(tasks) if t.get('status')=='queued']
+        positions={id:i+1 for i,id in enumerate(pending)}
+        with self.mutex:
+            active={id for id,thread in self.active_threads.items() if thread.is_alive()}
+        result=[]
+        for task in tasks:
+            value={**task,'live':live_snapshot(task,observed,task['id'] in active,positions.get(task['id']))}
+            if 'progress' in value:
+                safe=safe_progress_record(value['progress'])
+                if safe:value['progress']=safe
+                else:value.pop('progress',None)
+            result.append(value)
+        return result
+
+    def present(self,task):
+        tasks=self.store.list('tasks')
+        # Use the returned value for this task while sharing a FIFO queue view.
+        values=[task if t['id']==task['id'] else t for t in tasks]
+        if not any(t['id']==task['id'] for t in values):values.append(task)
+        return next(t for t in self.present_many(values) if t['id']==task['id'])
+
+    def observer(self,id,stage):
+        with self.mutex:
+            token=self.run_tokens.get(id)
+            step_token=self.step_tokens.get(id)
+        return lambda event:self.progress(id,event,stage=stage,token=token,step_token=step_token)
+
+    def progress(self,id,event,*,stage,token,step_token):
+        """Only changed, safe facts advance activity; telemetry cannot retry work."""
+        value=safe_observation(event)
+        if value is None:return False
+        try:
+            with self.mutex:
+                if token is None or self.run_tokens.get(id)!=token or step_token is None or self.step_tokens.get(id)!=step_token:return False
+                task=self.store.get('tasks',id)
+                if not task:return False
+                if task['status']=='cancelled' or self.stop.is_set():
+                    raise AppError('cancelled','任务已取消或服务正在停止')
+                if task['status']!='running' or task.get('stage')!=stage:return False
+                previous=safe_progress_record(task.get('progress')) or {}
+                same_phase=previous.get('phase')==value['phase'] and previous.get('stage')==stage
+                if same_phase:
+                    value['metrics']={**previous.get('metrics',{}),**value['metrics']}
+                if same_phase and previous.get('metrics',{})==value['metrics']:
+                    return False
+                clock=time.monotonic()
+                finished='completed' in value['metrics'] and value['metrics'].get('total',0)>0 and value['metrics']['completed']>=value['metrics']['total']
+                last=self.progress_writes.get(id)
+                if same_phase and not finished and last is not None and clock-last<1:return False
+                stamp=now()
+                task['progress']={**value,'stage':stage,'at':stamp}
+                task['last_activity_at']=stamp
+                self.store.put('tasks',task)
+                self.progress_writes[id]=clock
+                return True
+        except AppError as exc:
+            if exc.code=='cancelled':raise
+            return False
+        except Exception:
+            # A broken progress observer must not issue another supplier call.
+            return False
 
     def recover(self):
         for task in self.store.list('tasks'):
             if task['status'] in ('running','queued'):
                 uncertain=task.get('stage') in ('analysis','vision','transcription') and task['status']=='running'
+                stamp=now()
                 task.update(status='waiting_config' if uncertain else 'queued',error={'code':'interrupted_request','message':'服务中断时有模型请求未确认结果，请核对配置后手动继续；可能再次产生调用费用','retryable':False} if uncertain else None)
-                task.setdefault('stages',[]).append({'stage':'recovery','status':task['status'],'message':'服务重启，复用已保存检查点；未确认的模型请求需手动继续' if uncertain else '服务重启，复用已保存检查点继续','at':now()})
+                task['last_activity_at']=stamp
+                if not uncertain:
+                    task.update(stage='queued',stage_started_at=stamp,
+                        progress={'stage':'queued','phase':'queued','detail':PHASE_DETAILS['queued'],'metrics':{},'at':stamp})
+                task.setdefault('stages',[]).append({'stage':'recovery','status':task['status'],'message':'服务重启，复用已保存检查点；未确认的模型请求需手动继续' if uncertain else '服务重启，复用已保存检查点继续','at':stamp})
                 self.store.put('tasks',task)
 
     def start(self):
@@ -75,6 +151,8 @@ class TaskRunner:
             task=self.store.get('tasks',id)
             if task['status']=='cancelled' or self.stop.is_set():
                 raise AppError('cancelled','任务已取消')
+            if any(task.get(k)!=v for k,v in values.items()):
+                task['last_activity_at']=now()
             task.update(values)
             return self.store.put('tasks',task)
 
@@ -83,9 +161,17 @@ class TaskRunner:
             task=self.store.get('tasks',id)
             if task['status']=='cancelled' or self.stop.is_set():
                 raise AppError('cancelled','任务已取消或服务正在停止')
+            stamp=now()
             task['stage']=stage
-            task.setdefault('stages',[]).append({'stage':stage,'message':message,'status':status,'at':now()})
-            return self.store.put('tasks',task)
+            task['stage_started_at']=stamp
+            task['last_activity_at']=stamp
+            self.progress_writes.pop(id,None)
+            phase=STAGE_PHASES.get(stage,'')
+            task['progress']={'stage':stage,'phase':phase,'detail':PHASE_DETAILS.get(phase,message),'metrics':{},'at':stamp}
+            task.setdefault('stages',[]).append({'stage':stage,'message':message,'status':status,'at':stamp,'attempt':task.get('attempts',0)})
+            result=self.store.put('tasks',task)
+            self.step_tokens[id]=uuid.uuid4().hex
+            return result
 
     def retry(self,id):
         with self.mutex:
@@ -94,7 +180,11 @@ class TaskRunner:
             if id in self.active_ids and task['status']=='cancelled':
                 raise AppError('task_stopping','任务正在结束当前请求，请稍后继续',status=409)
             if task['status'] in ('running','queued','succeeded'):return task
-            task.update(status='queued',error=None,attempts=0)
+            stamp=now()
+            task.update(status='queued',stage='queued',error=None,attempts=0,stage_started_at=stamp,last_activity_at=stamp)
+            task.pop('last_error',None)
+            task['progress']={'stage':'queued','phase':'queued','detail':PHASE_DETAILS['queued'],'metrics':{},'at':stamp}
+            task.setdefault('stages',[]).append({'stage':'queued','status':'queued','message':'任务已重新排队，复用已保存检查点','at':stamp})
             self.store.put('tasks',task)
         self.wake.set();return task
 
@@ -103,7 +193,7 @@ class TaskRunner:
             t=self.store.get('tasks',id)
             if not t:raise AppError('not_found','未找到任务',status=404)
             if t['status']=='succeeded':raise AppError('task_complete','任务已完成')
-            t.update(status='cancelled',ended_at=now())
+            t.update(status='cancelled',ended_at=now(),last_activity_at=now())
             t.setdefault('stages',[]).append({'stage':'cancel','status':'cancelled','message':'用户取消；停止后续阶段。正在进行的请求最多等待至超时。','at':now()})
             return self.store.put('tasks',t)
 
@@ -115,9 +205,9 @@ class TaskRunner:
             if t['status'] in ('running','queued'):raise AppError('task_busy','请先取消或等待当前处理结束',status=409)
             if t['status']=='succeeded':raise AppError('task_complete','该任务已完成；新材料请创建新任务，以保留原分析与知识',status=409)
             t.setdefault('uploads',[]).append(upload)
-            for k in ('source','media','analysis','vision_result','transcripts','media_complete','skill_id','project_links'):
+            for k in ('source','media','analysis','vision_result','transcripts','media_complete','skill_id','project_links','progress','last_error','stage_started_at'):
                 t.pop(k,None)
-            t.update(status='queued',error=None,attempts=0)
+            t.update(status='queued',stage='queued',error=None,attempts=0,last_activity_at=now())
             self.store.put('tasks',t)
         self.wake.set();return t
 
@@ -172,10 +262,18 @@ class TaskRunner:
         with self.mutex:
             if id in self.active_ids:return
             self.active_ids.add(id)
+            self.active_threads[id]=threading.current_thread()
+            self.run_tokens[id]=uuid.uuid4().hex
+            self.progress_writes.pop(id,None)
         try:
             self._run(id)
         finally:
-            with self.mutex:self.active_ids.discard(id)
+            with self.mutex:
+                self.active_ids.discard(id)
+                self.active_threads.pop(id,None)
+                self.run_tokens.pop(id,None)
+                self.step_tokens.pop(id,None)
+                self.progress_writes.pop(id,None)
 
     def _run(self,id):
         with self.mutex:
@@ -208,11 +306,20 @@ class TaskRunner:
                 task.setdefault('stages',[]).append({'stage':task['stage'],'status':'failed','message':message,'at':now(),'attempt':retry+1})
                 if retryable and retry<2:
                     task['attempts']+=1
+                    stamp=now()
+                    task['last_error']=task['error']
+                    task['error']=None
+                    task['last_activity_at']=stamp
+                    task['progress']={'stage':task['stage'],'phase':'retry_wait',
+                        'detail':PHASE_DETAILS['retry_wait'],'metrics':{'retry_attempt':retry+2,'max_attempts':3},'at':stamp}
+                    task.setdefault('stages',[]).append({'stage':task['stage'],'status':'retrying',
+                        'message':f'本轮自动尝试 {retry+2}/3，累计已尝试 {task["attempts"]} 次；上一轮错误已保留在处理记录','at':stamp,'attempt':task['attempts']})
                     self.store.put('tasks',task)
                     if self.stop.wait(0.5*(2**retry)):return
                     continue
                 task['status']='waiting_config' if code=='configuration' else 'waiting_material' if code.startswith('douyin_') else 'failed'
                 task['ended_at']=now()
+                task['last_activity_at']=task['ended_at']
                 self.store.put('tasks',task);return
 
     def _execute(self,id):
@@ -236,14 +343,18 @@ class TaskRunner:
                 url=extract_url(task['input'])
                 if urlsplit(url).hostname in ('github.com','www.github.com','raw.githubusercontent.com'):
                     connector=self.github_factory()
-                    try:source=connector.snapshot(url,task['depth'])
+                    try:
+                        if hasattr(connector,'set_progress_callback'):
+                            connector.set_progress_callback(self.observer(id,'fetch'))
+                        source=connector.snapshot(url,task['depth'])
                     finally:
                         if hasattr(connector,'close'):connector.close()
                     source['basis']='source_files'
                 else:
                     self.stage(id,'fetch','自动读取抖音原片；由项目采集器处理，无需 Codex 或手动下载')
                     source=douyin_source(url,folder,cancelled=lambda:self.stop.is_set() or
-                        (self.store.get('tasks',id) or {}).get('status')=='cancelled')
+                        (self.store.get('tasks',id) or {}).get('status')=='cancelled',
+                        progress_callback=self.observer(id,'fetch'))
             source['original_input']=task['input']
             source['acquired_at']=now()
             source['snapshot_hash']=hashlib.sha256(json.dumps(source,sort_keys=True,ensure_ascii=False).encode()).hexdigest()
@@ -253,7 +364,8 @@ class TaskRunner:
         if source.get('media_path') and not task.get('media_complete'):
             self.stage(id,'media','检查媒体、分段音频与抽取关键帧')
             media_key=hashlib.sha256(Path(source['media_path']).read_bytes()).hexdigest()[:20]
-            prepared=task.get('media') or prepare_media(Path(source['media_path']),folder/'processed'/media_key,task['depth'])
+            prepared=task.get('media') or prepare_media(Path(source['media_path']),folder/'processed'/media_key,task['depth'],
+                progress_callback=self.observer(id,'media'))
             self.checkpoint(id,media=prepared)
             transcripts=task.get('transcripts',{})
             has_subtitles=source.get('basis') in ('subtitles','text_only')
@@ -261,9 +373,12 @@ class TaskRunner:
                 for i,chunk in enumerate(prepared['chunks']):
                     if str(i) in transcripts:continue
                     self.stage(id,'transcription',f'转写音频段 {i+1}/{len(prepared["chunks"])}，起点 {chunk["time"]} 秒')
+                    observation=self.observer(id,'transcription')
+                    observation({'phase':'model_transcription','transcribed_chunks':len(transcripts),'total_chunks':len(prepared['chunks'])})
                     data=self.models.transcribe(Path(chunk['path']))
                     transcripts[str(i)]={'text':data['text'],'time':chunk['time'],'usage':data.get('usage')}
                     self.checkpoint(id,transcripts=transcripts)
+                    observation({'phase':'transcription_complete','transcribed_chunks':len(transcripts),'total_chunks':len(prepared['chunks'])})
             if transcripts and not has_subtitles:
                 source=dict(source)
                 source['evidence']=[{'id':f'audio-{i}','time':f'{v["time"]}—{min(v["time"]+120,prepared["duration"])}s','excerpt':v['text'],'kind':'transcript'} for i,v in transcripts.items()]
@@ -274,9 +389,12 @@ class TaskRunner:
             if prepared['frames'] and vision_config.get('base_url') and vision_config.get('model'):
                 if not vision:
                     self.stage(id,'vision','理解已抽取画面；画面材料将发送到视觉模型服务')
+                    observation=self.observer(id,'vision')
+                    observation({'phase':'model_vision','sampled_frames':len(prepared['frames']),'total_frames':len(prepared['frames'])})
                     text,meta=self.models.vision([{'path':Path(f['path']),'time':f['time']} for f in prepared['frames']])
                     vision={'text':text,**meta}
                     self.checkpoint(id,vision_result=vision)
+                    observation({'phase':'vision_complete','sampled_frames':len(prepared['frames']),'total_frames':len(prepared['frames'])})
                 source=dict(source)
                 source['text']+='\n画面观察：\n'+vision['text']
                 source['evidence']=[e for e in source.get('evidence',[]) if e['id']!='frames-observation']+[{'id':'frames-observation','excerpt':vision['text'],'time':', '.join(str(f['time'])+'s' for f in prepared['frames']),'kind':'model_frame_observation','model':vision['model']}]

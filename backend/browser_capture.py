@@ -819,6 +819,9 @@ def capture_douyin(url, folder, *, video_id, timeout=180, max_bytes=MAX_MEDIA,
                             'bound_media': len(broker.entries), 'complete_media': len(broker.ready()),
                             'metadata_diagnostics': broker.metadata_diagnostics,
                             'binding_diagnostic': broker.binding_diagnostic()})
+                    except AppError as exc:
+                        if exc.code == 'cancelled':
+                            raise
                     except Exception:
                         pass
         if not result or not result.get('ok'):

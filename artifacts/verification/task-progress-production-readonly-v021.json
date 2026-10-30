@@ -1,0 +1,54 @@
+{
+  "recorded_at": "2026-10-30T07:46:41.844671+00:00",
+  "version": "0.2.1",
+  "assessment": "通过",
+  "evidence_kind": "actual_existing_service_readonly_deployment_verification",
+  "service": {
+    "version": "0.2.1",
+    "loopback_only": true,
+    "name_verified": true,
+    "counts": {
+      "tasks": 6,
+      "knowledge": 4,
+      "skills": 1
+    }
+  },
+  "deployment": {
+    "active_tasks_before_graceful_stop": 0,
+    "all_existing_user_entities_unchanged": true,
+    "credential_file_sizes_and_mtimes_unchanged": true,
+    "credential_contents_read_for_this_verification": false,
+    "user_configuration_modified": false
+  },
+  "actual_existing_task": {
+    "status": "waiting_material",
+    "attempts": 3,
+    "error_code": "douyin_browser_timeout",
+    "error_message": "匿名浏览器采集超过等待时限",
+    "elapsed_seconds": 551,
+    "current_step_seconds": 183,
+    "worker_active": false,
+    "updated_at_unchanged_after_reads": true,
+    "last_activity_unchanged_after_reads": true,
+    "terminal_processing_clock_frozen": true,
+    "observed_at_is_ephemeral": true,
+    "source_title_url_and_task_id_included": false
+  },
+  "browser_review": {
+    "existing_tab_reloaded_after_confirming_no_unsent_input": true,
+    "observed_version": "0.2.1",
+    "actual_heading": "来源获取未完成",
+    "actual_attempts_visible": 3,
+    "actual_wait_reason_visible": true,
+    "connection_freshness_visible": true,
+    "private_screenshot_retained": true
+  },
+  "new_real_business_calls": {
+    "video_acquisition": 0,
+    "model": 0,
+    "github_sources": 0,
+    "feishu": 0,
+    "task_submissions": 0
+  },
+  "scope": "New observability backend/frontend installed; inspected existing failed task. No real supplier pipeline or successful source retrieval repeated; original acquisition failure is retained."
+}

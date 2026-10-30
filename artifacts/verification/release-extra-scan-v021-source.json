@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "at": "2026-10-30T07:51:38.511948+00:00",
+  "version": "0.2.1",
+  "phase": "source_candidate_before_commit",
+  "status": "passed",
+  "base_head": "f1221f6d22754dda6447cd2fc4d46ea5f649bac7",
+  "source_files_scanned": 171,
+  "reachable_commits_scanned": 15,
+  "unique_history_blobs": 302,
+  "rules": [
+    "literal_auth_cookie_or_config",
+    "enterprise_identifier",
+    "jwt",
+    "signed_remote_url",
+    "local_absolute_path"
+  ],
+  "matched_occurrences": {
+    "signed_remote_url": 136,
+    "literal_auth_cookie_or_config": 89,
+    "local_absolute_path": 38
+  },
+  "reviewed_classification_counts": {
+    "explicit_fixture_or_placeholder": 221,
+    "legacy_public_node_runtime_reference": 3,
+    "known_public_workspace_reference": 35,
+    "explicit_mock_oauth_token": 4
+  },
+  "findings": [],
+  "public_inventory_sha256_excluding_this_pair_of_scan_reports": "b271bc329441321edcfc814a32cc15d0a497e9ac4353d0fefaa07bac7d060384",
+  "scope_note": "Current tracked/untracked nonignored public set and all reachable history. Matched literal values never printed or persisted. Known-pattern and literal review is not a guarantee for all secret formats. No private/data material or credentials read; explicit test and legacy public tooling references classified separately.",
+  "validation_boundary": {
+    "new_model_calls": 0,
+    "new_feishu_calls": 0,
+    "new_original_media_calls": 0,
+    "new_task_submissions": 0,
+    "production_restart_by_release_preparation": false,
+    "ui_final_progress_contracts": 6,
+    "ui_separate_existing_regression": 7,
+    "not_one_final_combined_13_test_run": true,
+    "pytest_final_passed": 444,
+    "pytest_final_failed": 0,
+    "pytest_final_skipped": 0,
+    "exact_source_ci": "pending",
+    "release": "not_created"
+  }
+}
