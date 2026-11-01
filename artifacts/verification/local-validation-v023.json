@@ -5,10 +5,11 @@
     "passed": 600,
     "failed": 0,
     "errors": 0,
-    "skipped": 15,
-    "seconds": 11.54,
+    "skipped": 17,
+    "seconds": 10.68,
     "junit": "pytest-v023.xml",
-    "skip_scope": "Windows-only PowerShell updater execution not available on macOS; must run on Windows CI and actual customer separately"
+    "skip_scope": "Windows-only PowerShell updater execution not available on macOS; must run on Windows CI and actual customer separately",
+    "junit_seconds": 10.654
   },
   "frontend": {
     "build": "passed",
@@ -31,7 +32,10 @@
     "backend/browser_capture.py": "64d7f8f8ae03671b727789bf52deb16d512ca903e5cc58926544e58f32730286",
     "backend/media.py": "5b77e9ca31b23a083bda51dfd7ba1f190a20bb3863a08f5063f3244ae6e3b2c1",
     "backend/models.py": "b3bd24f191934c09d5d8d10abade2f1edd7aa3fa5706271418d0d62b56debf70",
-    "frontend/scripts/capture-douyin.mjs": "8c3f0d63d7472d84787b0835ea164c9b6958a2da11c774694751059dc0c60235"
+    "frontend/scripts/capture-douyin.mjs": "8c3f0d63d7472d84787b0835ea164c9b6958a2da11c774694751059dc0c60235",
+    "scripts/apply_windows_update.ps1": "2c8c205eb89101267d7538ffae231699c84f342960e54717973b9ff4f113a8fb",
+    "scripts/windows_update.cmd": "fbeaa4bdbbbcf448713a048fdd48e0b6f516e7b7535859eee5e1a788e5ad77a4",
+    "scripts/build_windows_update.py": "17823360be40553dde011bb18618d43753a64b59b8b7a18634637f67e0c59fce"
   },
   "previous_full_candidate": {
     "passed": 600,
@@ -45,8 +49,26 @@
   },
   "windows_updater_local_targeted": {
     "passed": 19,
-    "skipped": 15,
-    "seconds": 0.21,
+    "skipped": 17,
+    "duration_recorded": false,
+    "scope": "independent final targeted run after PS7/CMD/STA changes",
+    "supported_shell": "PowerShell 7",
+    "legacy_shell": "PowerShell 5 refuses before IO; not a supported upgrade",
     "actual_windows_execution": false
+  },
+  "previous_ps5_candidate_full": {
+    "passed": 600,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 15,
+    "seconds": 11.54,
+    "junit": "pytest-v023.xml",
+    "skip_scope": "Windows-only PowerShell updater execution not available on macOS; must run on Windows CI and actual customer separately"
+  },
+  "github_ci": {
+    "tested_source": "73b6655b4d6498047bf1d9dd380fc698c9b647b5",
+    "report": "github-ci-v023.json",
+    "windows_updater_cases_actually_executed": 17,
+    "customer_gui_and_business": "待外部条件"
   }
 }

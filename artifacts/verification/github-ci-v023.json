@@ -1,0 +1,302 @@
+{
+  "schema_version": 1,
+  "scope": "v0.2.3 PR2 exact-head three-platform CI and Windows code-only updater contracts; no business-service or customer GUI acceptance",
+  "repository": "baizhanwen/liming-zhiyao-skill-collect",
+  "pull_request": {
+    "number": 2,
+    "url": "https://github.com/baizhanwen/liming-zhiyao-skill-collect/pull/2",
+    "draft": true,
+    "merged": false,
+    "raw_mergeable": true,
+    "mergeable_state_at_read": "clean"
+  },
+  "head_sha": "73b6655b4d6498047bf1d9dd380fc698c9b647b5",
+  "synthetic_merge_sha": "0efcf39b1b3e012e9c74fababb11a6a7fd62ddb4",
+  "tree_comparison": {
+    "head_tree": "758e86f89437de2bd6f563c6416de3c6572636cb",
+    "synthetic_merge_tree": "758e86f89437de2bd6f563c6416de3c6572636cb",
+    "equal": true,
+    "all_job_checkout_logs_confirm_synthetic_merge": true
+  },
+  "run": {
+    "id": 41303099689,
+    "url": "https://github.com/baizhanwen/liming-zhiyao-skill-collect/actions/runs/41303099689",
+    "attempt": 1,
+    "event": "pull_request",
+    "status": "completed",
+    "conclusion": "success",
+    "created_at": "2026-11-01T11:42:51Z",
+    "updated_at": "2026-11-01T11:45:08Z"
+  },
+  "jobs": [
+    {
+      "id": 124837938639,
+      "platform": "windows-latest",
+      "conclusion": "success",
+      "passed": 612,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 5,
+      "warnings": 1,
+      "seconds": 78.25,
+      "build_ms": 184,
+      "steps": [
+        {
+          "name": "Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run astral-sh/setup-uv@v6",
+          "conclusion": "success"
+        },
+        {
+          "name": "macOS/Linux repeatable installation",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Windows repeatable installation",
+          "conclusion": "success"
+        },
+        {
+          "name": "Restore locked development dependencies after setup",
+          "conclusion": "success"
+        },
+        {
+          "name": "Core and connector contract tests (after browser installation)",
+          "conclusion": "success"
+        },
+        {
+          "name": "Local diagnostic (does not prove external connections)",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 124837938802,
+      "platform": "macos-latest",
+      "conclusion": "success",
+      "passed": 597,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 20,
+      "warnings": 1,
+      "seconds": 47.99,
+      "build_ms": 123,
+      "steps": [
+        {
+          "name": "Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run astral-sh/setup-uv@v6",
+          "conclusion": "success"
+        },
+        {
+          "name": "macOS/Linux repeatable installation",
+          "conclusion": "success"
+        },
+        {
+          "name": "Windows repeatable installation",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Restore locked development dependencies after setup",
+          "conclusion": "success"
+        },
+        {
+          "name": "Core and connector contract tests (after browser installation)",
+          "conclusion": "success"
+        },
+        {
+          "name": "Local diagnostic (does not prove external connections)",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 124837938805,
+      "platform": "ubuntu-latest",
+      "conclusion": "success",
+      "passed": 597,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 20,
+      "warnings": 1,
+      "seconds": 11.73,
+      "build_ms": 138,
+      "steps": [
+        {
+          "name": "Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run astral-sh/setup-uv@v6",
+          "conclusion": "success"
+        },
+        {
+          "name": "macOS/Linux repeatable installation",
+          "conclusion": "success"
+        },
+        {
+          "name": "Windows repeatable installation",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Restore locked development dependencies after setup",
+          "conclusion": "success"
+        },
+        {
+          "name": "Core and connector contract tests (after browser installation)",
+          "conclusion": "success"
+        },
+        {
+          "name": "Local diagnostic (does not prove external connections)",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
+  "installation": {
+    "python": "3.12",
+    "node": "24",
+    "production_setup": "passed on all three platforms",
+    "locked_development_dependencies_restored_after_no_dev_setup": true,
+    "frontend": {
+      "javascript": "index-DLla0KoL.js",
+      "css": "index-Dv1BBRwq.css",
+      "all_three_builds": "passed"
+    },
+    "browser": {
+      "playwright": "1.64.1",
+      "chromium": "Chrome for Testing 156.0.8078.4, revision 1248",
+      "source": "official cdn.playwright.dev",
+      "all_three_downloads": "passed",
+      "doctor": "file presence only; not a real website capture check"
+    },
+    "doctor": "passed on all three platforms; read-only and not external-service connectivity",
+    "media_limit": "System FFmpeg/FFprobe were absent; Playwright's private bundled FFmpeg does not replace system FFprobe"
+  },
+  "windows_updater": {
+    "required_runtime": "PowerShell 7 (pwsh)",
+    "actual_executed": 17,
+    "passed": 17,
+    "failed": 0,
+    "skipped": 0,
+    "verified": [
+      "Direct pwsh -NoStart updates and reapplication",
+      "CMD entry invokes supported pwsh -STA -NoStart, updates and reapplies",
+      "Chinese and space package paths, quoted target path containing apostrophe/dollar/ampersand",
+      "All payload file SHA-256 values match; existing synthetic user data/config and unrelated code preserved",
+      "Old overwritten code backup retained; lock released",
+      "Windows PowerShell 5.1 explicitly rejected before any file I/O, full original tree including .venv unchanged",
+      "pwsh -STA loads System.Windows.Forms and constructs/disposes FolderBrowserDialog without ShowDialog",
+      "Invalid manifest/hash/project/version and extra payload rejected without code write",
+      "Repinned traversal, absolute, out-of-scope and reserved paths rejected",
+      "Occupied loopback port is not killed or upgraded",
+      "Late uv.lock post-write fault marker actually reached; current and prior files restored byte-for-byte; newly added JavaScript/CSS removed",
+      "Real target/payload directory junctions rejected without changing external files"
+    ],
+    "failure_safety": "Attempted file is journaled before atomic replace; Python probes use fixed stdin source, per-process environment and bounded process/stream waits; diagnostics contain only fixed stage, validated exception type and source line",
+    "customer_double_click_and_folder_selection": "not validated on the customer's Windows computer"
+  },
+  "skips": {
+    "unix": {
+      "total": 20,
+      "windows_only_updater": 17,
+      "optional_system_media": 3
+    },
+    "windows": {
+      "total": 5,
+      "existing_distribution_cases": [
+        {
+          "reason": "POSIX address reuse semantics",
+          "count": 1
+        },
+        {
+          "reason": "symlink creation may require Windows developer mode",
+          "count": 1
+        }
+      ],
+      "optional_system_media": 3,
+      "windows_updater": 0
+    }
+  },
+  "package_scope": {
+    "payload_files": 13,
+    "archive_entries_in_fixture": 18,
+    "adjacent_licenses": [
+      "LICENSE",
+      "THIRD_PARTY_NOTICES.md"
+    ],
+    "license_files_are_not_replacement_payload": true,
+    "no_data_or_credentials_in_payload": true
+  },
+  "historical_failures": [
+    {
+      "head_sha": "4367c0e2c92f14b25e46e956fd4757e66b1e0c08",
+      "run_id": 41301388407,
+      "report": "github-ci-v023-attempt1.json",
+      "windows": {
+        "passed": 608,
+        "failed": 2,
+        "skipped": 5
+      }
+    },
+    {
+      "head_sha": "6e441db96780394c65b79d8854bbb518383d6801",
+      "run_id": 41302131269,
+      "report": "github-ci-v023-attempt2.json",
+      "windows": {
+        "passed": 609,
+        "failed": 1,
+        "skipped": 5
+      }
+    },
+    {
+      "head_sha": "308a84d5ae41a2c14c204f09119aafac34731e06",
+      "run_id": 41302614859,
+      "report": "github-ci-v023-attempt3.json",
+      "windows": {
+        "passed": 609,
+        "failed": 1,
+        "skipped": 5
+      },
+      "diagnosis": "Get-FileHash command unavailable in that PS5.1 runner process; not a claim about all PS5 installations"
+    }
+  ],
+  "support_alignment": "AGENTS already requires PowerShell 7. Legacy PS5 success was replaced by explicit zero-write rejection, not skipped; supported pwsh/CMD success and stronger rollback checks remain.",
+  "verification_boundaries": [
+    "Automated tests use explicit synthetic fixtures and isolated temporary directories",
+    "No real Douyin, paid model, Feishu, GitHub project search or user credential is called by tests",
+    "Official Chromium installation and doctor do not prove media acquisition",
+    "Windows NoStart and GUI type construction do not prove real customer double-click/folder-selection behavior",
+    "Real anonymous-capture/model acceptance is documented separately by the project owner",
+    "No PR merge, release creation, production restart or permission change performed by this CI monitor",
+    "No raw job logs, private material, credential, account identifier or user-path output copied into this report"
+  ],
+  "evidence_source": "GitHub connector run/jobs/decoded job logs, raw PR response and Git commit tree API"
+}
