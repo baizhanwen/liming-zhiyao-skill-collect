@@ -1,0 +1,106 @@
+{
+  "recorded_at": "2026-11-01T04:58:51.961234+00:00",
+  "assessment": "通过",
+  "scope": "Read-only diagnostic utility and local validation; customer Windows failure remains unresolved.",
+  "application_version": "0.2.2",
+  "diagnostic_version": 1,
+  "customer_report": {
+    "system": "Windows 11",
+    "application_version": "0.2.2",
+    "task_status": "失败",
+    "error_code": "douyin_fetch",
+    "stage": "fetch",
+    "attempts": 3,
+    "completed_page_responses": 0,
+    "exact_cause": "未验证",
+    "diagnostic_report_received": false,
+    "customer_e2e_after_repair": "未验证"
+  },
+  "actual_local_media_probe": {
+    "acquired": true,
+    "media_bytes": 1524390,
+    "bytes_match": true,
+    "sha256_match": true,
+    "requested_video_id_matches": true,
+    "ffprobe_duration": 17.483991,
+    "has_audio": true,
+    "has_video": true,
+    "seconds": 16.703,
+    "model_calls": 0,
+    "customer_windows_execution": false,
+    "scope": "Project-owned original media acquisition on current macOS/network only; separate from diagnostic utility. No models or product task changes."
+  },
+  "actual_local_diagnostic": {
+    "diagnostic_version": 1,
+    "application_version": "0.2.2",
+    "system": "Darwin",
+    "python": "3.12.14",
+    "proxy_environment_present": false,
+    "custom_tls_environment_present": false,
+    "runtime": {
+      "node_found": true,
+      "capture_script_present": true,
+      "browser_installed": true,
+      "status": "ready",
+      "playwright_version": "1.64.1"
+    },
+    "ffmpeg_found": true,
+    "ffprobe_found": true,
+    "network": {
+      "status": "page_received",
+      "category": "none",
+      "http_status": 200,
+      "platform_url_has_video_id": true,
+      "platform_redirect_has_video_id": true,
+      "origin_request_attempts": 2,
+      "page_bytes": 34498,
+      "hops": [
+        {
+          "status": 302,
+          "request_url_has_video_id": false,
+          "redirect_is_platform": true,
+          "redirect_url_has_video_id": true
+        },
+        {
+          "status": 200,
+          "request_url_has_video_id": true
+        }
+      ]
+    },
+    "scope": "Share-page requests and runtime file checks only. No browser launch, original media pipeline, model calls, app credential reads, database writes or user browser sessions.",
+    "interpretation": "A page response, URL video ID or installed browser does not prove original media acquisition or analysis.",
+    "elapsed_seconds": 2.193
+  },
+  "validation": {
+    "full_pytest": {
+      "tests": "532",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "9.466"
+    },
+    "new_explicit_offline_contracts": 59,
+    "xml_hostname_only_redacted": true,
+    "source_sha256": {
+      "scripts/diagnose_douyin.py": "508f50d40bb38d92cc2f0130e4326d60c76ae7807cbf4caad59d15d6e5bd15a5",
+      "tests/test_douyin_diagnostic.py": "e4bcf4fde583e6ad1f6ea1468e0103ea413978f363cceeada31f04b23d431d34"
+    },
+    "ui_changed": false,
+    "dependencies_changed": false,
+    "application_backend_changed": false,
+    "independent_review": "passed; exception report type issue fixed, minimal helper environment added; customer execution not claimed"
+  },
+  "privacy": {
+    "raw_source_link_title_video_id_not_included": true,
+    "no_signed_urls_headers_cookies_exception_messages_or_local_paths_in_report": true,
+    "worker_environment_allowlisted": true,
+    "custom_CA_configuration_preserved_without_reporting_paths": true,
+    "no_database_or_credential_file_reads_by_utility": true
+  },
+  "publication": {
+    "source": "未验证",
+    "ci": "未验证",
+    "release_tags_changed": false
+  },
+  "boundary": "Page HTTP success, a numeric video ID in URL, or installed runtime are not original-media or model acceptance. Diagnostic utility does not add QR login or claim to fix the customer machine."
+}
