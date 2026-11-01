@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "scope": "Historical safe diagnostics before support was aligned to the required PowerShell 7 runtime",
+  "repository": "baizhanwen/liming-zhiyao-skill-collect",
+  "pull_request": 2,
+  "draft": true,
+  "head_sha": "308a84d5ae41a2c14c204f09119aafac34731e06",
+  "run_id": 41302614859,
+  "url": "https://github.com/baizhanwen/liming-zhiyao-skill-collect/actions/runs/41302614859",
+  "conclusion": "failure",
+  "jobs": [
+    {
+      "platform": "ubuntu-latest",
+      "passed": 597,
+      "failed": 0,
+      "skipped": 18,
+      "seconds": 11.79
+    },
+    {
+      "platform": "macos-latest",
+      "passed": 597,
+      "failed": 0,
+      "skipped": 18,
+      "seconds": 47.7
+    },
+    {
+      "platform": "windows-latest",
+      "passed": 609,
+      "failed": 1,
+      "skipped": 5,
+      "seconds": 65.89
+    }
+  ],
+  "windows_failure": {
+    "case": "NoStart success using Windows PowerShell 5.1",
+    "stage": "manifest_hash",
+    "type": "CommandNotFoundException",
+    "source_line": 60,
+    "source_operation": "Get-FileHash",
+    "meaning": "Required module command was unavailable in this PS5.1 process; this does not indicate a data write or replacement failure"
+  },
+  "scope_change": {
+    "authorized_by": "Project owner / root",
+    "required_runtime": "PowerShell 7 (pwsh), already specified in AGENTS installation requirements",
+    "preserved_checks": [
+      "PS7 update and reapply",
+      "post-write late rollback marker and old-tree restoration",
+      "package/hash/path/junction/port safeguards"
+    ],
+    "ps51": "Explicit unsupported-runtime rejection before any I/O, with full-tree preservation assertion; not skipped or claimed successful"
+  },
+  "boundaries": [
+    "No business calls or customer GUI interaction",
+    "No raw logs, exception message, user paths, environment or credentials copied"
+  ]
+}

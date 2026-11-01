@@ -40,6 +40,8 @@ def source_fixture(tmp_path):
     (root / 'scripts').mkdir()
     for name in ('apply_windows_update.ps1', 'windows_update.cmd'):
         shutil.copyfile(ROOT / 'scripts' / name, root / 'scripts' / name)
+    for name in ('LICENSE', 'THIRD_PARTY_NOTICES.md'):
+        shutil.copyfile(ROOT / name, root / name)
     return root
 
 
@@ -47,7 +49,7 @@ def package_fixture(tmp_path):
     source = source_fixture(tmp_path)
     output = tmp_path / 'update.zip'
     report = update.build_update(source, output)
-    folder = tmp_path / 'extracted'
+    folder = tmp_path / '解压补丁 synthetic'
     with zipfile.ZipFile(output) as archive:
         archive.extractall(folder)  # Our explicitly built, validated fixture only.
     return folder / 'skill-collect-update-0.2.3', report
@@ -65,7 +67,9 @@ def test_builder_includes_only_exact_public_payload_and_pins_manifest(tmp_path):
     with zipfile.ZipFile(output) as archive:
         prefix = 'skill-collect-update-0.2.3/'
         names = archive.namelist()
-        assert len(names) == 16  # 10 allowlisted source/meta + 3 dist + 3 entry files.
+        assert len(names) == 18  # 13 payload files, 3 entry files and 2 license notices.
+        for notice in ('LICENSE', 'THIRD_PARTY_NOTICES.md'):
+            assert archive.read(prefix + notice) == (source / notice).read_bytes()
         assert not any(s in '\n'.join(names) for s in ('node_modules', 'app.sqlite3', 'secrets', 'private', '/tests/'))
         assert all(b'EXPLICIT_SYNTHETIC_PRIVATE_SENTINEL' not in archive.read(name) for name in names)
         raw = archive.read(prefix + 'manifest.json')
@@ -180,13 +184,22 @@ def invoke(package, target, *, shell='pwsh', port=None):
         capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=45)
 
 
+def invoke_launcher(package, target):
+    args = [str(package / '升级并启动.cmd'), '-ProjectPath', str(target), '-NoStart', '-Port', str(free_port())]
+    # cmd /s /c removes the outer quote pair; inner quoted arguments remain.
+    command = '"' + os.environ['COMSPEC'] + '" /d /s /c "' + subprocess.list2cmdline(args) + '"'
+    env = dict(os.environ, SKILL_COLLECT_UPDATE_NO_PAUSE='1')
+    return subprocess.run(command,
+        env=env, capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=45)
+
+
 @WINDOWS
-@pytest.mark.parametrize('shell', ['pwsh', 'powershell'])
-def test_actual_windows_nostart_updates_only_code_and_retains_backup_and_data(tmp_path, shell):
+@pytest.mark.parametrize('entrypoint', ['pwsh', 'cmd'])
+def test_actual_windows_nostart_updates_only_code_and_retains_backup_and_data(tmp_path, entrypoint):
     package, _ = package_fixture(tmp_path)
     target = target_fixture(tmp_path)
     before = tree_bytes(target)
-    result = invoke(package, target, shell=shell)
+    result = invoke(package, target) if entrypoint == 'pwsh' else invoke_launcher(package, target)
     assert result.returncode == 0, result.stdout + result.stderr
     manifest = json.loads((package / 'manifest.json').read_text())
     for entry in manifest['files']:
@@ -199,7 +212,30 @@ def test_actual_windows_nostart_updates_only_code_and_retains_backup_and_data(tm
     assert (backups[0].parent / 'backend/__init__.py').read_bytes() == before['backend/__init__.py']
     assert not (target / '.skill-collect-update-backups/update.lock').exists()
     # Reapplying the same version supports a later source hash without migrations.
-    assert invoke(package, target, shell=shell).returncode == 0
+    reapplied = invoke(package, target) if entrypoint == 'pwsh' else invoke_launcher(package, target)
+    assert reapplied.returncode == 0, reapplied.stdout + reapplied.stderr
+
+
+@WINDOWS
+def test_actual_windows_powershell51_is_explicitly_unsupported_without_any_write(tmp_path):
+    package, _ = package_fixture(tmp_path)
+    target = target_fixture(tmp_path)
+    before = {p.relative_to(target).as_posix(): p.read_bytes() for p in target.rglob('*') if p.is_file()}
+    result = invoke(package, target, shell='powershell')
+    assert result.returncode == 1
+    assert 'PowerShell 7' in result.stdout and '5.1' in result.stdout
+    assert 'learn.microsoft.com/powershell/' in result.stdout
+    assert {p.relative_to(target).as_posix(): p.read_bytes() for p in target.rglob('*') if p.is_file()} == before
+    assert not (target / '.skill-collect-update-backups').exists()
+
+
+@WINDOWS
+def test_actual_windows_pwsh_sta_can_construct_required_folder_picker_without_display():
+    script = "Add-Type -AssemblyName System.Windows.Forms; $picker = [Windows.Forms.FolderBrowserDialog]::new(); $picker.Dispose(); Write-Output 'SYNTHETIC_GUI_TYPES_READY'"
+    result = subprocess.run([shutil.which('pwsh'), '-NoLogo', '-NoProfile', '-STA', '-Command', script],
+        capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=15)
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert 'SYNTHETIC_GUI_TYPES_READY' in result.stdout
 
 
 @WINDOWS

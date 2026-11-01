@@ -7,6 +7,11 @@ param(
 $ExpectedManifestSha256 = '__MANIFEST_SHA256__'
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version 2.0
+if ($PSVersionTable.PSVersion.Major -lt 7) {
+    Write-Host '此升级器需要 PowerShell 7（pwsh）；不支持 Windows PowerShell 5.1。原项目未修改。'
+    Write-Host '官方安装说明：https://learn.microsoft.com/powershell/scripting/install/installing-powershell-on-windows'
+    exit 1
+}
 $Product = 'liming-zhiyao-skill-collect'
 $StaticFiles = @('backend/__init__.py', 'backend/browser_capture.py', 'backend/media.py',
     'backend/models.py', 'backend/task_progress.py', 'frontend/scripts/capture-douyin.mjs',

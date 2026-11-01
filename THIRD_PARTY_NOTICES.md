@@ -21,3 +21,31 @@
 GitHub 技能的仓库级许可不一定覆盖每个技能。导入前查看真实 SKILL.md、相关文件和各级 LICENSE/NOTICE。应用完整包会保存范围内文件和上级许可声明；许可 UNKNOWN 不代表获得使用授权。导入不授予执行验证状态，也不会执行脚本。
 
 界面图标为本项目手写 SVG 路径，未复制 Easel 资产。合成媒体契约夹具使用本机 FFmpeg 色块/正弦波，仅证明对应测试流程，未冒充用户视频或真实模型理解。真实原片验收单列脱敏统计与哈希，原媒体及私人材料不随仓库分发。
+
+## 升级包内的前端运行时代码
+
+Windows升级包包含已构建页面，内含 react 19.3.1, react-dom 19.3.1, scheduler 0.28.0。三者使用相同的下列MIT许可；许可证原文来自锁定安装包的LICENSE，随升级包分发。本项目自身LICENSE也随包提供，许可文件不进入待替换的payload。
+
+```text
+MIT License
+
+Copyright (c) Meta Platforms, Inc. and affiliates.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```

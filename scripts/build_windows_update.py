@@ -147,6 +147,13 @@ def build_update(source: Path, output: Path) -> dict:
     # Windows PowerShell 5.1 needs a BOM for Chinese messages.
     ps_bytes = ps.replace('__MANIFEST_SHA256__', manifest_hash).encode('utf-8-sig')
     cmd_bytes = command.read_text(encoding='utf-8-sig').replace('\r\n', '\n').replace('\n', '\r\n').encode('utf-8')
+    notices = {}
+    for name in ('LICENSE', 'THIRD_PARTY_NOTICES.md'):
+        file = source / name
+        no_links(file)
+        if not file.is_file() or not 0 < file.stat().st_size <= 65536:
+            raise UpdateBuildError('Required redistribution notice is unavailable')
+        notices[name] = file.read_bytes()
     prefix = 'skill-collect-update-' + VERSION + '/'
     output.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.NamedTemporaryFile(dir=output.parent, suffix='.partial', delete=False) as temp:
@@ -155,7 +162,8 @@ def build_update(source: Path, output: Path) -> dict:
         with zipfile.ZipFile(temporary, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
             for name, body in [
                 ('manifest.json', raw_manifest), ('apply_windows_update.ps1', ps_bytes),
-                ('升级并启动.cmd', cmd_bytes), *[('payload/' + path, body) for path, body in sorted(data.items())],
+                ('升级并启动.cmd', cmd_bytes), *sorted(notices.items()),
+                *[('payload/' + path, body) for path, body in sorted(data.items())],
             ]:
                 entry = zipfile.ZipInfo(prefix + name, date_time=(2026, 11, 1, 0, 0, 0))
                 entry.external_attr = 0o100644 << 16
