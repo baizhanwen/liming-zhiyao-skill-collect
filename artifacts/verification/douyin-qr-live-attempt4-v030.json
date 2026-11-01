@@ -1,0 +1,28 @@
+{
+  "date": "2026-11-01",
+  "scope": "User-reported project QR scan and phone confirmation followed by read-only safe status observations; no OTP or official page pixels inspected",
+  "result": "失败",
+  "user_observation": "扫码并在手机确认后，项目二维码消失，没有后续反馈",
+  "safe_status": {
+    "status": "checking",
+    "session_saved": false,
+    "browser_open": true,
+    "qr_available": false,
+    "verification_available": false,
+    "error": null
+  },
+  "verified_local_defect": "Active check optimistically sets checking, but unchanged Node phase is suppressed; QR clear does not supply an updated phase",
+  "additional_proven_contract_gap": "Direct SMS step not included in first MFA entry; hidden first title can mask a visible later title. Not established as this live account root cause.",
+  "model_calls_by_observation": 0,
+  "feishu_writes_by_observation": 0,
+  "authenticated_session": "not verified",
+  "saved_session_reuse": "not verified",
+  "media_acquisition": "not performed in this attempt",
+  "source_followup": "Remove optimistic active-check phase; always acknowledge observed phase; show a purpose-separated official page view after QR departure; include visible direct SMS matches. Real recheck pending.",
+  "final_safe_status": {
+    "status": "failed",
+    "session_saved": false,
+    "browser_open": false,
+    "error_code": "douyin_session_timeout"
+  }
+}

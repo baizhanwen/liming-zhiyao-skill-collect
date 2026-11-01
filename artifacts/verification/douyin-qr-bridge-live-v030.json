@@ -1,0 +1,60 @@
+{
+  "kind": "real_official_qr_bridge",
+  "events": [
+    {
+      "elapsed_seconds": 0.048,
+      "status": "waiting_scan",
+      "qr_available": true,
+      "has_update_time": true
+    },
+    {
+      "elapsed_seconds": 50.456,
+      "status": "waiting_scan",
+      "qr_available": true,
+      "has_update_time": true
+    },
+    {
+      "elapsed_seconds": 84.715,
+      "status": "checking",
+      "qr_available": false,
+      "has_update_time": false
+    }
+  ],
+  "images_checked": [
+    {
+      "png": true,
+      "dimensions": [
+        179,
+        179
+      ],
+      "bytes": 28710,
+      "no_store": true,
+      "same_origin_policy": true
+    },
+    {
+      "png": true,
+      "dimensions": [
+        179,
+        179
+      ],
+      "bytes": 10596,
+      "no_store": true,
+      "same_origin_policy": true
+    }
+  ],
+  "distinct_images": 2,
+  "qr_images_saved_to_disk": false,
+  "storage_state_read": false,
+  "model_calls_started": 0,
+  "task_mutations": 0,
+  "authenticated": false,
+  "scope": "Real official-page PNG transport and workbench display only. Later overlay defect showed these transport checks cannot establish that every PNG is a valid QR; see attempt3. No account authentication established.",
+  "browser_shortlink_resolution": {
+    "passed": true,
+    "seconds": 4.915,
+    "method": "official_browser_redirect",
+    "session_used": false,
+    "media_downloaded": false
+  },
+  "later_defect_record": "douyin-qr-live-attempt3-v030.json"
+}

@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "application_version": "0.3.0",
+  "kind": "explicit_ui_contract_targeted_qr_expiry_followup",
+  "result": "passed",
+  "build": {
+    "javascript": "index-CHdhXr6F.js",
+    "css": "index-jPAKYIil.css"
+  },
+  "run": {
+    "started_at": "2026-11-01T09:44:30.155Z",
+    "duration_ms": 8444,
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "flaky": 0,
+    "tests": [
+      {
+        "name": "抖音会话界面契约：失败任务入口、验证码与网络错误不冒充登录成功",
+        "status": "passed",
+        "duration_ms": 6822,
+        "attempts": 1
+      }
+    ]
+  },
+  "scope": {
+    "executed_here": 1,
+    "defined_total": 20,
+    "full_suite_rerun": false,
+    "real_official_qr_or_session": false,
+    "real_sms_or_verification_request": false,
+    "production_data_read_or_modified": false,
+    "real_model_calls": false
+  },
+  "checks": [
+    "waiting_scan plus douyin_session_qr_expired and qr_available=false removes the QR image",
+    "Main instruction explicitly says the official QR has expired and requires user-requested replacement instead of waiting for QR generation",
+    "A subsequent automatic GET poll does not issue any session POST while expired",
+    "Only clicking the explicit replacement button sends login; the old image stays hidden while awaiting the next generation",
+    "Existing image failure, verification boundary and uncertain operation checks remain in this single affected case"
+  ],
+  "boundary": "This is an explicitly mocked single UI contract run. It does not prove official QR lifetime, challenge preservation, phone confirmation, login or video acquisition. Earlier 4-case and privacy/focus reports retain their own build identities.",
+  "source_and_build_frozen": true
+}

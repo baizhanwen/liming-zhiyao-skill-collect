@@ -1,0 +1,39 @@
+{
+  "recorded_at": "2026-11-01T07:04:33.368435+00:00",
+  "kind": "explicit_offline_home_entry_contract",
+  "scope": "Only the initial login navigation changed from self to ordinary official homepage; no capture or official authentication was performed",
+  "pytest": {
+    "passed": 108,
+    "failed": 0,
+    "skipped": 0,
+    "seconds": 30.87
+  },
+  "command": ".venv/bin/python -m pytest -q tests/test_douyin_login.py tests/test_douyin_mfa_lifecycle.py tests/test_douyin_verification.py",
+  "checks": {
+    "node_syntax": true,
+    "git_diff_check": true
+  },
+  "covered": [
+    "Login primary page navigates once to official homepage; fixture simulates its normal jingxuan redirect",
+    "Check mode initial page remains the official self page",
+    "All post-login proof pages still use official self endpoint with the existing owner and epoch evidence guard",
+    "Existing one-time ordinary login button and active-check no-navigation assertions retained",
+    "All 27 MFA lifecycle contracts retained including SMS no-navigation and original-PNG QR relay"
+  ],
+  "independent_readonly_review": {
+    "agent": "feishu_connector",
+    "unresolved_blockers": 0,
+    "source_sha256": "d9bc3b86cbccf5d44e8dd330fc463b9e2f09cfe2618196108ab7961ddbf3f16f"
+  },
+  "external_business_requests": 0,
+  "boundaries": [
+    "No real account login, SMS, saved-session reuse or media acquisition was validated in this offline run",
+    "Earlier 365-test report is preserved with its own pre-entry-change source hash; this run is a focused follow-up rather than a new full application test",
+    "Actual project homepage/QR/official authentication validation is performed separately by the parent task"
+  ],
+  "source_hashes": {
+    "frontend/scripts/douyin-login.mjs": "d9bc3b86cbccf5d44e8dd330fc463b9e2f09cfe2618196108ab7961ddbf3f16f",
+    "tests/test_douyin_login.py": "3deee44d73fe4509f7edd3699d6c7f88c18f3078deca5d1ad7ffa37c22ec98c2",
+    "tests/test_douyin_mfa_lifecycle.py": "0779eb86e5afab95471105c31e680ab20d70ae66d315430a5c5568541911cf5a"
+  }
+}

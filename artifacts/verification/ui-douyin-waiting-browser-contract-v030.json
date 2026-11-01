@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "application_version": "0.3.0",
+  "kind": "explicit_ui_contract_targeted_waiting_browser_followup",
+  "result": "passed",
+  "build": {
+    "javascript": "index-BNPenEAY.js",
+    "css": "index-jPAKYIil.css"
+  },
+  "run": {
+    "started_at": "2026-11-01T10:08:37.067Z",
+    "duration_ms": 6007,
+    "passed": 2,
+    "failed": 0,
+    "skipped": 0,
+    "flaky": 0,
+    "tests": [
+      {
+        "name": "官方验证视图契约：1440px等比及放大坐标、旧帧锁定、临时输入清空",
+        "status": "passed",
+        "duration_ms": 2295,
+        "attempts": 1
+      },
+      {
+        "name": "官方验证视图契约：390px等比及放大坐标、旧帧锁定、临时输入清空",
+        "status": "passed",
+        "duration_ms": 1727,
+        "attempts": 1
+      }
+    ]
+  },
+  "scope": {
+    "executed_here": 2,
+    "defined_total": 20,
+    "full_suite_rerun": false,
+    "real_official_qr_or_session": false,
+    "real_sms_or_verification_request": false,
+    "production_data_read_or_modified": false,
+    "real_model_calls": false
+  },
+  "checks": [
+    "waiting_browser is an active pending-login state even if browser_open=false; check and cancel stay available",
+    "Main instruction says the QR step has ended and login is not yet confirmed; it does not claim MFA or success",
+    "Missing frame shows an explicit wait-for-official-login-prompt placeholder with no automatic action",
+    "Loaded official-prompt view shares the existing frame channel while QR slot remains absent even if an old qr_available flag is true",
+    "Current prompt can only be abandoned by an explicit clearly labeled restart action",
+    "Transition to actual verification_required restores MFA-specific wording and original coordinate, zoom, consumed UUID, masked input, key and exit assertions pass",
+    "1440px and 390px body widths do not overflow; both new prompt screenshots were visually reviewed"
+  ],
+  "screenshots": [
+    {
+      "path": "ui-douyin-waiting-browser-desktop-contract-v030.png",
+      "viewport_width": 1440,
+      "sha256": "610a486573f1a25cd19ee8b43c6023cc09325793405c502dac11c413656502ab",
+      "visually_reviewed": true,
+      "explicit_marker": "CONTRACT / NOT OFFICIAL"
+    },
+    {
+      "path": "ui-douyin-waiting-browser-mobile-contract-v030.png",
+      "viewport_width": 390,
+      "sha256": "0b269535eedca413a0e8e54df27977ecaa54a6905680c30985e1ddb08d954ac8",
+      "visually_reviewed": true,
+      "explicit_marker": "CONTRACT / NOT OFFICIAL"
+    }
+  ],
+  "boundary": "Only the existing two desktop/mobile official-view cases were extended and rerun. All session states and JPEG frames are explicit local mocks. This does not prove actual official page content, phone confirmation, identity verification, login or video acquisition; earlier privacy and QR reports keep their own build identities.",
+  "source_and_build_frozen": true
+}

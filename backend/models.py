@@ -216,10 +216,17 @@ class ModelService:
                     run=self.store.get('model_runs',error.diagnostic_id)
                     self.store.put('model_runs',{**run,'validation':'failed','source_snapshot_hash':source.get('snapshot_hash'),'validation_errors':[{'type':error.code}]})
                 raise
+            output_normalizations=[]
             try:
                 parsed=json.loads(re.sub(r'^```(?:json)?\s*|\s*```$','',content.strip()))
                 mention_warnings=[]
                 if isinstance(parsed,dict):
+                    audience=parsed.get('audience')
+                    if isinstance(audience,list) and 1<=len(audience)<=8 and all(isinstance(item,str) and item.strip() for item in audience):
+                        # Accept this bounded provider variation without another
+                        # paid request. Preserve every string and the raw reply.
+                        parsed={**parsed,'audience':'\n'.join(audience)}
+                        output_normalizations.append('audience_string_list')
                     # Optional lookup hints must not cause another paid analysis
                     # call when the actual content analysis is otherwise valid.
                     raw_mentions=parsed.get('project_mentions',[])
@@ -237,14 +244,14 @@ class ModelService:
                     raise ValueError('unrecognized evidence')
                 if any(c['kind']!='inference' and not c['evidence_ids'] for c in result['claims']):
                     raise ValueError('claim lacks evidence')
-                result.update(meta,evidence=evidence,basis=source.get('basis','source_files'),validation='not_executed',source_snapshot_hash=source.get('snapshot_hash'),source_version=source.get('version'),project_mention_warnings=mention_warnings)
+                result.update(meta,evidence=evidence,basis=source.get('basis','source_files'),validation='not_executed',source_snapshot_hash=source.get('snapshot_hash'),source_version=source.get('version'),project_mention_warnings=mention_warnings,output_normalizations=output_normalizations)
                 run=self.store.get('model_runs',meta['model_run_id'])
-                self.store.put('model_runs',{**run,'validation':'passed','source_snapshot_hash':source.get('snapshot_hash')})
+                self.store.put('model_runs',{**run,'validation':'passed','source_snapshot_hash':source.get('snapshot_hash'),'output_normalizations':output_normalizations})
                 return result
             except (ValueError,ValidationError) as error:
                 run=self.store.get('model_runs',meta['model_run_id'])
                 reason=[{'field':'.'.join(str(x) for x in e['loc']),'type':e['type']} for e in error.errors(include_input=False)] if isinstance(error,ValidationError) else [{'type':'json_or_evidence','reason':str(error)[:200]}]
-                self.store.put('model_runs',{**run,'validation':'failed','validation_errors':reason,'source_snapshot_hash':source.get('snapshot_hash')})
+                self.store.put('model_runs',{**run,'validation':'failed','validation_errors':reason,'source_snapshot_hash':source.get('snapshot_hash'),'output_normalizations':output_normalizations})
                 if attempt>=max_repairs:
                     fields=', '.join(v.get('field') or v['type'] for v in reason)
                     error=AppError('output_format',f'模型输出结构或证据校验失败（{fields}），原始回答仅保存在本机诊断，未保存为成功分析')

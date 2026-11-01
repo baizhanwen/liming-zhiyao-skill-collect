@@ -718,8 +718,60 @@ def _renderer_env():
     return {key:value for key,value in os.environ.items() if key.upper() in allowed}
 
 
+def _browser_state(value):
+    """Accept only the dedicated platform context; never a system profile path."""
+    if value is None:
+        return None
+    try:
+        if not isinstance(value, dict) or len(json.dumps(value).encode()) > 256 * 1024:
+            raise ValueError('state size')
+        state = json.loads(json.dumps(value))
+        if not isinstance(state.get('cookies', []), list) or not isinstance(state.get('origins', []), list):
+            raise ValueError('state shape')
+        for cookie in state.get('cookies', []):
+            domain = cookie.get('domain', '').lstrip('.') if isinstance(cookie, dict) else ''
+            if not domain or not _platform_page('https://' + domain):
+                raise ValueError('cookie origin')
+        for origin in state.get('origins', []):
+            if not isinstance(origin, dict) or not _platform_page(origin.get('origin', '')):
+                raise ValueError('storage origin')
+        return state
+    except (ValueError, TypeError, AttributeError, RecursionError):
+        raise AppError('douyin_session_invalid', '专用抖音会话格式或范围无效，请重新登录') from None
+
+
+def _resolved_redirect(result, initial):
+    """Validate the renderer's initial HTTP navigation chain, never page content."""
+    chain = result.get('redirect_chain')
+    if not isinstance(chain, list) or not 1 <= len(chain) <= 6 or not all(isinstance(u, str) and _platform_page(u) for u in chain):
+        raise AppError('douyin_resolve_identity', '未取得可信的官方视频跳转链')
+    def comparable(url):
+        p = urlsplit(url)
+        return p.scheme, p.hostname, p.port or 443, p.path or '/', p.query
+    if comparable(chain[0]) != comparable(initial) or comparable(chain[-1]) != comparable(result.get('resolved_url', '')):
+        raise AppError('douyin_resolve_identity', '分享页跳转来源不一致')
+    # Only the already-supported numeric video path is accepted. modal_id,
+    # recommendations, DOM links and titles cannot establish a target here.
+    identities = [re.search(r'/(?:share/)?video/(\d+)(?:/|$)', urlsplit(u).path) for u in chain]
+    identities = [m[1] for m in identities if m]
+    final = re.search(r'/(?:share/)?video/(\d+)(?:/|$)', urlsplit(chain[-1]).path)
+    if not final or set(identities) != {final[1]} or str(result.get('video_id')) != final[1]:
+        raise AppError('douyin_resolve_identity', '未确认分享链接的唯一视频标识')
+    return {'video_id': final[1], 'resolved_url': _clean_url(chain[-1]),
+            'method': 'official_browser_redirect', 'redirect_count': len(chain) - 1}
+
+
+def resolve_douyin_url(url, folder, storage_state=None, timeout=30, cancelled=None,
+                       progress_callback=None, *, transport_factory=None):
+    """Resolve only the initial official HTTP redirect chain; acquire no media."""
+    return capture_douyin(url, folder, video_id='0', timeout=min(float(timeout), 45),
+        cancelled=cancelled, transport_factory=transport_factory,
+        progress_callback=progress_callback, storage_state=storage_state, _resolve_only=True)
+
+
 def capture_douyin(url, folder, *, video_id, timeout=180, max_bytes=MAX_MEDIA,
-                   cancelled=None, transport_factory=None, progress_callback=None):
+                   cancelled=None, transport_factory=None, progress_callback=None,
+                   storage_state=None, _resolve_only=False):
     """Return complete media candidates for one explicit video; otherwise raise.
 
     Caller must FFprobe/validate the resulting AV streams and duration before
@@ -728,14 +780,18 @@ def capture_douyin(url, folder, *, video_id, timeout=180, max_bytes=MAX_MEDIA,
     """
     if not _platform_page(url):
         raise AppError('unsupported_source', '匿名浏览器仅支持抖音公开分享页')
-    if not str(video_id).isdigit() or (_identity(url) and _identity(url) != str(video_id)):
+    if not _resolve_only and (not str(video_id).isdigit() or (_identity(url) and _identity(url) != str(video_id))):
         raise AppError('douyin_browser_identity', '分享链接与指定视频标识不一致')
+    state = _browser_state(storage_state)
     node = shutil.which('node')
     if not node or not SCRIPT.is_file():
         raise AppError('douyin_browser_runtime', '匿名浏览器未安装，请重新运行项目安装脚本')
     timeout = min(max(float(timeout), 3), 180)
     work = Path(folder).resolve() / ('browser-' + uuid.uuid4().hex)
     broker = _Broker(work, video_id, time.monotonic() + timeout, max_bytes, transport_factory, cancelled)
+    if state is not None:
+        broker.cookie_values.update(cookie['value'] for cookie in state.get('cookies', [])
+            if isinstance(cookie.get('value'), str) and len(cookie['value']) >= 4)
     # The explicit injected transport selects offline fulfillment contracts only.
     # Production uses native Chromium TLS through the validating CONNECT proxy.
     native_proxy = transport_factory is None
@@ -788,7 +844,8 @@ def capture_douyin(url, folder, *, video_id, timeout=180, max_bytes=MAX_MEDIA,
         reader = threading.Thread(target=read_messages, daemon=True); reader.start()
         send({'type': 'start', 'url': url, 'video_id': str(video_id), 'timeout_ms': int(timeout * 1000),
               'guard_proxy': f'http://127.0.0.1:{guard.server_address[1]}',
-              'native_proxy': native_proxy, 'work_dir': str(work)})
+              'native_proxy': native_proxy, 'work_dir': str(work),
+              'resolve_only': bool(_resolve_only), **({'storage_state': state} if state is not None else {})})
         while result is None:
             broker._check()
             try:
@@ -800,6 +857,9 @@ def capture_douyin(url, folder, *, video_id, timeout=180, max_bytes=MAX_MEDIA,
             if message is None:
                 break
             if message.get('type') in ('fetch', 'observe', 'observed_metadata', 'observed_media', 'observed_redirect'):
+                if _resolve_only:
+                    send({'type': 'reply', 'id': message.get('id'), 'abort': True})
+                    continue
                 if not inflight.acquire(blocking=False):
                     send({'type': 'reply', 'id': message.get('id'), 'abort': True})
                     continue
@@ -819,7 +879,11 @@ def capture_douyin(url, folder, *, video_id, timeout=180, max_bytes=MAX_MEDIA,
                             'metadata_bodies', 'metadata_body_errors', 'observed_media')}
                 if progress_callback:
                     try:
-                        progress_callback({**progress, 'proxy_connections': getattr(guard, 'connections', 0),
+                        if _resolve_only:
+                            counts = progress.get('response_status_counts') or {}
+                            progress_callback({'phase': 'resolving_share', 'requests': sum(v for v in counts.values() if type(v) is int and v >= 0)})
+                        else:
+                            progress_callback({**progress, 'proxy_connections': getattr(guard, 'connections', 0),
                             'proxy_bytes': getattr(guard, 'bytes', 0), 'proxy_denied': getattr(guard, 'denied', 0),
                             'bound_media': len(broker.entries), 'complete_media': len(broker.ready()),
                             'metadata_diagnostics': broker.metadata_diagnostics,
@@ -831,9 +895,16 @@ def capture_douyin(url, folder, *, video_id, timeout=180, max_bytes=MAX_MEDIA,
                         pass
         if not result or not result.get('ok'):
             code = (result or {}).get('code', 'douyin_browser_runtime')
-            if code not in ('douyin_browser_identity', 'douyin_browser_runtime', 'douyin_browser_budget', 'cancelled'):
+            if code not in ('douyin_browser_identity', 'douyin_browser_runtime', 'douyin_browser_budget', 'douyin_resolve_identity', 'douyin_resolve_failed', 'cancelled'):
                 code = 'douyin_browser_material'
             raise AppError(code, '匿名公开页面未取得指定原视频；未绕过登录、验证码或访问限制')
+        if _resolve_only:
+            resolved = _resolved_redirect(result, url)
+            resolved['session_used'] = state is not None
+            status = result.get('http_status')
+            if type(status) is int and 100 <= status <= 599:
+                resolved['http_status'] = status
+            return resolved
         # Freeze completed transfers before hashing/returning the selected files.
         executor.shutdown(wait=True, cancel_futures=True)
         if not _platform_page(result.get('page_url', '')) or _identity(result['page_url']) != str(video_id):
@@ -850,6 +921,7 @@ def capture_douyin(url, folder, *, video_id, timeout=180, max_bytes=MAX_MEDIA,
                        'requests': broker.requests, 'downloaded_bytes': broker.total,
                        'blocked_requests': broker.blocked, 'renderer_version': result.get('renderer_version'),
                        'native_origin_tls': native_proxy,
+                       'session_used': state is not None,
                        'proxy_connections': getattr(guard, 'connections', 0),
                        'proxy_bytes': getattr(guard, 'bytes', 0)}
         return {'media_paths': [item['path'] for item in candidates], 'media_files': candidates, 'video_id': str(video_id),

@@ -1,0 +1,60 @@
+{
+  "recorded_at": "2026-11-01T06:56:56.375848+00:00",
+  "kind": "explicit_offline_contract_and_safety_regression",
+  "scope": "Dedicated login modal lifecycle, source PNG relay, proof-page isolation and existing browser/session integration fixtures",
+  "pytest": {
+    "passed": 365,
+    "failed": 0,
+    "skipped": 0,
+    "seconds": 35.26,
+    "warnings": 1,
+    "warning_scope": "upstream Starlette TestClient httpx deprecation"
+  },
+  "command": ".venv/bin/python -m pytest -q tests/test_douyin_login.py tests/test_douyin_verification.py tests/test_douyin_mfa_lifecycle.py tests/test_douyin_browser_session.py tests/test_browser_capture_review.py tests/test_browser_capture.py tests/test_browser_environment.py tests/test_media_browser_fallback.py tests/test_douyin_session.py tests/test_douyin_application.py",
+  "checks": {
+    "node_syntax": true,
+    "git_diff_check": true
+  },
+  "new_lifecycle_contracts": 27,
+  "covered": [
+    "Same verification modal remains active after identity heading becomes SMS step",
+    "View screenshot, user input and final proof share the modal tracker",
+    "Unknown/replacement verification root stays latched and clears frames",
+    "Known background DOM identity cannot excuse a replacement modal containing QR",
+    "Original QR dataPNG is relayed without element screenshot; SMS occlusion clears QR",
+    "Original input page is navigated once only; self-proof uses a separate same-context page",
+    "Late response body from original page cannot serve as fresh probe proof",
+    "Probe page requiring MFA returns a fixed failure rather than waiting invisibly or declaring success",
+    "450ms about:blank probe navigation waits, then new official profile proof can succeed",
+    "Probe timeout, connection failure and final blank are fixed timeout/runtime, never MFA or authentication success",
+    "Temporary probe DOM exception can recover; persistent unknown DOM cannot save authentication",
+    "Source page owner and the actual gate epoch are bound before new proof requests"
+  ],
+  "external_business_requests": 0,
+  "boundaries": [
+    "Existing browser runtime fixture uses explicit Mock transport; it is not a real Douyin login or capture",
+    "No real SMS, model or Feishu call; no user browser or saved state was inspected",
+    "Actual official authentication and persistence require separate live validation",
+    "A new MFA challenge on the proof-only page is not adopted; current attempt exits with douyin_session_verification_required",
+    "Unidentifiable or replaced verification modal remains conservatively incomplete",
+    "A retained transparent/unknown verification root may conservatively prevent the proof gate; no broader heuristic was introduced",
+    "No real user QR scan, phone approval, SMS, authentication persistence or customer Windows proof is established by this contract report"
+  ],
+  "source_hashes": {
+    "frontend/scripts/douyin-login.mjs": "2737cd7a2a760432e28d4de9e6d34f73470b9d2f66bc19c01552513bb184866c",
+    "tests/test_douyin_login.py": "a90a2c0cfb901439ede7bb1aef3438563227de2b98eb2deada71b28afac54882",
+    "tests/test_douyin_verification.py": "484ba5e643ef58d39f839f46bd3b70c560cd47a6318893d8a95e92f940074228",
+    "tests/test_douyin_mfa_lifecycle.py": "2781898b542e1fa3701ec9095c4971fb7a752095b81295c9b8a55927d6b2310c"
+  },
+  "supersedes_for_current_source": "douyin-mfa-lifecycle-contract-v030.json (historical 359-test source snapshot retained)",
+  "independent_review": {
+    "agent": "feishu_connector",
+    "source_sha256": "2737cd7a2a760432e28d4de9e6d34f73470b9d2f66bc19c01552513bb184866c",
+    "unresolved_blockers": 0,
+    "independent_focused_test": {
+      "passed": 27,
+      "seconds": 17.96,
+      "kind": "offline mocks only"
+    }
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "application_version": "0.3.0",
+  "kind": "explicit_ui_contract_targeted_followup",
+  "result": "passed",
+  "build": {
+    "javascript": "index-DPtvVfEp.js",
+    "css": "index-Bqusu-Ej.css"
+  },
+  "run": {
+    "started_at": "2026-11-01T06:24:24.424Z",
+    "duration_ms": 10552,
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "flaky": 0,
+    "tests": [
+      {
+        "name": "官方验证视图契约：缺帧/图片错误/断连/不确定动作只等待新帧且不重发",
+        "status": "passed",
+        "duration_ms": 9254,
+        "attempts": 1
+      }
+    ]
+  },
+  "scope": {
+    "executed_here": 1,
+    "defined_total": 20,
+    "full_suite_rerun": false,
+    "real_sms_or_verification_request": false,
+    "real_otp_or_account_input": false,
+    "production_data_read_or_modified": false,
+    "real_model_calls": false
+  },
+  "checks": [
+    "A normal automatic GET poll changes the valid UUID while masked unsubmitted local input length is preserved",
+    "Submitting clears the local input immediately; uncertain POST does not replay; HTTP reflection is not shown",
+    "Disconnect and invalid frames disable official actions; a new valid frame recovers safely",
+    "Leaving verification removes the view and local input; remount starts empty",
+    "Test metadata and published results retain no input values"
+  ],
+  "boundary": "This one affected privacy case was rerun after removing frame-ID-only input clearing. The earlier three-new-plus-one-existing run retains index-LjXYgJxm.js; it is not relabeled as a full final-build rerun.",
+  "previous_report": "ui-douyin-verification-contract-v030.json",
+  "final_source_and_build_frozen": true
+}

@@ -1,0 +1,14 @@
+{
+  "date": "2026-11-01",
+  "scope": "First real user scan of project-rendered official QR before challenge-preservation fix",
+  "status": "失败",
+  "qr_displayed_in_workbench": true,
+  "user_report": "scanned in project; no phone login confirmation; still needed official site",
+  "observed_official_page": "not_logged_in",
+  "observed_workbench": "waiting_scan",
+  "session_saved": false,
+  "model_calls_started": 0,
+  "not_a_successful_authentication": true,
+  "identified_implementation_issue": "active check reloaded /user/self and could replace an in-flight challenge; exact cause of phone nonconfirmation not yet proven",
+  "next_required_acceptance": "one scan in workbench followed by official authenticated response and reusable encrypted state"
+}
