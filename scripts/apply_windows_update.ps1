@@ -17,6 +17,7 @@ $Lock = $null
 $LockPath = $null
 $Backup = $null
 $Installed = $false
+$DiagnosticStage = 'package_check'
 
 function Stop-Update([string]$Message) { $script:FailureText = $Message; throw [InvalidOperationException]::new($Message) }
 function Assert-LocalPath([string]$Path) {
@@ -74,6 +75,37 @@ function Assert-PortFree([int]$Number) {
     } catch { Stop-Update '端口正在使用。请先关闭旧项目启动窗口，再运行升级；不会结束任何进程。' }
     finally { $Socket.Dispose() }
 }
+function Invoke-PythonProbe([string]$Python, [string]$Script, [hashtable]$Values) {
+    # Arguments contain no script or user path: PS5.1 and PS7 use the same stdin.
+    $Info = [Diagnostics.ProcessStartInfo]::new()
+    $Info.FileName = $Python
+    $Info.Arguments = '-I -'
+    $Info.UseShellExecute = $false
+    $Info.CreateNoWindow = $true
+    $Info.RedirectStandardInput = $true
+    $Info.RedirectStandardOutput = $true
+    $Info.RedirectStandardError = $true
+    foreach ($Key in $Values.Keys) { $Info.EnvironmentVariables[$Key] = [string]$Values[$Key] }
+    $Process = [Diagnostics.Process]::new()
+    $Process.StartInfo = $Info
+    try {
+        $null = $Process.Start()
+        $Output = $Process.StandardOutput.ReadToEndAsync()
+        $Errors = $Process.StandardError.ReadToEndAsync()
+        $Process.StandardInput.WriteLine($Script)
+        $Process.StandardInput.Close()
+        if (-not $Process.WaitForExit(15000)) {
+            # Only this probe process is terminated; the existing server is untouched.
+            $Process.Kill()
+            $null = $Process.WaitForExit(5000)
+            throw [TimeoutException]::new('Python probe timeout')
+        }
+        if (-not [Threading.Tasks.Task]::WaitAll([Threading.Tasks.Task[]]@($Output, $Errors), 1000)) {
+            throw [TimeoutException]::new('Python probe stream timeout')
+        }
+        return $Process.ExitCode
+    } finally { $Process.Dispose() }
+}
 function Write-CodeFile([string]$Source, [string]$Destination) {
     $null = Assert-LocalPath $Source
     $null = Assert-LocalPath $Destination
@@ -84,7 +116,7 @@ function Write-CodeFile([string]$Source, [string]$Destination) {
     try {
         [IO.File]::Copy($Source, $Temporary, $false)
         $null = Assert-LocalPath $Destination
-        if ([IO.File]::Exists($Destination)) { [IO.File]::Replace($Temporary, $Destination, $null) }
+        if ([IO.File]::Exists($Destination)) { [IO.File]::Replace($Temporary, $Destination, [NullString]::Value) }
         else { [IO.File]::Move($Temporary, $Destination) }
     } finally {
         if ([IO.File]::Exists($Temporary)) { [IO.File]::Delete($Temporary) }
@@ -139,6 +171,7 @@ try {
             } elseif (-not $Seen.Contains($Relative)) { Stop-Update '补丁包含清单之外的文件。' }
         }
     }
+    $DiagnosticStage = 'project_check'
     if (-not $ProjectPath) {
         Add-Type -AssemblyName System.Windows.Forms
         $Picker = New-Object Windows.Forms.FolderBrowserDialog
@@ -170,16 +203,18 @@ try {
     if ($Port -eq 0) { if ($env:SKILL_COLLECT_PORT) { $Port = [int]$env:SKILL_COLLECT_PORT } else { $Port = 8765 } }
     Assert-PortFree $Port
     $Python = Assert-LocalPath (Join-Path $Project '.venv/Scripts/python.exe')
+    $DiagnosticStage = 'runtime_probe'
     $Check = 'import sys,importlib.util;sys.exit(0 if sys.version_info>=(3,11) and all(importlib.util.find_spec(x) is not None for x in ("fastapi","uvicorn","httpx","pydantic","multipart","cryptography")) else 1)'
-    & $Python -I -c $Check *> $null
-    if ($LASTEXITCODE -ne 0) { Stop-Update '原项目 .venv 的 Python 或依赖不完整；本升级包不会安装或修改全局环境。' }
-    $Identity = 'import sys,tomllib;from pathlib import Path;p=tomllib.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))["project"];sys.exit(0 if p.get("name")=="liming-zhiyao-skill-collect" and p.get("version")==sys.argv[2] else 1)'
-    & $Python -I -c $Identity (Join-Path $Project 'pyproject.toml') $VersionMatch.Groups[1].Value *> $null
-    if ($LASTEXITCODE -ne 0) { Stop-Update '原项目 TOML 标识或版本不匹配；未修改代码。' }
+    if ((Invoke-PythonProbe $Python $Check @{}) -ne 0) { Stop-Update '原项目 .venv 的 Python 或依赖不完整；本升级包不会安装或修改全局环境。' }
+    $DiagnosticStage = 'identity_probe'
+    $Identity = 'import os,sys,tomllib;from pathlib import Path;p=tomllib.loads(Path(os.environ["SKILL_COLLECT_UPDATE_TOML"]).read_text(encoding="utf-8"))["project"];sys.exit(0 if p.get("name")=="liming-zhiyao-skill-collect" and p.get("version")==os.environ["SKILL_COLLECT_UPDATE_VERSION"] else 1)'
+    $ProbeValues = @{ SKILL_COLLECT_UPDATE_TOML = (Join-Path $Project 'pyproject.toml'); SKILL_COLLECT_UPDATE_VERSION = $VersionMatch.Groups[1].Value }
+    if ((Invoke-PythonProbe $Python $Identity $ProbeValues) -ne 0) { Stop-Update '原项目 TOML 标识或版本不匹配；未修改代码。' }
     foreach ($Entry in $Entries) {
         $Destination = Child-Path $Project $Entry.path
         if ([IO.Directory]::Exists($Destination)) { Stop-Update '原代码目标被同名目录占用。' }
     }
+    $DiagnosticStage = 'backup'
     $BackupRoot = Assert-LocalPath (Join-Path $Project '.skill-collect-update-backups')
     $null = [IO.Directory]::CreateDirectory($BackupRoot)
     $LockPath = Join-Path $BackupRoot 'update.lock'
@@ -204,19 +239,26 @@ try {
     }
     @{ product = $Product; source_version = $VersionMatch.Groups[1].Value; files = @($Originals.ToArray()) } | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $Backup 'backup.json') -Encoding UTF8
     Assert-PortFree $Port
+    $DiagnosticStage = 'code_write'
     $FailureText = '代码写入未完成，正在恢复旧代码。'
     foreach ($Entry in $Entries) {
         $Source = Child-Path $Payload $Entry.path
         if ((Hash-File $Source) -cne $Entry.sha256) { Stop-Update '补丁在复制前发生变化，正在恢复旧代码。' }
         $Destination = Child-Path $Project $Entry.path
-        Write-CodeFile $Source $Destination
+        # Include the attempted file even if replacement or its verification fails.
         $Committed.Add(($Originals | Where-Object { $_.path -ceq $Entry.path } | Select-Object -First 1))
+        Write-CodeFile $Source $Destination
         if ((Hash-File $Destination) -cne $Entry.sha256) { Stop-Update '复制后哈希校验失败，正在恢复旧代码。' }
     }
     $Installed = $true
     Write-Host '代码升级至 0.2.3 完成。现有资料、模型和飞书配置保持原目录。'
-    Write-Host "原代码备份：$Backup"
+    Write-Host '原代码备份保存在所选项目的 .skill-collect-update-backups 文件夹。'
 } catch {
+    $ExceptionType = $_.Exception.GetType().Name
+    if ($_.Exception.InnerException) { $ExceptionType = $_.Exception.InnerException.GetType().Name }
+    if (@('IOException', 'UnauthorizedAccessException', 'ArgumentException', 'ArgumentNullException',
+        'InvalidOperationException', 'TimeoutException', 'Win32Exception', 'MethodInvocationException',
+        'RuntimeException') -cnotcontains $ExceptionType) { $ExceptionType = 'UnexpectedError' }
     $RollbackOk = $true
     if ($Backup -and $Committed.Count) {
         for ($Index = $Committed.Count - 1; $Index -ge 0; $Index--) {
@@ -233,7 +275,9 @@ try {
         }
     }
     Write-Host $FailureText -ForegroundColor Red
-    if ($Committed.Count) { if ($RollbackOk) { Write-Host '旧代码已恢复；未启动服务。' } else { Write-Host "恢复未完全确认；请保留备份并联系维护助手：$Backup" } }
+    # Fixed stage and allowlisted exception type only: no paths, input or raw error.
+    Write-Host ('诊断代码：{0}/{1}' -f $DiagnosticStage, $ExceptionType)
+    if ($Committed.Count) { if ($RollbackOk) { Write-Host '旧代码已恢复；未启动服务。' } else { Write-Host '恢复未完全确认；请保留项目内 .skill-collect-update-backups 备份并联系维护助手。' } }
     exit 1
 } finally {
     if ($Lock) { $Lock.Dispose() }

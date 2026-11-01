@@ -133,7 +133,7 @@ WINDOWS = pytest.mark.skipif(os.name != 'nt', reason='actual Windows PowerShell 
 
 
 def target_fixture(tmp_path):
-    target = tmp_path / '旧项目 synthetic'
+    target = tmp_path / "旧项目 synthetic ' dollar$ &"
     target.mkdir()
     (target / 'backend').mkdir()
     (target / 'frontend/dist/assets').mkdir(parents=True)
@@ -263,11 +263,18 @@ def test_actual_windows_copy_failure_rolls_back_old_code_and_removes_new_assets(
     text = script.read_text(encoding='utf-8-sig')
     needle = '        Write-CodeFile $Source $Destination'
     assert text.count(needle) == 1
-    # Explicit fixture injection at a late copy operation; no production fault flag.
-    text = text.replace(needle, "        if ($Entry.path -ceq 'uv.lock') { throw 'synthetic-copy-failure' }\n" + needle)
+    # After the last file was replaced: prove current-file rollback as well as
+    # restoration of earlier files and removal of assets absent in the old tree.
+    marker = 'SYNTHETIC_LATE_COPY_FAILURE_REACHED'
+    text = text.replace(needle, needle + "\n        if ($Entry.path -ceq 'uv.lock') { Write-Host '" + marker + "'; throw 'synthetic-copy-failure' }")
     script.write_text(text, encoding='utf-8-sig')
-    assert invoke(package, target).returncode != 0
+    result = invoke(package, target)
+    assert result.returncode != 0
+    assert marker in result.stdout, 'Late injected failure was not reached: ' + result.stdout + result.stderr
     assert tree_bytes(target) == before
+    assert (target / 'uv.lock').read_bytes() == before['uv.lock']
+    assert not (target / 'frontend/dist/assets/index-contract.js').exists()
+    assert not (target / 'frontend/dist/assets/index-contract.css').exists()
     assert list((target / '.skill-collect-update-backups').glob('0.2.3-*/backup.json'))
 
 
