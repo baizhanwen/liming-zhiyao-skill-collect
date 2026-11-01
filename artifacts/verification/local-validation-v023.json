@@ -1,0 +1,52 @@
+{
+  "version": "0.2.3",
+  "scope": "Post bounded-pool fix local full suite, targeted UI contracts and separately recorded real external services",
+  "pytest": {
+    "passed": 600,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 15,
+    "seconds": 11.54,
+    "junit": "pytest-v023.xml",
+    "skip_scope": "Windows-only PowerShell updater execution not available on macOS; must run on Windows CI and actual customer separately"
+  },
+  "frontend": {
+    "build": "passed",
+    "javascript": "index-DLla0KoL.js",
+    "css": "index-Dv1BBRwq.css",
+    "targeted_ui_passed": 2,
+    "ui_report": "local-ui-v023.json",
+    "not_one_combined_full_ui_run": true
+  },
+  "real_video_and_models": "free-local-video-route-v023.json",
+  "new_paid_parsing_service": false,
+  "new_dependencies": false,
+  "customer_windows_business": "待外部条件",
+  "data_preservation": {
+    "retained_entity_count": 109,
+    "entities_unchanged": true,
+    "credential_files_unchanged": true
+  },
+  "source_files_sha256": {
+    "backend/browser_capture.py": "64d7f8f8ae03671b727789bf52deb16d512ca903e5cc58926544e58f32730286",
+    "backend/media.py": "5b77e9ca31b23a083bda51dfd7ba1f190a20bb3863a08f5063f3244ae6e3b2c1",
+    "backend/models.py": "b3bd24f191934c09d5d8d10abade2f1edd7aa3fa5706271418d0d62b56debf70",
+    "frontend/scripts/capture-douyin.mjs": "8c3f0d63d7472d84787b0835ea164c9b6958a2da11c774694751059dc0c60235"
+  },
+  "previous_full_candidate": {
+    "passed": 600,
+    "skipped": 11,
+    "seconds": 11.14,
+    "scope": "before four extra Windows path tests"
+  },
+  "independent_reviews": {
+    "anonymous_redirect_and_pool": "no unresolved blocker",
+    "windows_update_safety": "no unresolved blocker; actual Windows execution pending CI"
+  },
+  "windows_updater_local_targeted": {
+    "passed": 19,
+    "skipped": 15,
+    "seconds": 0.21,
+    "actual_windows_execution": false
+  }
+}

@@ -17,7 +17,7 @@ export function formatElapsedSeconds(value: unknown): string {
 }
 
 const phases: Record<string, string> = {
-  public_page: '读取公开页面', browser: '浏览器读取媒体', validating_media: '核对原片与音画轨道', merging_media: '整理 / 合并音视频',
+  public_page: '读取公开页面', resolving_share: '浏览器解析分享跳转', browser: '浏览器读取媒体', validating_media: '核对原片与音画轨道', merging_media: '整理 / 合并音视频',
   audio_chunks: '分段音轨', frames: '准备抽样画面', github_metadata: '读取仓库元数据', github_tree: '扫描仓库目录',
   github_files: '检查所选来源文件', github_fallback: '通过公开 Git 读取来源', model_transcription: '等待转写服务响应',
   model_vision: '等待视觉服务响应', model_analysis: '等待文字服务响应', transcription_complete: '已收到音频转写',

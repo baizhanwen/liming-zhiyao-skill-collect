@@ -90,6 +90,30 @@ for(const viewport of [{width:1440,height:1100},{width:390,height:844}]){
     await progress.getByRole('button',{name:'刷新状态',exact:true}).click();
     await expect(progress).toContainText('暂未确认后台执行状态');
     expect(writes).toHaveLength(0);
+    // Explicit local contract only: full share text must reach the task API,
+    // while the server's measured share-resolution phase has a Chinese label.
+    const shareText='[契约样例 / 非真实视频] 完整抖音分享文案\nhttps://v.douyin.com/share-text-contract/\n复制此文案打开抖音；不连接真实平台。';
+    const submissions:Item[]=[];
+    await page.route('**/api/tasks',async route=>{
+      if(route.request().method()==='POST'){
+        submissions.push(route.request().postDataJSON());
+        current={...running('share-text-contract'),title:'[契约样例] 正在解析分享链接',input:shareText,stage:'fetch',live:{...running().live,phase:'resolving_share',waiting_on:'source',activity_age_seconds:0,stage_elapsed_seconds:2,detail:'[契约] 浏览器正在解析分享跳转，尚未取得原片',metrics:{completed:0,total:1}}};
+        return route.fulfill({json:current});
+      }
+      return route.fulfill({json:[current,queued]});
+    });
+    await page.goto('/');
+    await page.getByRole('textbox',{name:'链接或分享文案',exact:true}).fill(' \n'+shareText+'\n ');
+    await page.getByRole('button',{name:'开始探索',exact:true}).click();
+    await expect.poll(()=>submissions.length).toBe(1);
+    expect(submissions[0]).toEqual({input:shareText,depth:'quick'});
+    await expect(progress).toContainText('浏览器解析分享跳转：0 / 1');
+    await expect(progress).toContainText('尚未取得原片');
+    await expect(progress).not.toContainText('resolving_share');
+    await expect(progress.getByRole('progressbar')).toHaveCount(0);
+    await expect(page.locator('.page-heading')).toContainText('[契约样例] 正在解析分享链接');
+    await expect(page.locator('body')).toHaveJSProperty('scrollWidth',viewport.width);
+    await page.screenshot({path:resolve(output,`task-progress-resolving-share-${viewport.width}-contract.png`),fullPage:true,animations:'disabled'});
   });
 }
 
