@@ -440,12 +440,25 @@ def test_native_connect_connection_budgets_do_not_dial(limit):
         if limit == 'total':
             proxy.connections = 256
         elif limit == 'active':
-            proxy.active = 32
+            proxy.active = 64
         else:
             proxy.stopping.set()
         client, response = proxy_client(proxy, 'CONNECT public.contract.invalid:443 HTTP/1.1')
         client.close()
         assert b'200' not in response and calls == [] and proxy.denied >= 1
+
+
+@pytest.mark.parametrize('already_active', [32, 63])
+def test_native_connect_has_room_for_later_media_origins_within_64_tunnels(already_active):
+    with native_proxy() as (proxy, calls, peers):
+        proxy.active = already_active
+        client, response = proxy_client(proxy, 'CONNECT public.contract.invalid:443 HTTP/1.1')
+        try:
+            assert b'200 Connection Established' in response and len(calls) == 1
+            client.sendall(b'late-media-origin')
+            assert peers[0].recv(32) == b'late-media-origin'
+        finally:
+            client.close()
 
 
 @pytest.mark.parametrize('mode', ['cancelled', 'expired'])

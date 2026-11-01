@@ -1,0 +1,15 @@
+{
+  "version": "0.2.3",
+  "asset_name": "SkillCollect-v0.2.3-Windows-Update.zip",
+  "asset_bytes": 207718,
+  "sha256": "62d8a9ba05ab4250b04514dfb0155cc111629195509420e64207775a4115b1ec",
+  "manifest_sha256": "7df10cfe9dfb75543a753fda5ee297a896be7f2bacb70bc5ac1b390fd74118ef",
+  "payload_files": 13,
+  "license_notices": 2,
+  "manifest_and_payload_hashes": "passed",
+  "uncompressed_credential_scan": "passed",
+  "contains_private_data": false,
+  "supported_updater_shell": "PowerShell 7",
+  "ci_tested_source": "73b6655b4d6498047bf1d9dd380fc698c9b647b5",
+  "publication": "not yet published; release metadata recorded separately"
+}

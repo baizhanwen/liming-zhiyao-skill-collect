@@ -14,7 +14,7 @@ from .security import AppError, fetch_public
 MAX_UPLOAD = 100*1024*1024
 MAX_DURATION = 1200
 ALLOWED = {'.mp4','.mov','.mkv','.webm','.m4v','.mp3','.wav','.m4a','.srt','.vtt','.txt'}
-_PROGRESS_PHASES = {'public_page', 'browser', 'validating_media', 'merging_media', 'audio_chunks', 'frames'}
+_PROGRESS_PHASES = {'public_page', 'resolving_share', 'browser', 'validating_media', 'merging_media', 'audio_chunks', 'frames'}
 _PROGRESS_COUNTS = {'completed', 'total', 'requests', 'downloaded_bytes', 'proxy_connections',
                     'proxy_bytes', 'media_responses', 'complete_bound_media'}
 
@@ -438,6 +438,8 @@ def douyin_source(url, folder, *, cancelled=None, progress_callback=None):
             last_error = exc
         except Exception:
             last_error = AppError('douyin_fetch', '抖音公开页获取未完成，请检查网络或补传视频', True)
+    if not video_id:
+        video_id = _resolve_douyin_source_id(url, folder, cancelled, progress_callback)
     if video_id:
         if progress_callback is not None:
             return _browser_douyin_source(url,folder,video_id,cancelled=cancelled,progress_callback=progress_callback)
@@ -445,3 +447,26 @@ def douyin_source(url, folder, *, cancelled=None, progress_callback=None):
     if last_error:
         raise AppError('douyin_fetch', '项目未能解析此抖音原视频，请检查网络或平台访问限制；没有用网页摘要代替原片', last_error.retryable)
     raise AppError('douyin_material', '项目未能取得当前原视频标识；没有用网页标题或摘要代替原片')
+
+
+def _resolve_douyin_source_id(url, folder, cancelled, progress_callback):
+    """Resolve only the original official HTTP redirect with the project browser."""
+    from .browser_capture import resolve_douyin_url
+    _notify_progress(progress_callback, 'resolving_share', completed=0, total=1)
+    resolved = resolve_douyin_url(url, folder, cancelled=cancelled, progress_callback=progress_callback)
+    if (not isinstance(resolved, dict) or resolved.get('method') != 'official_browser_redirect'
+            or not isinstance(resolved.get('video_id'), str)
+            or not re.fullmatch(r'[0-9]{1,32}', resolved['video_id'])):
+        raise AppError('douyin_browser_identity', '项目浏览器没有确认原始分享链接的视频标识')
+    canonical = resolved.get('resolved_url', '')
+    try:
+        parsed = urlsplit(canonical)
+        valid = (parsed.scheme == 'https' and not parsed.username and not parsed.password
+            and parsed.port in (None, 443) and _douyin_host(parsed.hostname or '')
+            and _video_id(canonical) == resolved['video_id'])
+    except (ValueError, TypeError):
+        valid = False
+    if not valid:
+        raise AppError('douyin_browser_identity', '分享跳转没有指向同一目标的官方视频页')
+    _notify_progress(progress_callback, 'resolving_share', completed=1, total=1)
+    return resolved['video_id']

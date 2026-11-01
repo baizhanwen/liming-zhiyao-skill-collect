@@ -80,6 +80,51 @@ function platformPage(url) {
       && ['douyin.com', 'iesdouyin.com'].some(domain => u.hostname === domain || u.hostname.endsWith('.' + domain));
   } catch { return false; }
 }
+function officialRedirect(chain, initial) {
+  if (!Array.isArray(chain) || !chain.length || chain.length > 6 || !chain.every(platformPage)) return null;
+  const comparable = value => { const u = new URL(value); u.hash = ''; return u.href; };
+  if (comparable(chain[0]) !== comparable(initial)) return null;
+  const ids = chain.map(value => new URL(value).pathname.match(/\/(?:share\/)?video\/([0-9]{1,32})(?:\/|$)/)?.[1]).filter(Boolean);
+  const id = new URL(chain.at(-1)).pathname.match(/\/(?:share\/)?video\/([0-9]{1,32})(?:\/|$)/)?.[1];
+  if (!id || ids.some(value => value !== id)) return null;
+  return { video_id: id, resolved_url: chain.at(-1), redirect_chain: chain };
+}
+function httpChain(request) {
+  const chain = [];
+  while (request && chain.length <= 6) { chain.unshift(request.url()); request = request.redirectedFrom(); }
+  return chain;
+}
+async function resolveOnly(page, context, options, deadline) {
+  let identityChanged = false, resolved = null, responses = 0;
+  const expected = new URL(options.url); expected.hash = '';
+  const validChain = chain => {
+    if (!chain.length || chain.length > 6 || !chain.every(platformPage) || new URL(chain[0]).href !== expected.href) return false;
+    const ids = chain.map(value => new URL(value).pathname.match(/\/(?:share\/)?video\/([0-9]{1,32})(?:\/|$)/)?.[1]).filter(Boolean);
+    return new Set(ids).size <= 1;
+  };
+  await context.route('**/*', async route => {
+    const request = route.request();
+    if (!request.isNavigationRequest() || request.frame() !== page.mainFrame()) return route.abort('blockedbyclient');
+    const chain = httpChain(request);
+    if (!validChain(chain) || (resolved && officialRedirect(chain, options.url)?.video_id !== resolved.video_id)) {
+      identityChanged = true; return route.abort('blockedbyclient');
+    }
+    if (cancelled || Date.now() > deadline || !options.native_proxy) return route.abort('timedout');
+    return route.continue();
+  });
+  page.on('response', response => {
+    const request = response.request();
+    if (!request.isNavigationRequest() || request.frame() !== page.mainFrame()) return;
+    responses += 1;
+    const chain = httpChain(request), value = validChain(chain) && officialRedirect(chain, options.url);
+    if (value && !(response.status() >= 300 && response.status() < 400)) resolved = { ...value, http_status: response.status() };
+    send({ type: 'progress', response_status_counts: { received: responses } });
+  });
+  try { await page.goto(options.url, { waitUntil: 'commit', timeout: Math.max(1000, deadline - Date.now()) }); } catch { /* A trusted redirect can still end at HTTP 403. */ }
+  if (identityChanged) return { type: 'result', ok: false, code: 'douyin_resolve_identity' };
+  if (cancelled) return { type: 'result', ok: false, code: 'cancelled' };
+  return resolved ? { type: 'result', ok: true, ...resolved } : { type: 'result', ok: false, code: 'douyin_resolve_failed' };
+}
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 let browser;
 let result = { type: 'result', ok: false, code: 'douyin_browser_material' };
@@ -101,6 +146,9 @@ try {
   // WebSocket traffic is never allowed to escape the HTTP broker.
   await context.routeWebSocket('**/*', socket => socket.close());
   const page = await context.newPage();
+  if (options.resolve_only) {
+    result = await resolveOnly(page, context, options, deadline);
+  } else {
   const network = await context.newCDPSession(page);
   await network.send('Network.enable');
   const resourceBytes = new Map();
@@ -247,6 +295,7 @@ try {
     ? 'douyin_browser_identity' : cancelled ? 'cancelled' : 'douyin_browser_material',
     page_url: page.url(), observed_video_id: videoId(page.url()), title: await page.title().catch(() => ''),
     observations, renderer_version: version };
+  }
 } catch {
   result = { type: 'result', ok: false, code: 'douyin_browser_runtime' };
 } finally {

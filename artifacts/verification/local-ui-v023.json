@@ -1,0 +1,119 @@
+{
+  "schema_version": 1,
+  "application_version": "0.2.3",
+  "kind": "explicit_ui_contract_and_production_build",
+  "result": "passed",
+  "changes": [
+    "TaskProgress maps resolving_share to 浏览器解析分享跳转, matching the main checkout label",
+    "Existing full share-text composer and App entry points remain unchanged; no QR/session UI was added"
+  ],
+  "dependency_install": {
+    "command": "npm --prefix frontend ci",
+    "result": "passed",
+    "audited_packages": 29,
+    "reported_vulnerabilities": 0,
+    "lockfile_changed_by_this_task": false
+  },
+  "build": {
+    "command": "npm --prefix frontend run build",
+    "typescript": "passed",
+    "vite": "passed",
+    "modules": 22,
+    "assets": [
+      {
+        "file": "index-DLla0KoL.js",
+        "sha256": "7a9388ad36810de483da7ae4b10663a7d1d28dd5f42aef70bf38265d310f60d3",
+        "bytes": 323821
+      },
+      {
+        "file": "index-Dv1BBRwq.css",
+        "sha256": "5888f985b825e13ba744dcbfd5b0d6d92183554e0635842c33f218126b7f286a",
+        "bytes": 65628
+      }
+    ]
+  },
+  "ui_run": {
+    "command": "playwright test tests/task-progress.spec.ts -g 顶部进度、真实计数、排队与取消范围",
+    "started_at": "2026-11-01T10:40:44.068Z",
+    "duration_ms": 6566,
+    "passed": 2,
+    "failed": 0,
+    "skipped": 0,
+    "flaky": 0,
+    "tests": [
+      {
+        "name": "进度契约：1440px顶部进度、真实计数、排队与取消范围",
+        "status": "passed",
+        "duration_ms": 2682,
+        "attempts": 1
+      },
+      {
+        "name": "进度契约：390px顶部进度、真实计数、排队与取消范围",
+        "status": "passed",
+        "duration_ms": 2349,
+        "attempts": 1
+      }
+    ],
+    "full_suite_rerun": false
+  },
+  "checks": [
+    "Desktop 1440px and mobile 390px progress, measured counters, queue and cancellation contracts pass",
+    "Full explicitly fake multiline Douyin share text is submitted unchanged except trimming surrounding whitespace",
+    "Task creation POST is explicitly intercepted; no real source task or model call is sent",
+    "resolving_share displays the Chinese label and 0 / 1 measured step; source detail explicitly says no original video has been obtained yet",
+    "No synthetic overall percentage or raw resolving_share phase leaks into visible progress",
+    "Both current-phase screenshots were visually reviewed; body width has no horizontal overflow"
+  ],
+  "screenshots": [
+    {
+      "file": "ui-resolving-share-desktop-contract-v023.png",
+      "viewport_width": 1440,
+      "sha256": "6f08e60e193a9c1a8e7aa10e5213763e4a68cc7cb2f0b9af89dfdf03a5f3ea86",
+      "visually_reviewed": true,
+      "marker": "[契约样例 / 非真实视频]"
+    },
+    {
+      "file": "ui-resolving-share-mobile-contract-v023.png",
+      "viewport_width": 390,
+      "sha256": "860db464a81ff0d3c14c2842a9989f6d5a1cefa1a9fc68b9aa2568b46f885446",
+      "visually_reviewed": true,
+      "marker": "[契约样例 / 非真实视频]"
+    }
+  ],
+  "scope": {
+    "ui_cases_executed": 2,
+    "real_official_source": false,
+    "real_model_calls": false,
+    "real_accounts_or_cookies": false,
+    "production_service_or_user_data_modified": false,
+    "backend_or_version_or_readme_modified_by_this_task": false
+  },
+  "boundary": "These are explicit local UI contracts using mocked task/status APIs and clearly fake share text in isolated temporary data. They do not establish real source acquisition, model analysis, actual result rendering or external-service acceptance. Other UI cases were not rerun.",
+  "frontend_source_and_dist_frozen": true,
+  "live_completed_task_read_only": {
+    "result": "通过",
+    "scope": "Observed actual completed v0.2.3 task, not a mocked task or regenerated model answer",
+    "task_one_submission_seconds": 37.947,
+    "observed_completed_state": true,
+    "observed_transcript_and_sampled_frames_label": true,
+    "observed_saved_analysis": true,
+    "observed_real_github_search_candidates": true,
+    "candidate_not_claimed_as_confirmed_video_project": true,
+    "desktop": {
+      "viewport": 988,
+      "body_width": 988,
+      "document_width": 988
+    },
+    "mobile": {
+      "viewport": 390,
+      "body_width": 390,
+      "document_width": 390
+    },
+    "horizontal_overflow": false,
+    "screenshots_visually_reviewed": true,
+    "raw_live_screenshots_in_public_repository": false,
+    "temporary_viewport_reset": true,
+    "model_calls_or_writes_by_ui_inspection": 0,
+    "customer_windows_11": "未验证"
+  }
+}

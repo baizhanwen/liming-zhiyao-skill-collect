@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 PHASE_DETAILS = {
     'queued': '任务已排队，等待本机工作线程接手',
     'public_page': '正在读取公开页面，查找指定视频的原片来源',
+    'resolving_share': '正在通过项目浏览器确认原始抖音分享跳转；视频标识不代表原片已取得',
     'browser': '正在通过项目浏览器读取公开页面和媒体；网页流量不等于原片下载完成',
     'validating_media': '正在核对媒体完整性、视频身份和实际音视频轨道',
     'merging_media': '正在本机整理已取得的媒体，必要时合并音视频轨道',
