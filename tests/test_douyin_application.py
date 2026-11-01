@@ -244,7 +244,7 @@ def test_resolver_result_cannot_relax_official_source_identity(tmp_path,monkeypa
     assert error.value.code=='douyin_browser_identity'
 
 
-@pytest.mark.parametrize('status',['opening','waiting_scan','waiting_confirmation','checking','verification_required','expired'])
+@pytest.mark.parametrize('status',['opening','waiting_scan','waiting_confirmation','waiting_browser','checking','verification_required','expired'])
 def test_pending_or_expired_login_does_not_start_capture_or_model(tmp_path,monkeypatch,status):
     store=Store(tmp_path);vault=Vault(tmp_path);session=SessionFixture(status=status)
     runner=TaskRunner(store,vault,None,lambda:None,douyin_session=session)

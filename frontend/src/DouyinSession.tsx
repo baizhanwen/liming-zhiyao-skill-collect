@@ -7,6 +7,7 @@ import './DouyinSession.css';
 const statusLabels = {
   signed_out: '未连接抖音', opening: '正在准备官方二维码', waiting_scan: '等待手机扫码',
   waiting_confirmation: '已扫码，等待手机确认',
+  waiting_browser: '请查看官网登录提示',
   checking: '正在核验登录状态', logged_in: '抖音会话已验证', expired: '抖音会话已过期',
   verification_required: '需要本人完成官方验证', failed: '抖音连接未完成', cancelled: '本次登录已取消',
 };
@@ -105,7 +106,7 @@ export default function DouyinSession({focusKey = 0}: {focusKey?: number}) {
   }, []);
 
   const status = session?.status, verified = status === 'logged_in';
-  const active = !!session && (session.browser_open || ['opening', 'waiting_scan', 'waiting_confirmation', 'checking'].includes(session.status));
+  const active = !!session && (session.browser_open || ['opening', 'waiting_scan', 'waiting_confirmation', 'waiting_browser', 'checking'].includes(session.status));
   const qrUrl = '/api/douyin/session/qr?v=' + encodeURIComponent(String(session?.qr_updated_at ?? 'current'));
   const showQr = active && !!session?.qr_available && hiddenQrVersion !== qrUrl && ['opening', 'waiting_scan', 'checking'].includes(session.status);
   const canRestart = (active || status === 'verification_required') && status !== 'waiting_confirmation' && !(status === 'checking' && !session?.browser_open);
@@ -114,9 +115,9 @@ export default function DouyinSession({focusKey = 0}: {focusKey?: number}) {
     <div className="douyin-session-heading"><div><span className="douyin-session-eyebrow">项目专属会话</span><h3>抖音登录与连接</h3><p>默认匿名读取。连接后使用项目专属会话，不读取其他浏览器登录。</p></div>
       <span className={'badge ' + (verified ? 'verified' : status === 'failed' ? 'failed' : active ? 'running' : '')}>{session ? statusLabels[session.status] : '状态尚未确认'}</span></div>
     <div className="douyin-session-state" aria-live="polite">
-      {active && status !== 'verification_required' && status !== 'waiting_confirmation' && <p className="douyin-session-instruction">{status === 'checking' && !session?.browser_open ? '正在核验本项目已保存的抖音会话，请等待检查结果。' : session?.error?.code === 'douyin_session_qr_expired' ? '官网二维码已失效，请点击“重新获取二维码”。工作台不会自动更换二维码。' : showQr ? '用手机抖音扫描下方官方二维码并确认。确认后可检查登录状态。' : '正在等待抖音官网生成二维码；出现后可直接在此扫码。'}</p>}
+      {active && status !== 'verification_required' && status !== 'waiting_confirmation' && status !== 'waiting_browser' && <p className="douyin-session-instruction">{status === 'checking' && !session?.browser_open ? '正在核验本项目已保存的抖音会话，请等待检查结果。' : session?.error?.code === 'douyin_session_qr_expired' ? '官网二维码已失效，请点击“重新获取二维码”。工作台不会自动更换二维码。' : showQr ? '用手机抖音扫描下方官方二维码并确认。确认后可检查登录状态。' : '正在等待抖音官网生成二维码；出现后可直接在此扫码。'}</p>}
       {status === 'waiting_confirmation' && <p className="douyin-session-instruction">请在手机抖音确认登录，工作台会自动核验，无需再次扫码。“检查登录状态”只检查当前状态，不会刷新登录挑战。</p>}
-      {status === 'verification_required' && <><p className="douyin-session-instruction">需要额外验证，请在下方官方视图由本人操作。临时内容只转送当前官网输入框，不保存；请勿把验证内容发到聊天。</p><DouyinVerification available={session?.verification_available === true} frameId={session?.verification_frame_id} width={session?.verification_width} height={session?.verification_height} error={session?.verification_error} busy={!!busy} connected={!connectionError} onAction={action => {void invoke.current?.(action);}}/></>}
+      {(status === 'verification_required' || status === 'waiting_browser') && <><p className="douyin-session-instruction">{status === 'waiting_browser' ? '二维码已离开扫码步骤，请查看下方官网提示并继续操作；项目尚未确认登录。' : '需要额外验证，请在下方官方视图由本人操作。临时内容只转送当前官网输入框，不保存；请勿把验证内容发到聊天。'}</p><DouyinVerification purpose={status === 'waiting_browser' ? 'login_prompt' : 'verification'} available={session?.verification_available === true} frameId={session?.verification_frame_id} width={session?.verification_width} height={session?.verification_height} error={session?.verification_error} busy={!!busy} connected={!connectionError} onAction={action => {void invoke.current?.(action);}}/></>}
       {showQr && <div className="douyin-session-qr">{failedQr !== qrUrl ? <img src={qrUrl} alt="抖音官方登录二维码" referrerPolicy="no-referrer" draggable={false} onError={() => setFailedQr(qrUrl)}/> : <div className="douyin-session-qr-error"><p role="alert">二维码暂时无法显示，请重新加载或刷新登录状态；这不代表登录成功。</p><button type="button" className="button" onClick={() => setFailedQr('')}>重新加载二维码</button></div>}<small>来自抖音官网的当前登录二维码，仅在本机显示。</small></div>}
       {verified && <p className="douyin-session-verified">会话已通过登录核验。原片获取和分析仍需由任务实际完成。</p>}
       {status === 'expired' && <p>当前会话已过期，{session?.session_saved ? '可先检查已保存会话；若仍过期，请重新扫码登录。' : '请重新扫码登录。'}连接后再返回任务手动重试。</p>}
@@ -132,7 +133,7 @@ export default function DouyinSession({focusKey = 0}: {focusKey?: number}) {
       {!active && !canRestart && <button type="button" className="button primary" disabled={!!busy || !session} onClick={() => perform('login')}>{busy === 'login' ? '正在打开…' : verified ? '重新扫码登录' : '扫码登录抖音'}</button>}
       {!active && session?.session_saved && <button type="button" className="button" disabled={!!busy} onClick={() => perform('check')}>{busy === 'check' ? '正在检查…' : '检查已保存会话'}</button>}
       {active && <><button type="button" className="button primary" disabled={!!busy} onClick={() => perform('check')}>{busy === 'check' ? '正在检查…' : '检查登录状态'}</button><button type="button" className="button" disabled={!!busy} onClick={() => perform('cancel')}>{busy === 'cancel' ? '正在取消…' : '取消本次登录'}</button></>}
-      {canRestart && <button type="button" className="button" disabled={!!busy} onClick={() => perform('login')}>{busy === 'login' ? '正在重新获取…' : status === 'verification_required' ? '放弃验证并重新扫码' : '重新获取二维码'}</button>}
+      {canRestart && <button type="button" className="button" disabled={!!busy} onClick={() => perform('login')}>{busy === 'login' ? '正在重新获取…' : status === 'verification_required' ? '放弃验证并重新扫码' : status === 'waiting_browser' ? '放弃当前提示并重新扫码' : '重新获取二维码'}</button>}
       <button type="button" className="button" disabled={!!busy} onClick={() => perform('refresh')}>{busy === 'refresh' ? '正在刷新…' : '刷新登录状态'}</button>
       {(session?.session_saved || verified) && <button type="button" className="text-button douyin-session-clear" disabled={!!busy} onClick={() => perform('clear')}>{busy === 'clear' ? '正在退出并清除…' : '退出并清除本机会话'}</button>}
     </div>

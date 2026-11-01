@@ -194,3 +194,9 @@ Windows PowerShell 的 Chromium 指定方式是 `$env:PW_CHANNEL="chromium"`，�
 最后针对自动新帧期间输入框短暂禁用会丢失焦点的问题，将本机临时输入框与官网动作门控分开：当前帧有效、未消费、连接正常且无操作在途时，可以继续本机掩码输入；官网提交、点击和按键仍须新图加载完成。`index-BcjBchrg.js / index-jPAKYIil.css` 构建只重跑原 **1 项隐私契约，通过，0 失败、0 跳过，11.6 秒**。用例明确延迟新 JPEG，检查加载前后输入焦点和长度保留，提交仍禁用至加载完成，再验证发送清空、旧帧不重发、断连与退出清理。见[独立焦点后续报告](../artifacts/verification/ui-douyin-verification-focus-contract-v030.json)。未重跑前述 4 项或完整 20 项，没有操作真实官网、短信或用户输入。
 
 二维码失效的后续最小调整：服务保持 `waiting_scan`，当 `error.code=douyin_session_qr_expired` 时主卡明确提示“官网二维码已失效，请点击重新获取二维码”，不再显示正在等待官网生成；图片随 `qr_available=false` 隐藏，不自动发起登录。`index-CHdhXr6F.js / index-jPAKYIil.css` 构建仅重跑原 QR 错误流程 **1 项，通过，0 失败、0 跳过，8.4 秒**：包含失效无图、清晰手动指引、后续自动 GET 不发 POST，以及点击重取才发 `login`。见[独立二维码失效契约报告](../artifacts/verification/ui-douyin-qr-expiry-contract-v030.json)。全部状态和 PNG 均为显式模拟，不证明真实官网二维码稳定性或扫码完成；此前验证视图与广泛回归未重跑。
+
+### 扫码步骤结束后等待官网提示
+
+新增 `waiting_browser`，主卡显示“请查看官网登录提示”，明确二维码已离开扫码步骤、项目尚未确认登录；该状态为活动状态，保留检查、取消，并将重开明确标为“放弃当前提示并重新扫码”。它使用同一官网帧与动作通道，但标题、说明和空帧提示与真正的身份验证分开，不据此宣称需要 MFA 或登录成功。新阶段即使带有旧 `qr_available=true`，也不出现二维码槽。临时掩码输入、加载门控、坐标映射及 UUID 消费规则保持。
+
+`index-BNPenEAY.js / index-jPAKYIil.css` 构建只扩展并重跑原桌面/390px **2 项，通过，0 失败、0 跳过，6.0 秒**，先检查新状态缺帧及有帧反馈、无扫码槽、无自动动作、无横向溢出，再切入 `verification_required` 执行原坐标、缩放、旧帧锁定、掩码清空与按键断言。见[独立官网提示契约报告](../artifacts/verification/ui-douyin-waiting-browser-contract-v030.json)、[桌面提示卡](../artifacts/verification/ui-douyin-waiting-browser-desktop-contract-v030.png)及[390px 提示卡](../artifacts/verification/ui-douyin-waiting-browser-mobile-contract-v030.png)。两张截图已实际查看，均有 `CONTRACT / NOT OFFICIAL` 明显标记；没有读取真实会话、发送短信或操作用户任务。其余 18 项没有在此构建重跑，历史报告保持原身份；本组不代替真实手机确认、官网提示与登录业务验收。

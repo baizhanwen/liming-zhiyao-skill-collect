@@ -16,7 +16,7 @@ const emitted=[],typed=[],keys=[],clicks=[];
 let element={tagName:'INPUT',type:'text',disabled:false,readOnly:false};
 const focusedFrame={evaluate:async fn=>vm.runInNewContext('('+fn.toString()+')()',{document:{activeElement:element,hasFocus:()=>false}})};
 const page={url:()=> 'https://www.douyin.com/user/self',viewportSize:()=>({width:1280,height:800}),
-getByText:pattern=>({first:()=>({isVisible:async()=>active&&pattern.test('为保障账号安全，请先完成身份验证')})}),
+getByText:pattern=>({all:async function(){return [this.first()]},first:()=>({isVisible:async()=>active&&pattern.test('为保障账号安全，请先完成身份验证')})}),
 mainFrame:()=>focusedFrame,
 screenshot:async options=>{if(options.type!=='jpeg'||options.quality!==80||options.scale!=='css'||options.fullPage!==false||'path'in options)throw Error('unsafe screenshot');screenshots++;return Buffer.from([255,216,pixels,255,217]);},
 mouse:{click:async(x,y)=>clicks.push([x,y])},keyboard:{insertText:async text=>typed.push(text),press:async key=>keys.push(key)}};
@@ -118,10 +118,10 @@ const cookies=[{name:'sessionid',value:'synthetic-cookie-only',domain:'.douyin.c
 context.routeWebSocket=async()=>{};context.route=async()=>{};context.cookies=async()=>cookies;context.storageState=async()=>({cookies,origins:[]});
 context.newCDPSession=async()=>({send:async()=>{},on:()=>{}});
 const image={count:async()=>0,isVisible:async()=>false,screenshot:async()=>{throw Error('must not forward QR during verification');}};
-const panel={count:async()=>1,isVisible:async()=>true,getByText:()=>({first:()=>({isVisible:async()=>process.argv[1]==='true'})})};
+const panel={count:async()=>1,isVisible:async()=>true,getByText:()=>({all:async function(){return [this.first()]},first:()=>({isVisible:async()=>process.argv[1]==='true'})})};
 const page=new EventEmitter();page.url=()=> 'https://www.douyin.com/user/self';page.locator=s=>s==='#douyin_login_comp_scan_code'?panel:image;
 const root={isVisible:async()=>true,evaluate:async()=>true};
-page.getByText=()=>({first:()=>({isVisible:async()=>true,elementHandle:async()=>({evaluateHandle:async()=>({asElement:()=>root}),dispose:async()=>{}})})});page.viewportSize=()=>({width:1280,height:800});
+page.getByText=()=>({all:async function(){return [this.first()]},first:()=>({isVisible:async()=>true,elementHandle:async()=>({evaluateHandle:async()=>({asElement:()=>root}),dispose:async()=>{}})})});page.viewportSize=()=>({width:1280,height:800});
 page.getByRole=()=>({isVisible:async()=>true,click:async()=>{loginClicks++;}});
 page.screenshot=async()=>Buffer.from([255,216,1,255,217]);
 page.goto=async()=>{gotos++;queueMicrotask(()=>context.emit('response',{
@@ -151,10 +151,10 @@ context.newCDPSession=async()=>({send:async()=>{},on:()=>{}});
 const proof=(owner=page)=>context.emit('response',{request:()=>({frame:()=>({page:()=>owner})}),url:()=> 'https://www.douyin.com/aweme/v1/web/user/profile/self/',status:()=>200,
 allHeaders:async()=>({'content-type':'application/json'}),body:async()=>Buffer.from(JSON.stringify({status_code:0,user:{uid:'123456'}}))});
 const image={count:async()=>1,isVisible:async()=>true,screenshot:async()=>Buffer.from([137,80,78,71,13,10,26,10,1])};
-const panel={count:async()=>1,isVisible:async()=>true,getByText:()=>({first:()=>({isVisible:async()=>false})})};
+const panel={count:async()=>1,isVisible:async()=>true,getByText:()=>({all:async function(){return [this.first()]},first:()=>({isVisible:async()=>false})})};
 const page=new EventEmitter();page.url=()=> 'https://www.douyin.com/user/self';page.locator=s=>s==='#douyin_login_comp_scan_code'?panel:image;
 const root={isVisible:async()=>active,evaluate:async()=>true};page.evaluate=async()=>false;
-page.getByText=()=>({first:()=>({isVisible:async()=>active,elementHandle:async()=>({evaluateHandle:async()=>({asElement:()=>root}),dispose:async()=>{}})})});page.viewportSize=()=>({width:1280,height:800});page.screenshot=async()=>Buffer.from([255,216,1,255,217]);
+page.getByText=()=>({all:async function(){return [this.first()]},first:()=>({isVisible:async()=>active,elementHandle:async()=>({evaluateHandle:async()=>({asElement:()=>root}),dispose:async()=>{}})})});page.viewportSize=()=>({width:1280,height:800});page.screenshot=async()=>Buffer.from([255,216,1,255,217]);
 page.goto=async()=>{gotos++;if(active)navigatedDuringChallenge=true;if(gotos>=3)queueMicrotask(proof);};
 context.newPage=async()=>{if(!context.primary){context.primary=page;return page;}const probe=Object.assign(new EventEmitter(),page);probe.goto=async()=>{gotos++;if(active)navigatedDuringChallenge=true;if(gotos>=3)queueMicrotask(()=>proof(probe));};return probe;};const chromium={launch:async()=>({newContext:async()=>context,close:async()=>{}})};
 const execution=main({chromium,input,uiReadyWaitMs:0});input.write(JSON.stringify({type:'start',mode:'login',guard_proxy:'http://127.0.0.1:12345',timeout_ms:3000})+'\\n');

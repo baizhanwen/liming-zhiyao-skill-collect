@@ -29,7 +29,7 @@ const element={nodeType:1,parentElement:parent,style:{opacity:c==='transparent'?
 getBoundingClientRect:()=>({left:10,top:10,width:c==='zero_size'?0:100,height:24}),contains:x=>x===child};
 const text={isVisible:async()=>true,evaluate:async fn=>vm.runInNewContext('('+fn.toString()+')(element)',
 {element,getComputedStyle:x=>x.style,document:{elementFromPoint:()=>c==='covered'?foreign:c==='child_hit'?child:element}})};
-const panel={getByText:(label,opts)=>{if(label!=='二维码失效'||opts.exact!==true)throw Error('only exact official expiry label');return {first:()=>text};}};
+const panel={getByText:(label,opts)=>{if(label!=='二维码失效'||opts.exact!==true)throw Error('only exact official expiry label');return {all:async function(){return [this.first()]},first:()=>text};}};
 console.log(JSON.stringify({expired:await visibleQrExpiry(panel)}));""", case)[0]
     assert report == {'expired': expected}
 
@@ -41,10 +41,10 @@ context.route=async()=>{};context.routeWebSocket=async()=>{};context.cookies=asy
 context.newCDPSession=async()=>({send:async()=>{},on:()=>{}});
 const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLbtAAAAABJRU5ErkJggg==','base64');png[29]=generation;
 const image={count:async()=>1,isVisible:async()=>true,evaluate:async()=>true,getAttribute:async()=> 'data:image/png;base64,'+png.toString('base64'),screenshot:async()=>{throw Error('QR is never cropped');}};
-const panel={count:async()=>1,isVisible:async()=>true,getByText:()=>({first:()=>({isVisible:async()=>false})})};
+const panel={count:async()=>1,isVisible:async()=>true,getByText:()=>({all:async function(){return [this.first()]},first:()=>({isVisible:async()=>false})})};
 const page=new EventEmitter();let url='about:blank';page.url=()=>url;
 page.goto=async target=>{navigations.push({generation,target});url='https://www.douyin.com/jingxuan';};
-page.getByText=()=>({first:()=>({isVisible:async()=>false})});page.getByRole=()=>({isVisible:async()=>true,click:async()=>clicks++});
+page.getByText=()=>({all:async function(){return [this.first()]},first:()=>({isVisible:async()=>false})});page.getByRole=()=>({isVisible:async()=>true,click:async()=>clicks++});
 page.locator=selector=>selector==='#douyin_login_comp_scan_code'?panel:image;context.newPage=async()=>page;
 return {newContext:async()=>context,close:async()=>{}};}};
 async function login(timeout,checks=[]){const input=new PassThrough();const execution=main({chromium,input,uiReadyWaitMs:0});

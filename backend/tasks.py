@@ -356,7 +356,7 @@ class TaskRunner:
                     if self.douyin_session is not None:
                         session=self.douyin_session.status()
                         if session.get('browser_open') or session.get('status') in (
-                                'opening','waiting_scan','waiting_confirmation','checking','verification_required'):
+                                'opening','waiting_scan','waiting_confirmation','waiting_browser','checking','verification_required'):
                             raise AppError('douyin_login_pending','请先在项目的抖音登录窗口完成登录与验证，再继续本任务')
                         state=self.douyin_session.storage_state()
                         if state is not None:options['storage_state']=state

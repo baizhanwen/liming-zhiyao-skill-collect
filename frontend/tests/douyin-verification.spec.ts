@@ -46,7 +46,7 @@ function metadata(payload: Item): Item {
 for (const size of [{width: 1440, height: 1100}, {width: 390, height: 844}]) {
   test(`官方验证视图契约：${size.width}px等比及放大坐标、旧帧锁定、临时输入清空`, async ({page}) => {
     await page.setViewportSize(size);
-    let current = frame(1); const actions: Item[] = [];
+    let current: Item = {...consume(frame(100)), status: 'waiting_browser', browser_open: false, qr_available: true}; const actions: Item[] = [];
     const transient = 'contract-transient-input'; let leaked = false;
     page.on('console', message => {if (message.text().includes(transient)) leaked = true;});
     await workspace(page, route => route.fulfill({json: current}), async route => {
@@ -59,6 +59,32 @@ for (const size of [{width: 1440, height: 1100}, {width: 390, height: 844}]) {
     const image = view.getByRole('img', {name: '抖音官网当前验证画面', exact: true});
     const control = view.getByRole('button', {name: '点击官方验证画面', exact: true});
     const refreshState = card.getByRole('button', {name: '刷新登录状态', exact: true});
+    const promptView = page.getByRole('region', {name: '抖音官网登录提示视图', exact: true});
+    await expect(card).toContainText('请查看官网登录提示');
+    await expect(card).toContainText('二维码已离开扫码步骤，请查看下方官网提示并继续操作；项目尚未确认登录');
+    await expect(promptView).toContainText('正在等待官网登录提示画面');
+    await expect(promptView.getByRole('button', {name: '刷新官方画面', exact: true})).toBeDisabled();
+    await expect(card.getByRole('img', {name: '抖音官方登录二维码', exact: true})).toHaveCount(0);
+    await expect(card).not.toContainText('需要额外验证');
+    await expect(card).not.toContainText('抖音会话已验证');
+    await expect(card).not.toContainText('正在等待抖音官网生成二维码');
+    await expect(card.getByRole('button', {name: '检查登录状态', exact: true})).toBeEnabled();
+    await expect(card.getByRole('button', {name: '取消本次登录', exact: true})).toBeEnabled();
+    await expect(card.getByRole('button', {name: '放弃当前提示并重新扫码', exact: true})).toBeEnabled();
+    current = {...frame(100), status: 'waiting_browser', browser_open: false, qr_available: true};
+    await refreshState.click();
+    const promptImage = promptView.getByRole('img', {name: '抖音官网当前登录提示画面', exact: true});
+    await expect(promptImage).toHaveJSProperty('naturalWidth', 1280);
+    await expect(promptView.getByRole('button', {name: '点击官网登录提示画面', exact: true})).toBeEnabled();
+    await expect(card.locator('.douyin-session-qr')).toHaveCount(0);
+    await expect(view).toHaveCount(0); expect(actions).toHaveLength(0);
+    await expect(page.locator('body')).toHaveJSProperty('scrollWidth', size.width);
+    mkdirSync(output, {recursive: true});
+    await card.evaluate(element => {const label = document.createElement('p'); label.textContent = '[显式界面契约样例] CONTRACT / NOT OFFICIAL；未连接官网或发送短信'; label.dataset.contractEvidence = 'true'; label.className = 'douyin-session-eyebrow'; element.prepend(label);});
+    await card.screenshot({path: resolve(output, `douyin-waiting-browser-${size.width}-contract.png`), animations: 'disabled'});
+    await card.evaluate(element => element.querySelector('[data-contract-evidence]')?.remove());
+    current = frame(1); await refreshState.click();
+    await expect(promptView).toHaveCount(0); await expect(card).toContainText('需要额外验证');
     await expect(control).toBeEnabled(); await expect(image).toHaveJSProperty('naturalWidth', 1280);
     await view.locator('.douyin-verification-viewport').scrollIntoViewIfNeeded();
     let box = (await image.boundingBox())!;

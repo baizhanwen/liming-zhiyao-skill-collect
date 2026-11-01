@@ -50,8 +50,9 @@ LOGIN_SECONDS = 600
 CHECK_SECONDS = 45
 LOCAL_STORAGE_KEYS = frozenset({'passport_csrf_token', 'passport_csrf_token_default', 's_v_web_id', 'ttwid'})
 AUTH_COOKIES = frozenset({'sessionid', 'sessionid_ss', 'sid_tt', 'sid_guard'})
-STATUSES = frozenset({'signed_out', 'opening', 'waiting_scan', 'waiting_confirmation', 'checking', 'logged_in',
+STATUSES = frozenset({'signed_out', 'opening', 'waiting_scan', 'waiting_confirmation', 'waiting_browser', 'checking', 'logged_in',
     'expired', 'verification_required', 'failed', 'cancelled'})
+VIEW_STATUSES = frozenset({'waiting_browser', 'verification_required'})
 MESSAGES = {
     'douyin_session_cancelled': '本次登录操作已取消',
     'douyin_session_timeout': '官方登录检查等待超时，可重新打开登录或检查会话',
@@ -435,7 +436,7 @@ class DouyinSessionService:
             'browser_open': bool(self.active and self.active['browser_open']),
             'qr_available': bool(self.active and self.active['qr_image']),
             'qr_updated_at': self.active['qr_updated_at'] if self.active else None,
-            'verification_available': bool(self.active and status == 'verification_required'
+            'verification_available': bool(self.active and status in VIEW_STATUSES
                 and self.active['verification_image']),
             'verification_frame_id': self.active['verification_id'] if self.active else None,
             'verification_width': self.active['verification_width'] if self.active else None,
@@ -509,13 +510,9 @@ class DouyinSessionService:
         with self.lock:
             if self.active:
                 runner = self.active['runner']
-                if runner and not self.active['check_sent'] and self._status != 'checking':
+                if runner and not self.active['check_sent']:
                     self.active['check_sent'] = True
                     command_runner = runner
-                    if self._status not in ('waiting_confirmation', 'verification_required'):
-                        if not self._error or self._error['code'] != 'douyin_session_qr_expired':
-                            self._status, self._error = 'checking', None
-                        self._persist_locked()
                 result = self._snapshot_locked()
             else:
                 state = copy.deepcopy(self._state)
@@ -542,7 +539,7 @@ class DouyinSessionService:
                 kind = message.get('type')
                 if kind in ('verification_frame', 'verification_clear', 'verification_error'):
                     with self.lock:
-                        if self.active is not active or active['cancel'].is_set() or self._status != 'verification_required':
+                        if self.active is not active or active['cancel'].is_set() or self._status not in VIEW_STATUSES:
                             return
                         if kind == 'verification_clear':
                             self._clear_verification(active)
@@ -583,7 +580,7 @@ class DouyinSessionService:
                 if message.get('type') == 'qr':
                     with self.lock:
                         if (self.active is not active or active['cancel'].is_set()
-                                or mode != 'login' or self._status == 'waiting_confirmation'
+                                or mode != 'login' or self._status in ('waiting_confirmation', 'waiting_browser')
                                 or active['verification_started']):
                             return
                         image = _qr_png(message.get('image_base64'))
@@ -599,12 +596,12 @@ class DouyinSessionService:
                             self._error = None
                     return
                 phase = message.get('phase')
-                if phase not in ('opening', 'waiting_scan', 'waiting_confirmation', 'checking', 'verification_required'):
+                if phase not in ('opening', 'waiting_scan', 'waiting_confirmation', 'waiting_browser', 'checking', 'verification_required'):
                     return
                 with self.lock:
                     if self.active is active and not active['cancel'].is_set():
                         if active['verification_started'] and phase in (
-                                'opening', 'waiting_scan', 'waiting_confirmation', 'checking'):
+                                'opening', 'waiting_scan', 'waiting_confirmation', 'waiting_browser', 'checking'):
                             return
                         if (self._error and self._error['code'] == 'douyin_session_qr_expired'
                                 and phase in ('opening', 'checking')):
@@ -612,14 +609,14 @@ class DouyinSessionService:
                         if phase == 'verification_required':
                             active['verification_started'] = True
                             self._clear_qr(active)
+                        previous_phase = self._status
                         self._status = phase
                         if not self._error or self._error['code'] != 'douyin_session_qr_expired':
                             self._error = None
-                        if phase != 'checking':
-                            active['check_sent'] = False
-                        if phase == 'waiting_confirmation' or (phase == 'checking' and mode == 'check'):
+                        active['check_sent'] = False
+                        if phase in ('waiting_confirmation', 'waiting_browser') or (phase == 'checking' and mode == 'check'):
                             self._clear_qr(active)
-                        if phase != 'verification_required':
+                        if phase not in VIEW_STATUSES or phase != previous_phase:
                             self._clear_verification(active)
                         active['browser_open'] = True
                         self._persist_locked()
@@ -729,7 +726,7 @@ class DouyinSessionService:
 
     def verification_image(self, frame_id=None):
         with self.lock:
-            if (not self.active or self._status != 'verification_required'
+            if (not self.active or self._status not in VIEW_STATUSES
                     or (frame_id is not None and frame_id != self.active['verification_id'])):
                 return None
             return self.active['verification_image']
@@ -738,7 +735,7 @@ class DouyinSessionService:
         """Relay an explicit user action to the exact current official frame."""
         with self.lock:
             active = self.active
-            if (not active or active['cancel'].is_set() or self._status != 'verification_required'
+            if (not active or active['cancel'].is_set() or self._status not in VIEW_STATUSES
                     or not active['verification_image'] or not isinstance(value, dict)
                     or value.get('frame_id') != active['verification_id']):
                 raise AppError('douyin_verification_stale', VERIFICATION_MESSAGES['stale_frame'], status=409)
@@ -775,7 +772,7 @@ class DouyinSessionService:
             runner.send(command)
         except Exception:
             with self.lock:
-                if self.active is active and self._status == 'verification_required':
+                if self.active is active and self._status in VIEW_STATUSES:
                     active['verification_error'] = {'code': 'action_failed', 'message': VERIFICATION_MESSAGES['action_failed']}
         return self.status()
 

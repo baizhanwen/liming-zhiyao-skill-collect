@@ -108,11 +108,11 @@ allHeaders:async()=>({'content-type':'application/json'}),body:async()=>{backgro
 if(config.proof||config.denial)queueMicrotask(()=>context.emit('response',{
 url:()=> 'https://www.douyin.com/aweme/v1/web/user/profile/self/', status:()=>200,
 allHeaders:async()=>({'content-type':'application/json'}),body:async()=>Buffer.from(JSON.stringify(config.denial?{status_code:0,user:{uid:'0',is_login:false}}:{status_code:0,user:{uid:'123456'}}))}));};
-page.getByText=label=>({first:()=>({isVisible:async()=>typeof label==='string'&&label==='扫码登录'&&config.qr})});
+page.getByText=label=>({all:async function(){return [this.first()]},first:()=>({isVisible:async()=>typeof label==='string'&&label==='扫码登录'&&config.qr})});
 const image={count:async()=>config.qr?1:0,isVisible:async()=>config.qr,evaluate:async()=>true,getAttribute:async()=> 'data:image/png;base64,'+Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLbtAAAAABJRU5ErkJggg==','base64').toString('base64'),screenshot:async()=>{throw Error('QR must not screenshot');}};
-const panel={count:async()=>1,isVisible:async()=>true,getByText:label=>({first:()=>({isVisible:async()=>label instanceof RegExp&&config.confirmation})})};
+const panel={count:async()=>1,isVisible:async()=>true,getByText:label=>({all:async function(){return [this.first()]},first:()=>({isVisible:async()=>label instanceof RegExp&&config.confirmation})})};
 page.locator=selector=>selector==='#douyin_login_comp_scan_code'?panel:image;
-page.getByRole=(role,options)=>({first:()=>image,isVisible:async()=>role==='button'&&options.name==='登录',click:async()=>{loginClicks++;}});
+page.getByRole=(role,options)=>({all:async function(){return [this.first()]},first:()=>image,isVisible:async()=>role==='button'&&options.name==='登录',click:async()=>{loginClicks++;}});
 context.newPage=async()=>{if(!context.primary){context.primary=page;return page;}const probe=Object.assign(new EventEmitter(),page);probe.currentURL='about:blank';return probe;};
 const chromium={launch:async options=>{launchOptions=options;return {newContext:async options=>{contextOptions=options;return context;},close:async()=>{}};}};
 const execution=main({chromium,input,uiReadyWaitMs:0});input.write(JSON.stringify({type:'start',mode:config.mode,guard_proxy:'http://127.0.0.1:12345',timeout_ms:500})+'\\n');
@@ -163,7 +163,7 @@ def test_qr_relay_keeps_one_original_png_per_login_generation_and_never_resets_p
 let now=0,reads=0,exact=true;
 let png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLbtAAAAABJRU5ErkJggg==','base64'); const sent=[];
 const image={count:async()=>1,isVisible:async()=>true,evaluate:async()=>true,getAttribute:async name=>{reads++;exact&&=name==='src';return 'data:image/png;base64,'+png.toString('base64');},screenshot:async()=>{throw Error('no screenshot');}};
-const panel={count:async()=>1,isVisible:async()=>true,getByText:()=>({first:()=>({isVisible:async()=>false})})};
+const panel={count:async()=>1,isVisible:async()=>true,getByText:()=>({all:async function(){return [this.first()]},first:()=>({isVisible:async()=>false})})};
 const page={url:()=> 'https://www.douyin.com/jingxuan',locator:selector=>{
 if(selector==='#douyin_login_comp_scan_code')return panel;
 exact&&=selector==='#douyin_login_comp_scan_code #animate_qrcode_container img[aria-label="二维码"]';return image;}};
@@ -194,7 +194,7 @@ def test_expired_official_qr_is_cleared_and_waits_for_user_restart_with_zero_ref
     script = """import {qrRelay} from './frontend/scripts/douyin-login.mjs';
 let now=0,expired=false,refreshes=0,reads=0;const messages=[];
 const image={count:async()=>1,isVisible:async()=>true,evaluate:async()=>true,getAttribute:async()=>{reads++;if(expired)throw Error('must not read expired QR');return 'data:image/png;base64,'+Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLbtAAAAABJRU5ErkJggg==','base64').toString('base64');},screenshot:async()=>{throw Error('no screenshot');}};
-const panel={count:async()=>1,isVisible:async()=>true,getByText:label=>({first:()=>({
+const panel={count:async()=>1,isVisible:async()=>true,getByText:label=>({all:async function(){return [this.first()]},first:()=>({
 isVisible:async()=>expired&&label==='二维码失效',evaluate:async()=>expired,
 click:async()=>{refreshes++;throw Error('must never click an official refresh control');}})})};
 const page={url:()=> 'https://www.douyin.com/jingxuan',locator:selector=>selector==='#douyin_login_comp_scan_code'?panel:image};
@@ -223,9 +223,9 @@ const cookies=()=>cookieReady?[{name:'sessionid',value:'synthetic-confirmed-cook
 context.routeWebSocket=async()=>{};context.route=async()=>{};context.cookies=async()=>cookies();context.storageState=async()=>({cookies:cookies(),origins:[]});
 context.newCDPSession=async()=>({send:async()=>{},on:()=>{}});
 const image={count:async()=>1,isVisible:async()=>true,evaluate:async()=>true,getAttribute:async()=> 'data:image/png;base64,'+Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLbtAAAAABJRU5ErkJggg==','base64').toString('base64'),screenshot:async()=>{throw Error('QR must not screenshot');}};
-const panel={count:async()=>1,isVisible:async()=>true,getByText:()=>({first:()=>({isVisible:async()=>false})})};
+const panel={count:async()=>1,isVisible:async()=>true,getByText:()=>({all:async function(){return [this.first()]},first:()=>({isVisible:async()=>false})})};
 const page=new EventEmitter();page.url=()=> 'https://www.douyin.com/user/self';page.locator=selector=>selector==='#douyin_login_comp_scan_code'?panel:image;
-page.getByText=()=>({first:()=>({isVisible:async()=>false})});page.getByRole=()=>{throw Error('must not touch global tutorial image or reopen login');};
+page.getByText=()=>({all:async function(){return [this.first()]},first:()=>({isVisible:async()=>false})});page.getByRole=()=>{throw Error('must not touch global tutorial image or reopen login');};
 page.goto=async()=>{gotos++;if(scenario==='retain_proof'||(scenario==='cookie_then_proof'&&gotos===2))queueMicrotask(()=>context.emit('response',{
 url:()=> 'https://www.douyin.com/aweme/v1/web/user/profile/self/',status:()=>200,allHeaders:async()=>({'content-type':'application/json'}),
 body:async()=>Buffer.from(JSON.stringify({status_code:0,user:{uid:'123456'}}))}));};
@@ -253,7 +253,7 @@ def test_qr_selection_fails_closed_when_actual_challenge_image_is_missing_or_amb
     script = """import {qrRelay} from './frontend/scripts/douyin-login.mjs';
 let screenshots=0,messages=0;
 const image={count:async()=>Number(process.argv[1]),isVisible:async()=>true,screenshot:async()=>{screenshots++;}};
-const panel={count:async()=>1,isVisible:async()=>true,getByText:()=>({first:()=>({isVisible:async()=>false})})};
+const panel={count:async()=>1,isVisible:async()=>true,getByText:()=>({all:async function(){return [this.first()]},first:()=>({isVisible:async()=>false})})};
 const page={url:()=> 'https://www.douyin.com/user/self',locator:selector=>selector==='#douyin_login_comp_scan_code'?panel:image,
 getByRole:()=>{throw Error('must not fall back to first tutorial image');}};
 await qrRelay(()=>messages++).tick(page);console.log(JSON.stringify({screenshots,messages}));

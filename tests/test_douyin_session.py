@@ -212,12 +212,19 @@ def test_relogin_ignores_previous_runner_result_and_does_not_import_old_context(
 
 def test_check_in_open_window_sends_fixed_command_without_new_runner(service_factory):
     runner = FakeRunner()
-    service, _, _ = service_factory(runner)
+    service, store, _ = service_factory(runner)
     start(service, runner)
     runner.callback({'phase': 'waiting_scan'})
-    assert service.check_login()['status'] == 'checking'
+    writes = len(store.writes)
+    assert service.check_login()['status'] == 'waiting_scan'
     service.check_login()
     assert runner.commands == [{'type': 'check'}]
+    assert len(store.writes) == writes
+    # An authoritative runner receipt, even for the same phase, unlocks checks.
+    runner.callback({'type': 'progress', 'phase': 'waiting_scan'})
+    service.check_login()
+    assert runner.commands == [{'type': 'check'}, {'type': 'check'}]
+    assert service.status()['status'] == 'waiting_scan'
     runner.finish()
 
 
@@ -709,7 +716,7 @@ def test_active_check_preserves_live_qr_until_official_confirmation(service_fact
     runner.callback({'type': 'progress', 'phase': 'waiting_scan'})
     runner.callback(qr_message())
     before = service.status()['qr_updated_at']
-    assert service.check_login()['status'] == 'checking'
+    assert service.check_login()['status'] == 'waiting_scan'
     assert service.qr_image() == qr_png() and service.status()['qr_updated_at'] == before
     runner.callback({'type': 'progress', 'phase': 'checking'})
     runner.callback(qr_message())
@@ -987,7 +994,7 @@ def test_verification_latch_rejects_stale_scan_check_and_qr_until_final_result(s
     expected = show_verification(runner)
     identity = service.status()['verification_frame_id']
     writes = len(store.writes)
-    for phase in ('opening', 'checking', 'waiting_scan', 'waiting_confirmation'):
+    for phase in ('opening', 'checking', 'waiting_scan', 'waiting_confirmation', 'waiting_browser'):
         runner.callback({'type': 'progress', 'phase': phase})
         runner.callback(qr_message())
         assert service.status()['status'] == 'verification_required'
@@ -1020,3 +1027,100 @@ def test_verification_latch_does_not_transfer_to_a_new_login(service_factory):
     old.callback({'type': 'progress', 'phase': 'verification_required'})
     assert service.status()['status'] == 'waiting_scan'
     new.finish(); old.finish()
+
+
+def test_waiting_browser_uses_private_user_view_without_claiming_mfa(service_factory):
+    runner = FakeRunner()
+    service, store, vault = service_factory(runner)
+    start(service, runner)
+    runner.callback(qr_message())
+    runner.callback({'type': 'progress', 'phase': 'waiting_browser', 'account': PRIVATE})
+    assert service.status()['status'] == 'waiting_browser'
+    assert service.status()['qr_available'] is False and service.status()['browser_open'] is True
+    assert service.active['verification_started'] is False
+    writes, encrypted = len(store.writes), copy.deepcopy(vault.values)
+    message = verification_message('1')
+    runner.callback(message)
+    identity = service.status()['verification_frame_id']
+    assert service.status()['verification_available'] is True
+    assert service.verification_image(frame_id=identity) == base64.b64decode(message['image_base64'])
+    assert service.verification_image(frame_id='stale-image') is None
+    assert service.check_login()['status'] == 'waiting_browser'
+    assert runner.commands == [{'type': 'check'}]
+    result = service.verification_action({'frame_id': identity, 'kind': 'text', 'text': SECRET})
+    assert result['status'] == 'waiting_browser' and result['verification_available'] is False
+    assert runner.commands[-1] == {'type': 'verification_action', 'frame_id': '1', 'kind': 'text', 'text': SECRET}
+    with pytest.raises(AppError) as stale:
+        service.verification_action({'frame_id': identity, 'kind': 'refresh'})
+    assert stale.value.status == 409
+    assert len(store.writes) == writes and vault.values == encrypted
+    private_free(service.status()); private_free(store.writes)
+    assert all(not any(key.startswith('verification_') for key in item) for item in store.writes)
+    runner.finish()
+    assert service.status()['status'] == 'logged_in' and service.verification_image() is None
+
+
+def test_waiting_browser_phase_changes_consume_old_frames_and_mfa_cannot_downgrade(service_factory):
+    runner = FakeRunner()
+    service, _, _ = service_factory(runner)
+    start(service, runner)
+    runner.callback({'type': 'progress', 'phase': 'waiting_browser'})
+    runner.callback(verification_message('1'))
+    first = service.status()['verification_frame_id']
+    runner.callback({'type': 'progress', 'phase': 'waiting_scan'})
+    assert service.active['verification_started'] is False
+    assert service.verification_image(frame_id=first) is None
+    with pytest.raises(AppError) as stale:
+        service.verification_action({'frame_id': first, 'kind': 'click', 'x': 1, 'y': 1})
+    assert stale.value.status == 409
+    runner.callback(qr_message())
+    assert service.status()['qr_available'] is True
+    runner.callback({'type': 'progress', 'phase': 'waiting_browser'})
+    runner.callback(verification_message('2'))
+    second = service.status()['verification_frame_id']
+    runner.callback({'type': 'progress', 'phase': 'verification_required'})
+    assert service.verification_image(frame_id=second) is None
+    runner.callback(verification_message('3'))
+    mfa = service.status()
+    runner.callback({'type': 'progress', 'phase': 'waiting_browser'})
+    runner.callback(qr_message())
+    assert service.status() == mfa and service.active['verification_started'] is True
+    assert service.status()['status'] == 'verification_required' and service.status()['qr_available'] is False
+    runner.finish()
+
+
+def test_waiting_browser_late_frames_cannot_affect_another_login_generation(service_factory):
+    old, new = FakeRunner(), FakeRunner()
+    service, _, _ = service_factory(old, new)
+    start(service, old)
+    old.callback({'type': 'progress', 'phase': 'waiting_browser'})
+    old.callback(verification_message('1'))
+    prior = service.status()['verification_frame_id']
+    start(service, new)
+    new.callback({'type': 'progress', 'phase': 'waiting_browser'})
+    new.callback(verification_message('1'))
+    current = service.status()
+    assert current['verification_frame_id'] != prior
+    old.callback({'type': 'progress', 'phase': 'waiting_browser'})
+    old.callback({'type': 'verification_clear'})
+    old.callback(verification_message('2'))
+    assert service.status() == current
+    with pytest.raises(AppError) as stale:
+        service.verification_action({'frame_id': prior, 'kind': 'refresh'})
+    assert stale.value.status == 409 and new.commands == []
+    new.finish(); old.finish()
+
+
+def test_unknown_browser_prompt_timeout_does_not_mark_saved_session_expired(service_factory):
+    initial = FakeRunner()
+    prompt = FakeRunner({'ok': False, 'error': {'code': 'douyin_session_timeout'}})
+    service, _, vault = service_factory(initial, prompt)
+    start(service, initial); initial.finish()
+    encrypted = copy.deepcopy(vault.values)
+    start(service, prompt)
+    prompt.callback({'type': 'progress', 'phase': 'waiting_browser'})
+    assert service.active['verification_started'] is False
+    prompt.finish()
+    assert service.status()['status'] == 'failed'
+    assert service.status()['error']['code'] == 'douyin_session_timeout'
+    assert service.storage_state() is not None and vault.values == encrypted

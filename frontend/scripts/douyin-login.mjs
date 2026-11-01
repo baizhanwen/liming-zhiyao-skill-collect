@@ -9,6 +9,17 @@ const DOMAIN = /^\.?(?:[a-z0-9-]+\.)*(?:douyin\.com|iesdouyin\.com)$/i;
 const AUTH_COOKIES = new Set(['sessionid', 'sessionid_ss', 'sid_tt']);
 const QR_PANEL = '#douyin_login_comp_scan_code';
 const QR_IMAGE = '#douyin_login_comp_scan_code #animate_qrcode_container img[aria-label="二维码"]';
+const VERIFICATION_TEXT = /身份验证|为保障账号安全，请先完成身份验证|请完成(?:安全)?验证|拖动滑块|按住滑块|完成拼图|短信验证|接收短信验证码|发送短信验证/;
+async function firstVisibleText(locator) {
+  // Login dialogs may retain a hidden first copy of a heading. Inspect all
+  // matches so a later, visible SMS step is not hidden by that stale copy.
+  const items = await locator.all();
+  if (items.length > 64) throw new Error('budget');
+  for (const item of items) {
+    if (await item.isVisible()) return item;
+  }
+  return null;
+}
 export function officialPage(value) {
   try { const u = new URL(value); return u.protocol === 'https:' && !u.username && !u.password && (!u.port || u.port === '443') && DOMAIN.test(u.hostname); }
   catch { return false; }
@@ -62,13 +73,13 @@ function proxyAllowed(value) {
 }
 export async function visibleVerification(page) {
   if (!officialPage(page.url())) return false;
-  return page.getByText(/身份验证|为保障账号安全，请先完成身份验证|请完成(?:安全)?验证|拖动滑块|按住滑块|完成拼图/, { exact: false }).first().isVisible().catch(() => false);
+  return Boolean(await firstVisibleText(page.getByText(VERIFICATION_TEXT, { exact: false })).catch(() => null));
 }
 // Hold the actual modal element across its SMS substeps. Text is an entry
 // signal, never an exit signal, and no input values are inspected.
 async function verificationRoot(page) {
-  const title = page.getByText(/身份验证|为保障账号安全，请先完成身份验证|请完成(?:安全)?验证|拖动滑块|按住滑块|完成拼图/, { exact: false }).first();
-  if (!await title.isVisible().catch(() => false)) return null;
+  const title = await firstVisibleText(page.getByText(VERIFICATION_TEXT, { exact: false })).catch(() => null);
+  if (!title) return null;
   let source, handle;
   try {
     source = await title.elementHandle({ timeout: 1500 });
@@ -92,7 +103,6 @@ async function verificationBlocker(page, minimumLayer = 1, background = null) {
   if (await visibleVerification(page)) return true;
   // These are specific MFA words observed on the real SMS step, used only
   // after MFA was entered. Ordinary "验证码登录" is deliberately excluded.
-  if (await page.getByText(/短信验证|接收短信验证码|发送短信验证/, { exact: false }).first().isVisible().catch(() => false)) return true;
   try {
     return await page.evaluate(({ minimum, backgroundNodes }) => {
       const nodes = document.querySelectorAll('[role="dialog"], [aria-modal="true"], body *');
@@ -125,8 +135,7 @@ async function probeChallenge(page) {
   // a new challenge. A final non-official page still cannot prove login.
   if (!officialPage(page.url())) return null;
   try {
-    if (await page.getByText(/身份验证|为保障账号安全，请先完成身份验证|请完成(?:安全)?验证|拖动滑块|按住滑块|完成拼图/, { exact: false }).first().isVisible()) return true;
-    return await page.getByText(/短信验证|接收短信验证码|发送短信验证/, { exact: false }).first().isVisible();
+    return Boolean(await firstVisibleText(page.getByText(VERIFICATION_TEXT, { exact: false })));
   } catch { return null; } // Unknown DOM is neither a challenge nor permission to save.
 }
 export function verificationTracker(page, { clock = Date.now, locate = verificationRoot, blocked = verificationBlocker } = {}) {
@@ -307,11 +316,12 @@ export async function visibleQrExpiry(panel) {
 }
 export async function visibleScanConfirmation(page) {
   if (!officialPage(page.url())) return false;
-  return page.locator(QR_PANEL).getByText(/扫码成功|请在手机(?:抖音)?(?:上)?确认/, { exact: false }).first().isVisible().catch(() => false);
+  return Boolean(await firstVisibleText(page.locator(QR_PANEL).getByText(/扫码成功|请在手机(?:抖音)?(?:上)?确认/, { exact: false })).catch(() => null));
 }
 export function qrRelay(send, { clock = Date.now } = {}) {
   const seen = new Set(); let lastCheck = -Infinity, sent = 0, reading = false, cleared = false, expired = false, firstHash = '';
   return {
+    state() { return { shown: Boolean(firstHash), available: Boolean(firstHash) && !cleared, expired }; },
     clear() { if (!cleared) { send({ type: 'qr_clear' }); cleared = true; } },
     expire() { this.clear(); if (!expired) { expired = true; send({ type: 'qr_expired' }); } },
     async tick(page) {
@@ -353,6 +363,7 @@ async function settleWithin(value, milliseconds) {
 export async function main(runtime = {}) {
   let browser, cancelled = false, checking = false, startResolve, malformed = false;
   let options, proof = false, denied = false, verification = false, result, waitingConfirmation = false, proofNavigationUsed = false;
+  let confirmationSeen = false, officialViewPending = false;
   let tracker, trackerState = { latched: false, active: false, canProve: false, epoch: 0 };
   let probePage = null, probeEpoch = -1, proofEpoch = -1, probeFinished = false, probeChallenged = false, probePostMfa = false, probeFailure = null;
   let responses = 0, bytes = 0, phase = '', navigation = null, qrReady = false, lastUiCheck = -Infinity;
@@ -362,8 +373,13 @@ export async function main(runtime = {}) {
   const input = readline.createInterface({ input: runtime.input || process.stdin, crlfDelay: Infinity });
   const send = value => process.stdout.write(JSON.stringify(value) + '\n');
   const relay = qrRelay(send);
-  const view = verificationView(send, { visible: async () => Boolean(tracker && await tracker.visible()) });
-  const progress = value => { if (phase !== value) { phase = value; send({ type: 'progress', phase }); } };
+  let pageForView = null;
+  const view = verificationView(send, { visible: async () => {
+    if (!tracker) return false;
+    const state = await tracker.inspect();
+    return state.active || Boolean(officialViewPending && !state.latched && officialPage(pageForView?.url()));
+  } });
+  const progress = (value, acknowledge = false) => { if (phase !== value || acknowledge) { phase = value; send({ type: 'progress', phase }); } };
   const start = new Promise(resolve => { startResolve = resolve; });
   input.on('line', line => {
     if (Buffer.byteLength(line) > 512 * 1024) { malformed = true; cancelled = true; startResolve(null); return; }
@@ -408,6 +424,7 @@ export async function main(runtime = {}) {
       return route.continue(); // Every outbound TCP connection remains pinned by the mandatory proxy.
     });
     const page = await context.newPage();
+    pageForView = page;
     tracker = verificationTracker(page);
     progress('opening');
     page.on('close', () => { cancelled = true; });
@@ -471,20 +488,40 @@ export async function main(runtime = {}) {
         proofNavigationUsed = false; probeFinished = false;
         if (probePage) { const old = probePage; probePage = null; await old.close?.().catch(() => {}); }
       }
-      if (checking) {
-        checking = false;
-        if (verification) { relay.clear(); view.force(); progress('verification_required'); }
-        else if (waitingConfirmation) { relay.clear(); progress('waiting_confirmation'); }
-        else progress(options.mode === 'check' ? 'checking' : 'waiting_scan');
+      if (Date.now() - lastUiCheck >= 1000) {
+        lastUiCheck = Date.now();
+        if (!verification && options.mode === 'login') {
+          waitingConfirmation = await visibleScanConfirmation(page);
+          confirmationSeen ||= waitingConfirmation;
+          if (waitingConfirmation) relay.clear();
+        }
       }
-      if (verification) { relay.clear(); progress('verification_required'); }
+      if (verification) relay.clear();
+      if (options.mode === 'login' && qrReady && !waitingConfirmation && !verification) await relay.tick(page);
+      const qrState = relay.state();
+      // A vanished QR is not evidence of success or of MFA. Show the actual
+      // official page when the site has moved beyond its visible QR instead
+      // of leaving an empty slot, even if no known challenge wording matches.
+      officialViewPending = options.mode === 'login' && !verification && !waitingConfirmation &&
+        (qrState.shown || confirmationSeen) && !qrState.available && !qrState.expired;
+      const observedPhase = verification ? 'verification_required' : waitingConfirmation ? 'waiting_confirmation' :
+        officialViewPending ? 'waiting_browser' : options.mode === 'check' ? 'checking' : 'waiting_scan';
+      if (phase !== observedPhase) view.clear();
+      if (checking) view.force();
+      progress(observedPhase, checking);
+      checking = false;
       while (actions.length) await view.act(page, actions.shift());
-      await view.tick(page, verification);
+      await view.tick(page, verification || officialViewPending);
       const authCookie = hasAuthCookie(await context.cookies());
       const finalState = await tracker.inspect();
       verification = finalState.latched;
-      if (verification) { relay.clear(); progress('verification_required'); }
+      if (verification) {
+        relay.clear();
+        if (phase !== 'verification_required') view.clear();
+        progress('verification_required');
+      }
       const probeObservation = probePage ? await probeChallenge(probePage) : false;
+      const primaryObservation = await probeChallenge(page);
       if (probeObservation === true) probeChallenged = true;
       if (probePage && probeFinished && (probeFailure || !officialPage(probePage.url()))) {
         result = failure(probeFailure || 'douyin_session_runtime');
@@ -497,11 +534,11 @@ export async function main(runtime = {}) {
         break;
       }
       const freshProof = !finalState.latched || (finalState.canProve && proofEpoch === finalState.epoch && probeFinished && probeEpoch === finalState.epoch);
-      if (proof && authCookie && freshProof && !probeChallenged && probeObservation === false && (!probePage || probeFinished)) {
+      if (proof && authCookie && freshProof && !probeChallenged && primaryObservation === false && probeObservation === false && (!probePage || probeFinished)) {
         const storage = minimalStorageState(await context.storageState());
         const current = await tracker.inspect();
         if (hasAuthCookie(storage.cookies) && (!current.latched || (current.canProve && current.epoch === proofEpoch && current.epoch === probeEpoch)) &&
-          (!probePage || await probeChallenge(probePage) === false)) {
+          await probeChallenge(page) === false && (!probePage || await probeChallenge(probePage) === false)) {
           result = { type: 'result', ok: true, authenticated: true,
             verification_method: 'official_profile_response', storage_state: storage };
           break;
@@ -531,13 +568,6 @@ export async function main(runtime = {}) {
           if (probePage === currentProbe && probeEpoch === currentEpoch) probeFinished = true;
         });
       }
-      if (Date.now() - lastUiCheck >= 1000) {
-        lastUiCheck = Date.now();
-        if (!verification && options.mode === 'login' && await visibleScanConfirmation(page)) { waitingConfirmation = true; relay.clear(); }
-        if (verification) progress('verification_required');
-        else if (waitingConfirmation) progress('waiting_confirmation');
-      }
-      if (options.mode === 'login' && qrReady && !waitingConfirmation && !verification) await relay.tick(page);
       if (responses > 700 || bytes > 100 * 1024 * 1024) { result = failure('douyin_session_budget'); break; }
       await sleep(200);
     }

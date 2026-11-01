@@ -3,15 +3,15 @@
   "date": "2026-11-01",
   "scope": "Latest backend and Node offline contracts; frontend current privacy fix and earlier impacted-contract runs recorded independently. Real auth separate.",
   "pytest": {
-    "passed": 792,
+    "passed": 808,
     "failed": 0,
     "skipped": 0,
-    "seconds": 49.78,
+    "seconds": 64.71,
     "junit": "pytest-v030.xml"
   },
   "frontend": {
     "build": "passed",
-    "javascript": "index-CHdhXr6F.js",
+    "javascript": "index-BNPenEAY.js",
     "css": "index-jPAKYIil.css",
     "current_privacy_case": {
       "passed": 1,
@@ -28,6 +28,11 @@
       "passed": 1,
       "seconds": 8.4,
       "report": "ui-douyin-qr-expiry-contract-v030.json"
+    },
+    "latest_waiting_browser_cases": {
+      "passed": 2,
+      "seconds": 6.0,
+      "report": "ui-douyin-waiting-browser-contract-v030.json"
     }
   },
   "doctor": "passed local-only; not external acceptance",
@@ -35,15 +40,23 @@
     "retained_entity_count": 99,
     "entities_unchanged": true,
     "credential_files_unchanged": true,
-    "scope": "controlled restart before user QR login; excludes connection status metadata"
+    "scope": "post-scan fix controlled restart, before next user login; excludes connection status metadata"
   },
   "new_dependencies": false,
   "real_authenticated_douyin_media": "pending user official identity verification",
   "customer_windows_business": "unverified",
   "model_calls_started_by_login_tests": 0,
   "feishu_writes": 0,
-  "reviewed_node_sha256": "b9775f3e7d7b236e735fd87ff138158fd26edcea6a15768a611b933f2990ea6d",
+  "reviewed_node_sha256": "1313dbcab9900c5c0542f917283623a4499fd42b7e96c9e41d1c7ec77bc2b55f",
   "independent_review": "completed with no unresolved blocker; offline review does not establish real account login",
   "initial_login_entry": "official homepage; check and independent proof remain self page",
-  "real_qr_stability": "one PNG and one version observed for 25.29 seconds; expired state prompts manual refresh"
+  "real_qr_stability": "one PNG and one version observed for 25.29 seconds; expired state prompts manual refresh",
+  "latest_fix": "Authoritative check acknowledgements; purpose-separated official page view after QR departure; visible direct SMS detection; primary and proof-page unknown DOM cannot save.",
+  "previous_qr_stable_candidate": {
+    "commit": "590f485d56098f6cbd299b6771a87b1e87a5171c",
+    "passed": 792,
+    "seconds": 49.78,
+    "ci_report": "github-ci-v030-qr-stable.json",
+    "scope": "historical candidate before post-scan fix"
+  }
 }

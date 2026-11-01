@@ -7,7 +7,8 @@ export type VerificationAction = {frame_id: string} & (
   {kind: 'key'; key: 'Enter' | 'Tab' | 'Backspace'} | {kind: 'refresh'}
 );
 
-export default function DouyinVerification({available, frameId, width, height, error, busy, connected, onAction}: {
+export default function DouyinVerification({purpose = 'verification', available, frameId, width, height, error, busy, connected, onAction}: {
+  purpose?: 'verification' | 'login_prompt';
   available: boolean; frameId?: string; width?: number; height?: number; error?: {message: string};
   busy: boolean; connected: boolean; onAction: (action: VerificationAction) => void;
 }) {
@@ -20,6 +21,7 @@ export default function DouyinVerification({available, frameId, width, height, e
   const consumed = !!frameId && lockedFrame === frameId;
   const mayRefresh = valid && !busy && connected && !consumed;
   const mayInteract = mayRefresh && loadedFrame === frameId && failedFrame !== frameId;
+  const loginPrompt = purpose === 'login_prompt';
   useEffect(() => {setText('');}, [available, connected, busy]);
 
   function send(payload: VerificationAction) {
@@ -40,17 +42,17 @@ export default function DouyinVerification({available, frameId, width, height, e
     if (!mayInteract || !frameId || text.length === 0 || text.length > 128) return;
     const value = text; setText(''); send({frame_id: frameId, kind: 'text', text: value});
   }
-  return <section className="douyin-verification" aria-label="抖音官方验证视图">
-    <div className="douyin-verification-heading"><h4>官方验证视图</h4><span>同一官网会话 · 由本人操作</span></div>
-    <p className="douyin-verification-boundary">这是项目专属抖音官网的当前画面，不是工作台复制的短信表单。请由你本人点击官网控件；工作台不会自动发送短信、完成题目或填写验证码。</p>
+  return <section className="douyin-verification" aria-label={loginPrompt ? '抖音官网登录提示视图' : '抖音官方验证视图'}>
+    <div className="douyin-verification-heading"><h4>{loginPrompt ? '官网登录提示' : '官方验证视图'}</h4><span>同一官网会话 · 由本人操作</span></div>
+    <p className="douyin-verification-boundary">{loginPrompt ? '这是同一项目专属抖音官网的当前提示，不代表登录成功，也不表示一定需要身份验证。请先查看官网内容，再由本人决定是否操作。' : '这是项目专属抖音官网的当前画面，不是工作台复制的短信表单。请由你本人点击官网控件；工作台不会自动发送短信、完成题目或填写验证码。'}</p>
     <div className="douyin-verification-zoom" aria-label="官方画面缩放">{([{value: 0, label: '适应宽度'}, {value: 1, label: '100%'}, {value: 1.5, label: '150%'}]).map(option => <button type="button" className="button" key={option.value} aria-pressed={zoom === option.value} onClick={() => setZoom(option.value)}>{option.label}</button>)}</div>
     {valid && failedFrame !== frameId ? <div className="douyin-verification-viewport"><div className="douyin-verification-surface" style={{width: zoom ? width! * zoom : '100%', maxWidth: zoom ? undefined : width}}>
-      <button type="button" className="douyin-verification-frame" aria-label="点击官方验证画面" disabled={!mayInteract}
+      <button type="button" className="douyin-verification-frame" aria-label={loginPrompt ? '点击官网登录提示画面' : '点击官方验证画面'} disabled={!mayInteract}
         onPointerDown={event => {pointerFrame.current = mayInteract && frameId && event.isPrimary && event.button === 0 ? {id: frameId, pointerId: event.pointerId} : null;}}
         onPointerUp={clickFrame} onPointerCancel={() => {pointerFrame.current = null;}}>
-        <img key={frameId} ref={image} src={'/api/douyin/session/verification?v=' + encodeURIComponent(frameId)} alt="抖音官网当前验证画面" draggable={false} referrerPolicy="no-referrer"
+        <img key={frameId} ref={image} src={'/api/douyin/session/verification?v=' + encodeURIComponent(frameId)} alt={loginPrompt ? '抖音官网当前登录提示画面' : '抖音官网当前验证画面'} draggable={false} referrerPolicy="no-referrer"
           onLoad={() => setLoadedFrame(frameId)} onError={() => {setFailedFrame(frameId); setText('');}}/>
-      </button></div></div> : <div className="douyin-verification-placeholder" role={valid ? 'alert' : undefined}>{valid ? '官网画面暂时无法显示。可在当前帧仍有效时刷新官方画面；不会重复上一操作。' : '正在等待官网验证画面。若长时间未恢复，请检查工作台连接，或取消后重新登录。'}</div>}
+      </button></div></div> : <div className="douyin-verification-placeholder" role={valid ? 'alert' : undefined}>{valid ? '官网画面暂时无法显示。可在当前帧仍有效时刷新官方画面；不会重复上一操作。' : loginPrompt ? '正在等待官网登录提示画面；尚未确认登录。若长时间未恢复，请检查工作台连接，或取消后重新登录。' : '正在等待官网验证画面。若长时间未恢复，请检查工作台连接，或取消后重新登录。'}</div>}
     {!connected && <p className="douyin-verification-warning" role="alert">状态连接有问题，当前画面可能已过时。连接恢复前暂停官网操作，请先刷新登录状态。</p>}
     {(consumed || busy || (valid && loadedFrame !== frameId && failedFrame !== frameId)) && <p className="douyin-verification-pending">本次操作或画面结果待确认。收到新的官方画面并加载完成前暂停交互，不会重复发送操作。</p>}
     {error && <p className="douyin-verification-warning" role="alert">{error.message}</p>}

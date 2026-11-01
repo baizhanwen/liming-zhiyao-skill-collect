@@ -20,7 +20,7 @@ def test_modal_handle_survives_sms_title_and_all_view_input_guards_share_it():
     result = run("""import {verificationTracker,verificationView} from './frontend/scripts/douyin-login.mjs';
 let title=true,rootVisible=true,now=0,typed=0,n=0;const messages=[];
 const root={isVisible:async()=>rootVisible,evaluate:async()=>true};
-const page={url:()=> 'https://www.douyin.com/user/self',getByText:()=>({first:()=>({isVisible:async()=>title})}),
+const page={url:()=> 'https://www.douyin.com/user/self',getByText:()=>({all:async function(){return [this.first()]},first:()=>({isVisible:async()=>title})}),
 viewportSize:()=>({width:1280,height:800}),screenshot:async()=>Buffer.from([255,216,1,255,217]),
 mainFrame:()=>({evaluate:async()=> 'editable'}),keyboard:{insertText:async()=>typed++}};
 const tracker=verificationTracker(page,{clock:()=>now,locate:async()=>root,blocked:async()=>false});
@@ -42,7 +42,7 @@ def test_unknown_or_replaced_modal_stays_latched_and_cannot_prove_exit(missing_r
     result = run("""import {verificationTracker} from './frontend/scripts/douyin-login.mjs';
 const c=JSON.parse(process.argv[1]);let title=true,visible=true,now=0;
 const root={isVisible:async()=>visible,evaluate:async()=>true};
-const page={url:()=> 'https://www.douyin.com/user/self',getByText:()=>({first:()=>({isVisible:async()=>title})})};
+const page={url:()=> 'https://www.douyin.com/user/self',getByText:()=>({all:async function(){return [this.first()]},first:()=>({isVisible:async()=>title})})};
 const tracker=verificationTracker(page,{clock:()=>now,locate:async()=>c.missing?null:root,blocked:async()=>c.replacement});
 await tracker.inspect();title=false;visible=false;now=100000;
 const a=await tracker.inspect();now+=100000;const b=await tracker.inspect();
@@ -58,7 +58,7 @@ const png='iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFg
 const image={count:async()=>1,isVisible:async()=>true,evaluate:async()=>!covered,
 getAttribute:async()=>{reads++;return c.bad?'https://www.douyin.com/unknown.png':'data:image/png;base64,'+png;},
 screenshot:async()=>{screenshots++;throw Error('SMS overlay must never be screenshotted as QR');}};
-const panel={count:async()=>1,isVisible:async()=>true,getByText:()=>({first:()=>({isVisible:async()=>false})})};
+const panel={count:async()=>1,isVisible:async()=>true,getByText:()=>({all:async function(){return [this.first()]},first:()=>({isVisible:async()=>false})})};
 const page={url:()=> 'https://www.douyin.com/user/self',locator:s=>s==='#douyin_login_comp_scan_code'?panel:image};
 const relay=qrRelay(x=>messages.push(x),{clock:()=>now});await relay.tick(page);
 covered=c.covered;now=5000;await relay.tick(page);
@@ -71,7 +71,7 @@ original:messages.filter(x=>x.type==='qr').every(x=>x.image_base64===png),clear:
         assert result['reads'] == 1  # no read of the occluded image
 
 
-@pytest.mark.parametrize('scenario', ['sms', 'replacement', 'complete', 'old_delayed', 'probe_challenge', 'slow_probe', 'probe_timeout', 'probe_network', 'probe_blank', 'probe_dom_retry', 'probe_dom_closed'])
+@pytest.mark.parametrize('scenario', ['sms', 'replacement', 'complete', 'old_delayed', 'probe_challenge', 'slow_probe', 'probe_timeout', 'probe_network', 'probe_blank', 'probe_dom_retry', 'probe_dom_closed', 'probe_visibility_error'])
 def test_main_preserves_input_page_and_requires_fresh_independent_page_proof(scenario):
     lines = run("""import {PassThrough} from 'node:stream';import {EventEmitter} from 'node:events';import {main} from './frontend/scripts/douyin-login.mjs';
 const scenario=process.argv[1],input=new PassThrough(),context=new EventEmitter();
@@ -81,9 +81,9 @@ context.route=async()=>{};context.routeWebSocket=async()=>{};context.cookies=asy
 context.newCDPSession=async()=>({send:async()=>{},on:()=>{}});
 const root={isVisible:async()=>modal,evaluate:async()=>true};
 const locator={isVisible:async()=>title,elementHandle:async()=>({evaluateHandle:async()=>({asElement:()=>root}),dispose:async()=>{}})};
-const primary=new EventEmitter();let primaryURL='about:blank';primary.url=()=>primaryURL;primary.getByText=()=>({first:()=>locator});
+const primary=new EventEmitter();let primaryURL='about:blank';primary.url=()=>primaryURL;primary.getByText=()=>({all:async function(){return [this.first()]},first:()=>locator});
 primary.evaluate=async()=>replace;primary.viewportSize=()=>({width:1280,height:800});primary.screenshot=async()=>Buffer.from([255,216,1,255,217]);
-primary.locator=()=>({count:async()=>0,isVisible:async()=>false,getByText:()=>({first:()=>({isVisible:async()=>false})})});
+primary.locator=()=>({count:async()=>0,isVisible:async()=>false,getByText:()=>({all:async function(){return [this.first()]},first:()=>({isVisible:async()=>false})})});
 primary.getByRole=()=>({isVisible:async()=>false});
 const emit=(owner,delayed=false)=>context.emit('response',{request:()=>({frame:()=>({page:()=>owner})}),
 url:()=> 'https://www.douyin.com/aweme/v1/web/user/profile/self/',status:()=>200,
@@ -92,8 +92,8 @@ if(delayed)await new Promise(resolve=>{lateResolve=resolve;});
 return Buffer.from(JSON.stringify({status_code:0,user:{uid:'123456'}}));}});
 primary.goto=async url=>{if(url!=='https://www.douyin.com/')throw Error('login must start on the ordinary homepage');primaryURL='https://www.douyin.com/jingxuan';primaryGotos++;if(scenario==='old_delayed')emit(primary,true);};
 context.newPage=async()=>{pages++;if(pages===1)return primary;
-let probeChecks=0;let committed=!['slow_probe','probe_blank','probe_timeout','probe_network'].includes(scenario);const p=new EventEmitter();p.url=()=>committed?'https://www.douyin.com/user/self':'about:blank';p.getByText=()=>({first:()=>({isVisible:async()=>{if(scenario==='probe_dom_closed'||(scenario==='probe_dom_retry'&&probeChecks++===0))throw Error('synthetic-DOM-unavailable');return scenario==='probe_challenge';}})});p.close=async()=>{};
-p.goto=async url=>{if(url!=='https://www.douyin.com/user/self')throw Error('proof must use official self page');probeGotos++;if(['probe_timeout','probe_network'].includes(scenario)){const error=new Error('synthetic-private-url-not-for-output');error.name=scenario==='probe_timeout'?'TimeoutError':'Error';throw error;}if(scenario==='slow_probe'){await new Promise(resolve=>setTimeout(resolve,450));committed=true;}if(['complete','probe_challenge','slow_probe','probe_dom_retry','probe_dom_closed'].includes(scenario))queueMicrotask(()=>emit(p));if(scenario==='old_delayed')lateResolve?.();};return p;};
+let probeChecks=0;let committed=!['slow_probe','probe_blank','probe_timeout','probe_network'].includes(scenario);const p=new EventEmitter();p.url=()=>committed?'https://www.douyin.com/user/self':'about:blank';p.getByText=()=>({all:async function(){if(scenario==='probe_dom_closed')throw Error('synthetic-DOM-collection-unavailable');return [this.first()]},first:()=>({isVisible:async()=>{if(scenario==='probe_visibility_error'||(scenario==='probe_dom_retry'&&probeChecks++===0))throw Error('synthetic-DOM-visibility-unavailable');return scenario==='probe_challenge';}})});p.close=async()=>{};
+p.goto=async url=>{if(url!=='https://www.douyin.com/user/self')throw Error('proof must use official self page');probeGotos++;if(['probe_timeout','probe_network'].includes(scenario)){const error=new Error('synthetic-private-url-not-for-output');error.name=scenario==='probe_timeout'?'TimeoutError':'Error';throw error;}if(scenario==='slow_probe'){await new Promise(resolve=>setTimeout(resolve,450));committed=true;}if(['complete','probe_challenge','slow_probe','probe_dom_retry','probe_dom_closed','probe_visibility_error'].includes(scenario))queueMicrotask(()=>emit(p));if(scenario==='old_delayed')lateResolve?.();};return p;};
 const chromium={launch:async()=>({newContext:async()=>context,close:async()=>{}})};
 const execution=main({chromium,input,uiReadyWaitMs:0});input.write(JSON.stringify({type:'start',mode:'login',guard_proxy:'http://127.0.0.1:12345',timeout_ms:scenario==='probe_challenge'?6000:scenario==='slow_probe'?3000:1600})+'\\n');
 setTimeout(()=>{title=false;},250); // real SMS substep has no original heading
@@ -107,7 +107,7 @@ await execution;console.log(JSON.stringify({primaryGotos,probeGotos,pages,elapse
     if scenario in ('complete', 'slow_probe', 'probe_dom_retry'):
         assert outcome['authenticated'] and lines[-1]['probeGotos'] == 1
     else:
-        expected = 'douyin_session_timeout' if scenario in ('old_delayed', 'probe_timeout', 'probe_dom_closed') else 'douyin_session_runtime' if scenario in ('probe_network', 'probe_blank') else 'douyin_session_verification_required'
+        expected = 'douyin_session_timeout' if scenario in ('old_delayed', 'probe_timeout', 'probe_dom_closed', 'probe_visibility_error') else 'douyin_session_runtime' if scenario in ('probe_network', 'probe_blank') else 'douyin_session_verification_required'
         assert not outcome['authenticated'] and outcome['error']['code'] == expected
         assert 'storage_state' not in outcome and 'synthetic-private-url' not in json.dumps(lines)
         assert lines[-1]['probeGotos'] == (0 if scenario in ('sms', 'replacement') else 1)
@@ -123,7 +123,7 @@ const node={tagName:'SPAN',parentElement:modal,closest:()=>null};
 const root={isVisible:async()=>rootVisible,evaluate:async fn=>vm.runInNewContext('('+fn.toString()+')(node)',{node:modal,getComputedStyle:x=>x.style})};
 const source={dispose:async()=>disposed++,evaluateHandle:async fn=>{const found=vm.runInNewContext('('+fn.toString()+')(element)',{element:node,getComputedStyle:x=>x.style});
 return {asElement:()=>found===modal?root:null,dispose:async()=>{}};}};
-const page={url:()=> 'https://www.douyin.com/user/self',getByText:()=>({first:()=>({isVisible:async()=>title,elementHandle:async()=>source})})};
+const page={url:()=> 'https://www.douyin.com/user/self',getByText:()=>({all:async function(){return [this.first()]},first:()=>({isVisible:async()=>title,elementHandle:async()=>source})})};
 const tracker=verificationTracker(page);const a=await tracker.inspect();title=false;const b=await tracker.inspect();
 console.log(JSON.stringify({a,b,disposed}));""")[0]
     assert result['a']['active'] and result['b']['active'] and result['disposed'] == 1
@@ -140,7 +140,7 @@ const image={count:async()=>1,isVisible:async()=>true,
 evaluate:async fn=>vm.runInNewContext('('+fn.toString()+')(element)',{element:node,document:{elementFromPoint:()=>kind==='image'?node:kind==='logo'?logo:overlay}}),
 getAttribute:async()=>{reads++;return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLbtAAAAABJRU5ErkJggg==';},
 screenshot:async()=>{screenshots++;throw Error('no pixel crop');}};
-const panel={count:async()=>1,isVisible:async()=>true,getByText:()=>({first:()=>({isVisible:async()=>false})})};
+const panel={count:async()=>1,isVisible:async()=>true,getByText:()=>({all:async function(){return [this.first()]},first:()=>({isVisible:async()=>false})})};
 const page={url:()=> 'https://www.douyin.com/user/self',locator:s=>s==='#douyin_login_comp_scan_code'?panel:image};
 await qrRelay(x=>messages.push(x)).tick(page);
 console.log(JSON.stringify({reads,screenshots,qr:messages.filter(x=>x.type==='qr').length,clear:messages.some(x=>x.type==='qr_clear')}));""", hit)[0]
@@ -166,7 +166,7 @@ matches:()=>semantic,querySelector:()=>qr});
 const bg=make(true),qr=make(false,'static','0'),other=make(true);qr.parentElement=bg;
 const modal=make(true);const root={isVisible:async()=>visible,evaluate:async fn=>vm.runInNewContext('('+fn.toString()+')(node)',{node:modal,getComputedStyle:n=>n.style})};
 const document={querySelector:()=>qr,querySelectorAll:()=>replaced?[qr,bg,other]:[qr,bg]};
-const page={url:()=> 'https://www.douyin.com/user/self',getByText:()=>({first:()=>({isVisible:async()=>title})}),
+const page={url:()=> 'https://www.douyin.com/user/self',getByText:()=>({all:async function(){return [this.first()]},first:()=>({isVisible:async()=>title})}),
 evaluateHandle:async fn=>vm.runInNewContext('('+fn.toString()+')()',{document}),
 evaluate:async(fn,arg)=>vm.runInNewContext('('+fn.toString()+')(arg)',{document,getComputedStyle:n=>n.style,arg})};
 const tracker=verificationTracker(page,{clock:()=>now,locate:async()=>root});await tracker.inspect();
