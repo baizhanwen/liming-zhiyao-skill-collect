@@ -1,0 +1,220 @@
+{
+  "schema_version": 1,
+  "scope": "Second v0.2.3 PR2 CI, partial Windows compatibility fix; automated fixtures only",
+  "repository": "baizhanwen/liming-zhiyao-skill-collect",
+  "pull_request": 2,
+  "draft": true,
+  "head_sha": "6e441db96780394c65b79d8854bbb518383d6801",
+  "synthetic_merge_sha": "ff5bb4902568bf8769309a1d4a466bbe23f12787",
+  "run_id": 41302131269,
+  "run_attempt": 1,
+  "url": "https://github.com/baizhanwen/liming-zhiyao-skill-collect/actions/runs/41302131269",
+  "conclusion": "failure",
+  "completed_at": "2026-11-01T11:33:10Z",
+  "workflow_order": [
+    "locked production setup, frontend build and official Playwright Chromium install",
+    "restore locked development dependencies",
+    "pytest",
+    "read-only doctor only if prior steps pass"
+  ],
+  "runtime": {
+    "python": "3.12",
+    "node": "24",
+    "playwright": "1.64.1",
+    "chromium": "156.0.8078.4 / revision 1248",
+    "source": "official cdn.playwright.dev",
+    "system_ffmpeg_not_installed": true,
+    "playwright_bundled_ffmpeg_is_not_system_ffprobe": true
+  },
+  "jobs": [
+    {
+      "id": 124835118637,
+      "name": "Test and build (macos-latest)",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run astral-sh/setup-uv@v6",
+          "conclusion": "success"
+        },
+        {
+          "name": "macOS/Linux repeatable installation",
+          "conclusion": "success"
+        },
+        {
+          "name": "Windows repeatable installation",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Restore locked development dependencies after setup",
+          "conclusion": "success"
+        },
+        {
+          "name": "Core and connector contract tests (after browser installation)",
+          "conclusion": "success"
+        },
+        {
+          "name": "Local diagnostic (does not prove external connections)",
+          "conclusion": "success"
+        }
+      ],
+      "passed": 597,
+      "failed": 0,
+      "skipped": 18,
+      "seconds": 52.22,
+      "build_ms": 220
+    },
+    {
+      "id": 124835118947,
+      "name": "Test and build (windows-latest)",
+      "conclusion": "failure",
+      "steps": [
+        {
+          "name": "Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run astral-sh/setup-uv@v6",
+          "conclusion": "success"
+        },
+        {
+          "name": "macOS/Linux repeatable installation",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Windows repeatable installation",
+          "conclusion": "success"
+        },
+        {
+          "name": "Restore locked development dependencies after setup",
+          "conclusion": "success"
+        },
+        {
+          "name": "Core and connector contract tests (after browser installation)",
+          "conclusion": "failure"
+        },
+        {
+          "name": "Local diagnostic (does not prove external connections)",
+          "conclusion": "skipped"
+        }
+      ],
+      "passed": 609,
+      "failed": 1,
+      "skipped": 5,
+      "seconds": 125.26
+    },
+    {
+      "id": 124835118961,
+      "name": "Test and build (ubuntu-latest)",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Run actions/checkout@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run astral-sh/setup-uv@v6",
+          "conclusion": "success"
+        },
+        {
+          "name": "macOS/Linux repeatable installation",
+          "conclusion": "success"
+        },
+        {
+          "name": "Windows repeatable installation",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Restore locked development dependencies after setup",
+          "conclusion": "success"
+        },
+        {
+          "name": "Core and connector contract tests (after browser installation)",
+          "conclusion": "success"
+        },
+        {
+          "name": "Local diagnostic (does not prove external connections)",
+          "conclusion": "success"
+        }
+      ],
+      "passed": 597,
+      "failed": 0,
+      "skipped": 18,
+      "seconds": 12.72,
+      "build_ms": 150
+    }
+  ],
+  "frontend": {
+    "javascript": "index-DLla0KoL.js",
+    "css": "index-Dv1BBRwq.css",
+    "all_three_builds": "passed"
+  },
+  "skips": {
+    "unix": {
+      "windows_only_updater": 15,
+      "optional_system_media": 3
+    },
+    "windows": {
+      "existing_distribution_platform_cases": 2,
+      "optional_system_media": 3,
+      "new_updater_cases": 0
+    }
+  },
+  "windows_updater": {
+    "executed": 15,
+    "passed": 14,
+    "failed": 1,
+    "real_shells_exercised": [
+      "PowerShell 7 pwsh",
+      "Windows PowerShell 5.1 powershell.exe"
+    ],
+    "failed_cases": [
+      "successful NoStart update using Windows PowerShell 5.1"
+    ],
+    "confirmed": [
+      "pwsh successful update, reapply, hash and synthetic user-data preservation passed",
+      "Late uv.lock post-write injected failure marker was reached, full old tree restored, new JavaScript/CSS assets removed"
+    ],
+    "observations": [
+      "Only PS5.1 preflight remains failing",
+      "Fixed diagnostic reports package_check/UnexpectedError, no raw exception was emitted",
+      "Failure occurs before project metadata and Python probes"
+    ],
+    "next_diagnostic": "Split manifest/payload stages and emit a regex-validated exception type name plus integer source line, without raw message, paths or environment"
+  },
+  "boundaries": [
+    "No real Douyin, model, GitHub search or Feishu business call is part of CI",
+    "Browser runtime installation does not prove real capture",
+    "NoStart fixtures do not prove a customer double-click GUI upgrade",
+    "Windows doctor skipped after pytest failure",
+    "Raw logs, private paths, credentials and synthetic payload dumps are not copied into this report"
+  ],
+  "completed_at_basis": "Final Windows pytest log timestamp; final run metadata recorded separately"
+}

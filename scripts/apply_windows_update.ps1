@@ -127,11 +127,14 @@ try {
     if ($env:OS -ne 'Windows_NT') { Stop-Update '本升级器仅适用于 Windows。' }
     $Package = Assert-LocalPath $PSScriptRoot
     $ManifestPath = Join-Path $Package 'manifest.json'
+    $DiagnosticStage = 'manifest_hash'
     if ($ExpectedManifestSha256 -cnotmatch '^[0-9a-f]{64}$' -or (Hash-File $ManifestPath) -cne $ExpectedManifestSha256) {
         Stop-Update '补丁清单 SHA-256 校验失败，请重新获取完整升级包。'
     }
     if ((Get-Item -LiteralPath $ManifestPath).Length -gt 1048576) { Stop-Update '补丁清单超出大小限制。' }
+    $DiagnosticStage = 'manifest_read'
     $Manifest = Get-Content -LiteralPath $ManifestPath -Raw -Encoding UTF8 | ConvertFrom-Json
+    $DiagnosticStage = 'manifest_schema'
     Assert-Keys $Manifest @('schema_version', 'product', 'version', 'supported_versions', 'files')
     if ($Manifest.schema_version -ne 1 -or $Manifest.product -cne $Product -or $Manifest.version -cne '0.2.3' -or
         (@($Manifest.supported_versions) -join ',') -cne '0.2.2,0.2.3') { Stop-Update '此包不是本项目 0.2.3 专用升级包。' }
@@ -141,6 +144,7 @@ try {
     $Seen = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
     $Directories = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
     $Total = [long]0
+    $DiagnosticStage = 'payload_entries'
     foreach ($Entry in $Entries) {
         Assert-Keys $Entry @('path', 'size', 'sha256')
         if ($Entry.path -isnot [string] -or -not (Allowed-Relative $Entry.path) -or -not $Seen.Add($Entry.path) -or
@@ -156,6 +160,7 @@ try {
     if ($Total -gt 33554432) { Stop-Update '补丁总大小超限。' }
     foreach ($Required in @($StaticFiles + 'frontend/dist/index.html')) { if (-not $Seen.Contains($Required)) { Stop-Update '补丁缺少必要代码或版本文件。' } }
     if (-not @($Entries | Where-Object { $_.path -cmatch '^frontend/dist/assets/[A-Za-z0-9_-]+\.js$' }).Count) { Stop-Update '补丁缺少已构建前端。' }
+    $DiagnosticStage = 'payload_walk'
     $Pending = [System.Collections.Generic.Stack[string]]::new()
     $Pending.Push($Payload)
     $Checked = 0
@@ -256,9 +261,7 @@ try {
 } catch {
     $ExceptionType = $_.Exception.GetType().Name
     if ($_.Exception.InnerException) { $ExceptionType = $_.Exception.InnerException.GetType().Name }
-    if (@('IOException', 'UnauthorizedAccessException', 'ArgumentException', 'ArgumentNullException',
-        'InvalidOperationException', 'TimeoutException', 'Win32Exception', 'MethodInvocationException',
-        'RuntimeException') -cnotcontains $ExceptionType) { $ExceptionType = 'UnexpectedError' }
+    if ($ExceptionType -cnotmatch '^[A-Za-z][A-Za-z0-9]{0,63}$') { $ExceptionType = 'UnexpectedError' }
     $RollbackOk = $true
     if ($Backup -and $Committed.Count) {
         for ($Index = $Committed.Count - 1; $Index -ge 0; $Index--) {
@@ -275,8 +278,9 @@ try {
         }
     }
     Write-Host $FailureText -ForegroundColor Red
-    # Fixed stage and allowlisted exception type only: no paths, input or raw error.
+    # Fixed stage, validated type name and integer source line only; never raw error.
     Write-Host ('诊断代码：{0}/{1}' -f $DiagnosticStage, $ExceptionType)
+    Write-Host ('诊断行号：{0}' -f [int]$_.InvocationInfo.ScriptLineNumber)
     if ($Committed.Count) { if ($RollbackOk) { Write-Host '旧代码已恢复；未启动服务。' } else { Write-Host '恢复未完全确认；请保留项目内 .skill-collect-update-backups 备份并联系维护助手。' } }
     exit 1
 } finally {
