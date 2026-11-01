@@ -7,13 +7,14 @@ import uuid
 import threading
 from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import Literal
 from urllib.parse import urlsplit
 
 from fastapi import FastAPI, File, Form, Header, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.exceptions import RequestValidationError
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field, SecretStr, StrictInt
 
 from .connectors.github import GitHubConnector, GithubError
 from .connectors.feishu import FeishuConnector, FeishuError, DEFAULT_MAPPING
@@ -24,6 +25,7 @@ from .skills import SkillService
 from .store import Store, now
 from .sync import SyncService
 from .tasks import TaskRunner
+from .douyin_session import DouyinSessionService
 from . import __version__
 
 ROOT=Path(__file__).resolve().parent.parent
@@ -35,7 +37,18 @@ class TaskInput(BaseModel):
     depth: str = 'quick'
 
 
-def create_app(data_dir=None,start_worker=True,model_client=None,github_factory=None,connector_factory=None):
+class DouyinVerificationAction(BaseModel):
+    model_config=ConfigDict(extra='forbid')
+    frame_id: str = Field(min_length=1,max_length=80)
+    kind: Literal['click','text','key','refresh']
+    x: StrictInt | None = None
+    y: StrictInt | None = None
+    text: SecretStr | None = Field(default=None,max_length=128)
+    key: str | None = Field(default=None,max_length=20)
+
+
+def create_app(data_dir=None,start_worker=True,model_client=None,github_factory=None,connector_factory=None,
+               douyin_factory=None,douyin_diagnostic=None):
     # These clients log full signed request URLs at INFO and headers at DEBUG.
     # Keep private platform/session data out of service logs even when the host
     # application enables verbose logging for its own operational diagnostics.
@@ -47,7 +60,9 @@ def create_app(data_dir=None,start_worker=True,model_client=None,github_factory=
     models=ModelService(store,vault,client=model_client)
     github_factory=github_factory or (lambda:GitHubConnector(vault.get('github_token')))
     sync=SyncService(store,vault,skills,connector_factory=connector_factory)
-    runner=TaskRunner(store,vault,models,github_factory)
+    douyin=(douyin_factory or DouyinSessionService)(store,vault)
+    runner=TaskRunner(store,vault,models,github_factory,douyin_session=douyin)
+    douyin_diagnostic_lock=threading.Lock()
     generation_locks={}
     generation_guard=threading.Lock()
 
@@ -70,11 +85,13 @@ def create_app(data_dir=None,start_worker=True,model_client=None,github_factory=
             runner.start()
         yield
         runner.close()
+        douyin.close()
         if lockfile:lockfile.close()
 
     app=FastAPI(title='利明智耀.skill clloect',version=__version__,lifespan=lifespan)
     app.state.store,app.state.vault,app.state.skills=store,vault,skills
     app.state.models,app.state.runner,app.state.sync=models,runner,sync
+    app.state.douyin=douyin
 
     @app.middleware('http')
     async def local_boundary(request:Request,call_next):
@@ -193,7 +210,85 @@ def create_app(data_dir=None,start_worker=True,model_client=None,github_factory=
         s=settings()
         return {'name':'利明智耀.skill clloect','version':__version__,'mode':'local_single_user','counts':{k:len([v for v in store.list(k) if not v.get('archived')]) for k in ('tasks','knowledge','skills')},
                 'models':s['models'],'github_configured':s['github']['token_configured'],'feishu_configured':s['feishu']['secret_configured'],
+                'douyin':douyin.status(),
                 'diagnostics':{'ffmpeg':bool(shutil.which('ffmpeg')),'ffprobe':bool(shutil.which('ffprobe')),'sqlite':str(store.path),'frontend_built':(ROOT/'frontend/dist/index.html').exists(),'upload_limit_mb':100,'duration_limit_minutes':20,'concurrency':1}}
+
+    @app.get('/api/douyin/session')
+    def douyin_status():return douyin.status()
+
+    @app.get('/api/douyin/session/qr')
+    def douyin_qr(request:Request):
+        headers={'Cache-Control':'no-store, private','Pragma':'no-cache',
+            'Cross-Origin-Resource-Policy':'same-origin'}
+        if request.headers.get('sec-fetch-site') in ('cross-site','same-site'):
+            return Response(status_code=403,headers=headers)
+        image=douyin.qr_image(request.query_params.get('v'))
+        return Response(content=image or b'',status_code=200 if image else 404,
+            media_type='image/png',headers=headers)
+
+    @app.get('/api/douyin/session/verification')
+    def douyin_verification_image(request:Request):
+        headers={'Cache-Control':'no-store, private','Pragma':'no-cache',
+            'Cross-Origin-Resource-Policy':'same-origin'}
+        if request.headers.get('sec-fetch-site') in ('cross-site','same-site'):
+            return Response(status_code=403,headers=headers)
+        picture=douyin.verification_image(request.query_params.get('v'))
+        return Response(content=picture or b'',status_code=200 if picture else 404,
+            media_type='image/jpeg',headers=headers)
+
+    @app.post('/api/douyin/session/verification/action')
+    def douyin_verification_action(value:DouyinVerificationAction):
+        action=value.model_dump(exclude_none=True)
+        if value.text is not None:action['text']=value.text.get_secret_value()
+        return douyin.verification_action(action)
+
+    @app.post('/api/douyin/session/login')
+    def douyin_login():return douyin.start_login()
+
+    @app.post('/api/douyin/session/check')
+    def douyin_check():return douyin.check_login()
+
+    @app.post('/api/douyin/session/cancel')
+    def douyin_cancel():return douyin.cancel_login()
+
+    @app.post('/api/douyin/session/clear')
+    def douyin_clear():
+        # Stop account-backed acquisition before discarding its local session.
+        # Already prepared media/model stages do not retain the browser state.
+        from .media import extract_url, _douyin_host
+        with runner.mutex:
+            for task in store.list('tasks'):
+                if task.get('status')!='running' or task.get('stage')!='fetch':continue
+                try:is_douyin=_douyin_host(urlsplit(extract_url(task.get('input',''))).hostname or '')
+                except AppError:is_douyin=False
+                if is_douyin:runner.cancel(task['id'])
+            return douyin.clear()
+
+    @app.post('/api/douyin/diagnose')
+    def douyin_diagnose(value:TaskInput):
+        from scripts.diagnose_douyin import normalize_input, runtime_check, run_network_worker
+        url=normalize_input(value.input)
+        if not url:raise AppError('douyin_input','请提供有效的HTTPS抖音分享链接')
+        if not douyin_diagnostic_lock.acquire(blocking=False):
+            raise AppError('douyin_diagnostic_busy','正在检查抖音连接，请等待本次结果',status=409)
+        try:
+            if douyin_diagnostic:
+                return douyin_diagnostic(url)
+            network=run_network_worker(url,ROOT)
+            category=network.get('category')
+            descriptions={'dns':'抖音来源域名解析未完成','tls':'抖音来源TLS验证未通过',
+                'timeout':'抖音分享页读取超过等待时限','http_status':'抖音分享页返回了HTTP错误状态',
+                'redirect_limit':'抖音分享页跳转次数超过上限','connection':'未能建立抖音来源连接',
+                'public_address_guard':'抖音来源地址未通过公网校验','non_platform_redirect':'分享页跳转到了不支持的平台',
+                'non_page_response':'分享链接没有返回可诊断的网页','page_size_limit':'分享页超过诊断大小上限',
+                'missing_dependencies':'项目依赖缺失，请重新运行安装程序'}
+            if network.get('status')=='page_received':
+                summary=('分享页和目标跳转可读取；尚未验证原片获取或模型分析'
+                    if network.get('platform_url_has_video_id') else '分享页已返回，但还没有确认目标视频标识')
+            else:summary=descriptions.get(category,'抖音分享页检查未完成，请核对运行条件后重试')
+            return {'summary':summary,'network':network,'runtime':runtime_check(ROOT),
+                'scope':'只检查公开分享页与运行时，不使用账号会话，不调用模型；结果不等于原片获取成功'}
+        finally:douyin_diagnostic_lock.release()
 
     @app.post('/api/models/{cap}/test')
     def probe(cap:str):

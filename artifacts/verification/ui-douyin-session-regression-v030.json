@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "application_version": "0.3.0",
+  "kind": "independent_local_ui_regression",
+  "result": "passed",
+  "build": {
+    "javascript": "index-IXkYamCk.js",
+    "css": "index-L-EqrMka.css",
+    "built_by": "root agent (earlier window-only candidate)"
+  },
+  "run": {
+    "started_at": "2026-11-01T05:28:29.928Z",
+    "duration_ms": 11523,
+    "passed": 5,
+    "failed": 0,
+    "skipped": 0,
+    "flaky": 0,
+    "tests": [
+      {
+        "name": "真实本地服务：无配置、编辑、包往返、字幕待配置、错误与窄屏操作",
+        "status": "passed",
+        "duration_ms": 7096,
+        "attempts": 1
+      },
+      {
+        "name": "飞书UI契约：普通导入提示旧包，明确确认后刷新企业附件并呈现保留企业版结果",
+        "status": "passed",
+        "duration_ms": 1116,
+        "attempts": 1
+      },
+      {
+        "name": "模型高级设置UI契约：输出上限整数校验与DeepSeek官方host专属推理选项",
+        "status": "passed",
+        "duration_ms": 680,
+        "attempts": 1
+      },
+      {
+        "name": "模型诊断UI契约：失败回答仅按需读取并单独展开，不发起模型请求",
+        "status": "passed",
+        "duration_ms": 716,
+        "attempts": 1
+      },
+      {
+        "name": "MiniMax提示UI契约：精确官方主机显示原生路径，独立配置不复制模型或密钥",
+        "status": "passed",
+        "duration_ms": 654,
+        "attempts": 1
+      }
+    ]
+  },
+  "scope": {
+    "real_local_temp_service_tests": 1,
+    "explicit_ui_contract_tests": 4,
+    "production_data_read_or_modified": false,
+    "real_model_calls": false,
+    "real_douyin_login_or_browser_launch": false,
+    "real_github_or_feishu_calls": false
+  },
+  "boundary": "One real local CRUD/ZIP/subtitle-waiting-config/mobile flow in temporary data; four explicit Feishu/model-setting/diagnostics UI contracts. No user data, real credentials or real Douyin login were involved.",
+  "new_ui_contract_report": "ui-douyin-session-contract-v030.json",
+  "not_a_single_combined_9_test_run": true,
+  "not_a_full_17_test_suite_run": true,
+  "relationship_to_final_build": "This 5-test run used index-IXkYamCk.js, before saved-session check and in-page QR/restart changes. It was not rerun after those changes; the final 4-test contract report identifies its own newer build."
+}

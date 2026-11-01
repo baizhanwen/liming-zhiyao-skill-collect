@@ -1,0 +1,43 @@
+{
+  "recorded_at": "2026-11-01T06:49:20.343604+00:00",
+  "kind": "explicit_offline_contract_and_safety_regression",
+  "scope": "Dedicated login modal lifecycle, source PNG relay, proof-page isolation and existing browser/session integration fixtures",
+  "pytest": {
+    "passed": 359,
+    "failed": 0,
+    "skipped": 0,
+    "seconds": 25.04,
+    "warnings": 1,
+    "warning_scope": "upstream Starlette TestClient httpx deprecation"
+  },
+  "command": ".venv/bin/python -m pytest -q tests/test_douyin_login.py tests/test_douyin_verification.py tests/test_douyin_mfa_lifecycle.py tests/test_douyin_browser_session.py tests/test_browser_capture_review.py tests/test_browser_capture.py tests/test_browser_environment.py tests/test_media_browser_fallback.py tests/test_douyin_session.py tests/test_douyin_application.py",
+  "checks": {
+    "node_syntax": true,
+    "git_diff_check": true
+  },
+  "new_lifecycle_contracts": 21,
+  "covered": [
+    "Same verification modal remains active after identity heading becomes SMS step",
+    "View screenshot, user input and final proof share the modal tracker",
+    "Unknown/replacement verification root stays latched and clears frames",
+    "Known background DOM identity cannot excuse a replacement modal containing QR",
+    "Original QR dataPNG is relayed without element screenshot; SMS occlusion clears QR",
+    "Original input page is navigated once only; self-proof uses a separate same-context page",
+    "Late response body from original page cannot serve as fresh probe proof",
+    "Probe page requiring MFA returns a fixed failure rather than waiting invisibly or declaring success"
+  ],
+  "external_business_requests": 0,
+  "boundaries": [
+    "Existing browser runtime fixture uses explicit Mock transport; it is not a real Douyin login or capture",
+    "No real SMS, model or Feishu call; no user browser or saved state was inspected",
+    "Actual official authentication and persistence require separate live validation",
+    "A new MFA challenge on the proof-only page is not adopted; current attempt exits with douyin_session_verification_required",
+    "Unidentifiable or replaced verification modal remains conservatively incomplete"
+  ],
+  "source_hashes": {
+    "frontend/scripts/douyin-login.mjs": "fa050d46a6f5e4067f98b60748255a4fa1671368b1e55067537fb9f73d9aabca",
+    "tests/test_douyin_login.py": "a90a2c0cfb901439ede7bb1aef3438563227de2b98eb2deada71b28afac54882",
+    "tests/test_douyin_verification.py": "484ba5e643ef58d39f839f46bd3b70c560cd47a6318893d8a95e92f940074228",
+    "tests/test_douyin_mfa_lifecycle.py": "8ce247be1752f7365021b8968a7734f71c74f94214ddf49cd3b8d12f233cfba6"
+  }
+}

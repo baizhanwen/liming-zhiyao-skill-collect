@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "application_version": "0.3.0",
+  "kind": "explicit_ui_contract_targeted_followup",
+  "result": "passed",
+  "build": {
+    "javascript": "index-Cb-B9R3b.js",
+    "css": "index-CaADxVxN.css"
+  },
+  "run": {
+    "started_at": "2026-11-01T05:51:17.953Z",
+    "duration_ms": 10463,
+    "passed": 2,
+    "failed": 0,
+    "skipped": 0,
+    "flaky": 0,
+    "tests": [
+      {
+        "name": "抖音会话界面契约：1440px入口、扫码检查、取消与清除",
+        "status": "passed",
+        "duration_ms": 4230,
+        "attempts": 1
+      },
+      {
+        "name": "抖音会话界面契约：390px入口、扫码检查、取消与清除",
+        "status": "passed",
+        "duration_ms": 3923,
+        "attempts": 1
+      }
+    ]
+  },
+  "viewports": [
+    {
+      "width": 1440,
+      "height": 1100
+    },
+    {
+      "width": 390,
+      "height": 844
+    }
+  ],
+  "checks": [
+    "waiting_confirmation is accepted as the tenth status and displays phone-confirmation/automatic-verification guidance",
+    "The state remains active even with browser_open=false, so explicit check and cancellation remain available",
+    "QR and QR restart are hidden even if an older qr_available=true is received",
+    "After qr_available becomes false, the image stays hidden",
+    "The explicit check sends the existing POST check; no extra POST login occurs before the user later chooses re-login",
+    "UI guidance states that check does not refresh the login challenge; this UI contract does not itself prove a real upstream nonce was preserved",
+    "The existing login/check/clear/cancel flow and no-horizontal-overflow assertions pass in both viewports"
+  ],
+  "boundary": "Only the affected desktop/mobile cases were rerun. Session responses and local non-QR PNG are explicitly mocked; no real scan, phone confirmation, user session, model, GitHub or Feishu service was used.",
+  "scope": {
+    "defined_tests": 17,
+    "executed_here": 2,
+    "real_login_or_phone_confirmation": false,
+    "production_data_read_or_modified": false,
+    "real_model_calls": false
+  },
+  "previous_contract": "ui-douyin-session-contract-v030.json",
+  "history_note": "The previous 4-test QR report and its screenshots retain their earlier index-BNpAMcPi.js build identity; they were not overwritten or relabeled as a final four-test rerun. The independent earlier workbench 5-test report also remains unchanged.",
+  "screenshots": [
+    {
+      "file": "ui-douyin-confirmation-desktop-contract-v030.png",
+      "sha256": "f8d50cfe556f1babe73f72d337f631feae66f11600aea9ff6a8bd7e20cb6277c",
+      "contains": "explicit contract label; no real QR or account"
+    },
+    {
+      "file": "ui-douyin-confirmation-mobile-contract-v030.png",
+      "sha256": "761541cb2f0f46176fc9f875485b53026e2251983f7a643e157e550f6cf8b176",
+      "contains": "explicit contract label; no real QR or account"
+    }
+  ]
+}

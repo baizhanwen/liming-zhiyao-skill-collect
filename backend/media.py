@@ -14,7 +14,7 @@ from .security import AppError, fetch_public
 MAX_UPLOAD = 100*1024*1024
 MAX_DURATION = 1200
 ALLOWED = {'.mp4','.mov','.mkv','.webm','.m4v','.mp3','.wav','.m4a','.srt','.vtt','.txt'}
-_PROGRESS_PHASES = {'public_page', 'browser', 'validating_media', 'merging_media', 'audio_chunks', 'frames'}
+_PROGRESS_PHASES = {'public_page', 'resolving_share', 'browser', 'validating_media', 'merging_media', 'audio_chunks', 'frames'}
 _PROGRESS_COUNTS = {'completed', 'total', 'requests', 'downloaded_bytes', 'proxy_connections',
                     'proxy_bytes', 'media_responses', 'complete_bound_media'}
 
@@ -239,7 +239,7 @@ def _published_media(page, video_id):
     return candidates[:4]
 
 
-def _browser_douyin_source(url, folder, video_id, cancelled=None, *, progress_callback=None):
+def _browser_douyin_source(url, folder, video_id, cancelled=None, *, progress_callback=None, storage_state=None):
     """Product-owned rendering fallback; metadata alone can never be a source."""
     from .browser_capture import capture_douyin
     _notify_progress(progress_callback, 'browser')
@@ -268,6 +268,8 @@ def _browser_douyin_source(url, folder, video_id, cancelled=None, *, progress_ca
     options = {'video_id': video_id, 'timeout': 180, 'max_bytes': MAX_UPLOAD, 'cancelled': cancelled}
     if progress_callback is not None:
         options['progress_callback'] = browser_progress
+    if storage_state is not None:
+        options['storage_state'] = storage_state
     captured=capture_douyin(f'https://www.douyin.com/video/{video_id}',folder,**options)
     if str(captured.get('observed_video_id'))!=str(video_id):
         raise AppError('douyin_browser_identity','自动采集的视频标识与分享链接不一致')
@@ -348,6 +350,7 @@ def _browser_douyin_source(url, folder, video_id, cancelled=None, *, progress_ca
         acquisition={key:meta[key] for key in ('requests','downloaded_bytes','blocked_requests',
             'renderer_version','identity_metadata_sha256','native_origin_tls','proxy_connections',
             'proxy_bytes') if key in meta}
+        if type(meta.get('session_used')) is bool:acquisition['session_used']=meta['session_used']
         acquisition.update(method='project_browser',media_sha256=hashlib.sha256(final.read_bytes()).hexdigest())
         acquisition.update(media_bytes=final.stat().st_size,probe=probe,component_media_sha256=components)
         result={'platform':'douyin','url':url,'resolved_url':resolved,'video_id':str(video_id),
@@ -359,7 +362,7 @@ def _browser_douyin_source(url, folder, video_id, cancelled=None, *, progress_ca
         part.unlink(missing_ok=True)
 
 
-def douyin_source(url, folder, *, cancelled=None, progress_callback=None):
+def douyin_source(url, folder, *, cancelled=None, progress_callback=None, storage_state=None):
     parsed=urlsplit(url)
     if not _douyin_host(parsed.hostname or ''):
         raise AppError('unsupported_source', '当前仅支持 GitHub、抖音链接和文件上传')
@@ -369,6 +372,13 @@ def douyin_source(url, folder, *, cancelled=None, progress_callback=None):
         raise AppError('unsafe_url','请提供无认证信息的抖音分享链接')
     folder = Path(folder)
     pages, tried, video_id = [url], set(), _video_id(url)
+    if storage_state is not None:
+        # Account state belongs only to the project browser. Do not copy its
+        # cookies to generic HTTP requests or continue anonymously by accident.
+        if not video_id:
+            video_id=_resolve_douyin_source_id(url,folder,storage_state,cancelled,progress_callback)
+        return _browser_douyin_source(url,folder,video_id,cancelled=cancelled,
+            progress_callback=progress_callback,storage_state=storage_state)
     last_error = None
     responses = downloaded_bytes = 0
     _notify_progress(progress_callback, 'public_page', completed=0, requests=0, downloaded_bytes=0)
@@ -438,6 +448,8 @@ def douyin_source(url, folder, *, cancelled=None, progress_callback=None):
             last_error = exc
         except Exception:
             last_error = AppError('douyin_fetch', '抖音公开页获取未完成，请检查网络或补传视频', True)
+    if not video_id:
+        video_id=_resolve_douyin_source_id(url,folder,None,cancelled,progress_callback)
     if video_id:
         if progress_callback is not None:
             return _browser_douyin_source(url,folder,video_id,cancelled=cancelled,progress_callback=progress_callback)
@@ -445,3 +457,27 @@ def douyin_source(url, folder, *, cancelled=None, progress_callback=None):
     if last_error:
         raise AppError('douyin_fetch', '项目未能解析此抖音原视频，请检查网络或平台访问限制；没有用网页摘要代替原片', last_error.retryable)
     raise AppError('douyin_material', '项目未能取得当前原视频标识；没有用网页标题或摘要代替原片')
+
+
+def _resolve_douyin_source_id(url,folder,storage_state,cancelled,progress_callback):
+    """Resolve the original official share redirect with the project browser."""
+    from .browser_capture import resolve_douyin_url
+    _notify_progress(progress_callback,'resolving_share',completed=0,total=1)
+    options={'cancelled':cancelled,'progress_callback':progress_callback}
+    if storage_state is not None:options['storage_state']=storage_state
+    resolved=resolve_douyin_url(url,folder,**options)
+    if (not isinstance(resolved,dict) or resolved.get('method')!='official_browser_redirect'
+            or not isinstance(resolved.get('video_id'),str)
+            or not re.fullmatch(r'[0-9]{1,32}',resolved['video_id'])):
+        raise AppError('douyin_browser_identity','项目浏览器没有确认原始分享链接的视频标识')
+    canonical=resolved.get('resolved_url','')
+    try:
+        parsed=urlsplit(canonical)
+        valid=(parsed.scheme=='https' and not parsed.username and not parsed.password
+            and parsed.port in (None,443) and _douyin_host(parsed.hostname or '')
+            and _video_id(canonical)==resolved['video_id'])
+    except (ValueError,TypeError):valid=False
+    if not valid:
+        raise AppError('douyin_browser_identity','分享跳转没有指向同一目标的官方视频页')
+    _notify_progress(progress_callback,'resolving_share',completed=1,total=1)
+    return resolved['video_id']

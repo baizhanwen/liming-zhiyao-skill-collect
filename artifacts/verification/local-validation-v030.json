@@ -1,0 +1,43 @@
+{
+  "version": "0.3.0",
+  "date": "2026-11-01",
+  "scope": "Latest backend and Node offline contracts; frontend current privacy fix and earlier impacted-contract runs recorded independently. Real auth separate.",
+  "pytest": {
+    "passed": 777,
+    "failed": 0,
+    "skipped": 0,
+    "seconds": 42.23,
+    "junit": "pytest-v030.xml"
+  },
+  "frontend": {
+    "build": "passed",
+    "javascript": "index-BcjBchrg.js",
+    "css": "index-jPAKYIil.css",
+    "current_privacy_case": {
+      "passed": 1,
+      "seconds": 11.6,
+      "report": "ui-douyin-verification-focus-contract-v030.json"
+    },
+    "previous_verification_and_impacted_cases": {
+      "passed": 4,
+      "seconds": 13.9,
+      "javascript": "index-LjXYgJxm.js"
+    },
+    "not_one_combined_ui_run": true
+  },
+  "doctor": "passed local-only; not external acceptance",
+  "data_preservation": {
+    "retained_entity_count": 99,
+    "entities_unchanged": true,
+    "credential_files_unchanged": true,
+    "scope": "controlled restart before user QR login; excludes connection status metadata"
+  },
+  "new_dependencies": false,
+  "real_authenticated_douyin_media": "pending new real account test after reviewed MFA lifecycle fixes",
+  "customer_windows_business": "unverified",
+  "model_calls_started_by_login_tests": 0,
+  "feishu_writes": 0,
+  "reviewed_node_sha256": "d9bc3b86cbccf5d44e8dd330fc463b9e2f09cfe2618196108ab7961ddbf3f16f",
+  "independent_review": "completed with no unresolved blocker; offline review does not establish real account login",
+  "initial_login_entry": "official homepage; check and independent proof remain self page"
+}

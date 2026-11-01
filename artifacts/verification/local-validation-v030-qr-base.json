@@ -1,0 +1,34 @@
+{
+  "version": "0.3.0",
+  "date": "2026-11-01",
+  "scope": "Local implementation and explicitly mocked external-service contracts; real QR bridge recorded separately.",
+  "pytest": {
+    "passed": 663,
+    "failed": 0,
+    "skipped": 0,
+    "seconds": 18.02,
+    "junit": "pytest-v030.xml"
+  },
+  "frontend": {
+    "build": "passed",
+    "javascript": "index-BNpAMcPi.js",
+    "css": "index-CaADxVxN.css",
+    "current_session_contract_cases": 4,
+    "current_contract_seconds": 20.9,
+    "earlier_workbench_regression_cases": 5,
+    "earlier_build_javascript": "index-IXkYamCk.js",
+    "not_a_single_combined_ui_run": true
+  },
+  "doctor": "passed local-only; not external acceptance",
+  "data_preservation": {
+    "retained_entity_count": 99,
+    "entities_unchanged": true,
+    "credential_files_unchanged": true,
+    "scope": "controlled restart before user QR login; excludes connection status metadata"
+  },
+  "new_dependencies": false,
+  "real_authenticated_douyin_media": "pending user QR confirmation",
+  "customer_windows_business": "unverified",
+  "model_calls_started_by_login_tests": 0,
+  "feishu_writes": 0
+}

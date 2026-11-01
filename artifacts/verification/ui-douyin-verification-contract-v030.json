@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "application_version": "0.3.0",
+  "kind": "explicit_ui_contract",
+  "result": "passed",
+  "build": {
+    "javascript": "index-LjXYgJxm.js",
+    "css": "index-Bqusu-Ej.css"
+  },
+  "run": {
+    "started_at": "2026-11-01T06:21:47.764Z",
+    "duration_ms": 13886,
+    "passed": 4,
+    "failed": 0,
+    "skipped": 0,
+    "flaky": 0,
+    "tests": [
+      {
+        "name": "抖音会话界面契约：失败任务入口、验证码与网络错误不冒充登录成功",
+        "status": "passed",
+        "duration_ms": 3909,
+        "attempts": 1
+      },
+      {
+        "name": "官方验证视图契约：1440px等比及放大坐标、旧帧锁定、临时输入清空",
+        "status": "passed",
+        "duration_ms": 1259,
+        "attempts": 1
+      },
+      {
+        "name": "官方验证视图契约：390px等比及放大坐标、旧帧锁定、临时输入清空",
+        "status": "passed",
+        "duration_ms": 1294,
+        "attempts": 1
+      },
+      {
+        "name": "官方验证视图契约：缺帧/图片错误/断连/不确定动作只等待新帧且不重发",
+        "status": "passed",
+        "duration_ms": 6124,
+        "attempts": 1
+      }
+    ]
+  },
+  "scope": {
+    "new_verification_cases": 3,
+    "affected_existing_session_cases": 1,
+    "defined_total": 20,
+    "full_suite_rerun": false,
+    "production_data_read_or_modified": false,
+    "real_sms_or_verification_request": false,
+    "real_otp_or_account_input": false,
+    "real_model_calls": false
+  },
+  "viewports": [
+    {
+      "width": 1440,
+      "height": 1100
+    },
+    {
+      "width": 390,
+      "height": 844
+    }
+  ],
+  "fixture": "Locally drawn 1280x800 JPEG visibly marked CONTRACT / NOT OFFICIAL. All official-view APIs were explicitly intercepted; no official verification challenge was accessed.",
+  "checks": [
+    "Official view appears only in verification_required and is removed on cancellation or login success",
+    "Fit-width and 150-percent zoom map actual pointer geometry to bounded integer original coordinates in both viewports; zoom scrolls inside its container without page overflow",
+    "Primary pointer down/up stays bound to the same frame; consumed UUID and deliberately late old snapshots cannot replay actions",
+    "Text input uses password presentation and maxLength 128; send clears local state immediately, does not render or console-log the content, and publishes only text length in test metadata",
+    "Only explicit user click/text/Tab/Enter/Backspace/refresh actions are sent; no automatic SMS, answer, input or POST retry",
+    "Refresh requires a current available unconsumed frame; image failure can explicitly refresh only while that frame remains valid",
+    "Missing frames, read failures and uncertain POST results disable interactions and wait for a fresh loaded UUID; unsafe reflected HTTP errors are not rendered",
+    "Safe verification_error guidance appears without treating HTTP receipt as an official action or identity-verification success",
+    "Restart during verification explicitly says it abandons verification and starts a new scan"
+  ],
+  "coordinate_fixture": {
+    "original_width": 1280,
+    "original_height": 800,
+    "fit_target": [
+      640,
+      400
+    ],
+    "fit_tolerance_original_pixels": 2,
+    "zoom150_target": [
+      80,
+      60
+    ],
+    "zoom150_tolerance_original_pixels": 1
+  },
+  "iteration_note": "Initial 390px fit mapping failed because legacy MouseEvent rounded a fractional CSS coordinate. PointerEvent preserves it; original tolerance assertions were retained. Failed candidate/geometry diagnostics remain local and were not relabeled as passes.",
+  "boundary": "This verifies the browser UI and explicitly mocked contracts. It does not prove real SMS delivery, user-entered OTP, real phone identity verification or login completion.",
+  "privacy_note": "Published reports contain no transient input values, live frames, phone numbers, account details or credentials.",
+  "screenshots": [
+    {
+      "file": "ui-douyin-verification-desktop-contract-v030.png",
+      "sha256": "2b1d1473759009d3ba0abf3cdc42e4f3f503389dc463fcfb24f64957ccb58a27",
+      "contains": "CONTRACT / NOT OFFICIAL fixture; empty local input; no real verification data"
+    },
+    {
+      "file": "ui-douyin-verification-mobile-contract-v030.png",
+      "sha256": "8d6d7a54ca5ed66e3cb108ce3d1748c76dda46bd1949b2e34acbc10355bfcea8",
+      "contains": "CONTRACT / NOT OFFICIAL fixture; empty local input; no real verification data"
+    }
+  ],
+  "followup_report": "ui-douyin-verification-privacy-contract-v030.json"
+}

@@ -1,0 +1,13 @@
+{
+  "date": "2026-11-01",
+  "scope": "First real use of in-workbench official verification view",
+  "status": "失败",
+  "user_observation": "project returned to QR pane while entering SMS verification",
+  "official_page_observation": "SMS verification step still visible; no input value read or recorded",
+  "workbench_status_observation": "checking; QR available; official verification frame unavailable; no saved session",
+  "screenshot_defect": "QR pane displayed an overlay fragment containing an input placeholder instead of a QR image",
+  "cause_confirmed": "QR element rectangle screenshot can capture an overlaid verification dialog; initial-title-only verification detection misses the SMS step",
+  "private_inputs_saved": false,
+  "model_calls_started": 0,
+  "next_fix": "MFA-root lifecycle latch and original PNG image forwarding with occlusion guard; new real validation still required"
+}

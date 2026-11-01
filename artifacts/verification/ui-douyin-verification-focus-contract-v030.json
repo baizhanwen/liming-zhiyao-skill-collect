@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "application_version": "0.3.0",
+  "kind": "explicit_ui_contract_targeted_focus_followup",
+  "result": "passed",
+  "build": {
+    "javascript": "index-BcjBchrg.js",
+    "css": "index-jPAKYIil.css"
+  },
+  "run": {
+    "started_at": "2026-11-01T06:46:07.801Z",
+    "duration_ms": 11636,
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "flaky": 0,
+    "tests": [
+      {
+        "name": "官方验证视图契约：缺帧/图片错误/断连/不确定动作只等待新帧且不重发",
+        "status": "passed",
+        "duration_ms": 9409,
+        "attempts": 1
+      }
+    ]
+  },
+  "scope": {
+    "executed_here": 1,
+    "defined_total": 20,
+    "full_suite_rerun": false,
+    "real_sms_or_verification_request": false,
+    "real_otp_or_account_input": false,
+    "production_data_read_or_modified": false,
+    "real_model_calls": false
+  },
+  "checks": [
+    "Automatic new UUID poll with delayed JPEG preserves local masked input focus and length before and after image load",
+    "Only local temporary typing is enabled on an available unconsumed connected frame; official click, Enter and submit remain disabled until the new image loads",
+    "Submitting still consumes the UUID and clears input immediately; stale frames cannot replay actions",
+    "Disconnect disables and clears input; leaving verification removes it and remount starts empty",
+    "Uncertain responses are not replayed or reflected; test and public metadata contain no input values"
+  ],
+  "boundary": "Only the existing affected privacy case was rerun after separating local temporary input eligibility from official action eligibility. Earlier 4-case and 1-case runs retain their original build identities; no full-suite or real official verification claim is made.",
+  "previous_report": "ui-douyin-verification-privacy-contract-v030.json",
+  "final_source_and_build_frozen": true
+}

@@ -17,8 +17,9 @@ TERMINAL = {'succeeded','failed','cancelled','waiting_config','waiting_material'
 
 
 class TaskRunner:
-    def __init__(self,store,vault,models,github_factory):
+    def __init__(self,store,vault,models,github_factory,douyin_session=None):
         self.store,self.vault,self.models,self.github_factory=store,vault,models,github_factory
+        self.douyin_session=douyin_session
         self.stop=threading.Event()
         self.wake=threading.Event()
         self.thread=None
@@ -351,10 +352,22 @@ class TaskRunner:
                         if hasattr(connector,'close'):connector.close()
                     source['basis']='source_files'
                 else:
-                    self.stage(id,'fetch','自动读取抖音原片；由项目采集器处理，无需 Codex 或手动下载')
+                    options={}
+                    if self.douyin_session is not None:
+                        session=self.douyin_session.status()
+                        if session.get('browser_open') or session.get('status') in (
+                                'opening','waiting_scan','waiting_confirmation','checking','verification_required'):
+                            raise AppError('douyin_login_pending','请先在项目的抖音登录窗口完成登录与验证，再继续本任务')
+                        state=self.douyin_session.storage_state()
+                        if state is not None:options['storage_state']=state
+                        elif session.get('status')=='expired':
+                            raise AppError('douyin_session_expired','抖音登录会话已失效，请在设置中重新登录后继续本任务')
+                    message=('使用本机已验证抖音会话读取原片；登录状态不会发送给模型'
+                        if options else '自动读取抖音原片；由项目采集器处理，无需 Codex 或手动下载')
+                    self.stage(id,'fetch',message)
                     source=douyin_source(url,folder,cancelled=lambda:self.stop.is_set() or
                         (self.store.get('tasks',id) or {}).get('status')=='cancelled',
-                        progress_callback=self.observer(id,'fetch'))
+                        progress_callback=self.observer(id,'fetch'),**options)
             source['original_input']=task['input']
             source['acquired_at']=now()
             source['snapshot_hash']=hashlib.sha256(json.dumps(source,sort_keys=True,ensure_ascii=False).encode()).hexdigest()

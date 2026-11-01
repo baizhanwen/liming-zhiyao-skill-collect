@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "application_version": "0.3.0",
+  "kind": "explicit_ui_contract",
+  "result": "passed",
+  "build": {
+    "javascript": "index-BNpAMcPi.js",
+    "css": "index-CaADxVxN.css",
+    "built_by": "frontend agent; final QR/restart build; no subsequent source edits"
+  },
+  "run": {
+    "started_at": "2026-11-01T05:41:33.432Z",
+    "duration_ms": 20909,
+    "passed": 4,
+    "failed": 0,
+    "skipped": 0,
+    "flaky": 0,
+    "tests": [
+      {
+        "name": "抖音会话界面契约：1440px入口、扫码检查、取消与清除",
+        "status": "passed",
+        "duration_ms": 4146,
+        "attempts": 1
+      },
+      {
+        "name": "抖音会话界面契约：390px入口、扫码检查、取消与清除",
+        "status": "passed",
+        "duration_ms": 3760,
+        "attempts": 1
+      },
+      {
+        "name": "抖音会话界面契约：轮询串行、断连保留、离开停止读取且不重复登录",
+        "status": "passed",
+        "duration_ms": 6971,
+        "attempts": 1
+      },
+      {
+        "name": "抖音会话界面契约：失败任务入口、验证码与网络错误不冒充登录成功",
+        "status": "passed",
+        "duration_ms": 3764,
+        "attempts": 1
+      }
+    ]
+  },
+  "environment": {
+    "platform": "macOS",
+    "browser": "Google Chrome via Playwright",
+    "viewports": [
+      {
+        "width": 1440,
+        "height": 1100
+      },
+      {
+        "width": 390,
+        "height": 844
+      }
+    ],
+    "service": "isolated temporary FastAPI process; all session responses explicitly intercepted",
+    "production_data_read_or_modified": false,
+    "real_douyin_login_or_browser_launch": false,
+    "real_model_calls": false,
+    "real_github_or_feishu_calls": false
+  },
+  "checks": [
+    "Home and failed acquisition task navigate to the single settings session card; Home has no duplicate session polling",
+    "Desktop and 390px login/check/cancel/clear buttons work; POST bodies contain only an empty object",
+    "All nine statuses covered: signed_out/opening/waiting_scan/checking/logged_in/expired/verification_required/failed/cancelled",
+    "Active QR availability renders the same-origin PNG API with qr_updated_at in the URL; waiting for an unavailable QR remains explicit",
+    "The local contract PNG is decoded by the browser; no-store and two distinct image versions are verified; screenshot visibly says NOT A QR CODE",
+    "Image load failure is explicit and can reload; it never fabricates login success",
+    "Login success and cancellation remove the image; closed verification windows allow a new login",
+    "Explicit QR restart calls POST login, removes the old image, waits for a new QR, and uses its new version; GET status refresh is not labeled QR restart",
+    "Saved logged-in and expired sessions can explicitly POST check; headless checking has no QR-restart button and does not ask the user to scan",
+    "Session verification, saved session and video acquisition remain distinct; clear warns that an active acquisition stops but saved content remains",
+    "Polling waits 2.5 seconds after each read; slow reads never overlap; unmount stops reads and late response updates",
+    "Read failures retain previous state and qualify stale verification; operation failures do not automatically repeat login or invoke tasks/models",
+    "Desktop and 390px have no horizontal overflow; completed interaction flows have no uncaught browser exceptions"
+  ],
+  "screenshots": [
+    {
+      "file": "ui-douyin-session-desktop-contract-v030.png",
+      "sha256": "0d78490d64dd2e522c52790eeef788a5a48c745d9d0d92aa58c2e8ae56466984",
+      "contains": "explicit contract label and NOT A QR CODE fixture; no real account or login token"
+    },
+    {
+      "file": "ui-douyin-session-mobile-contract-v030.png",
+      "sha256": "2ec3d196aefe1bd4299484b99ec939d7fbce09a239c33c2be992ab23a9e0db94",
+      "contains": "explicit contract label and NOT A QR CODE fixture; no real account or login token"
+    }
+  ],
+  "boundary": "Final 4-test UI contract run. Session states and PNG responses are explicitly intercepted; this does not prove real official QR display, a real scan, session validity, video acquisition or model analysis.",
+  "regression_report": "ui-douyin-session-regression-v030.json",
+  "suite_scope": "17 tests are defined. Only these 4 were rerun on the final QR/restart build. The earlier 5-test workbench run retains its earlier build identity; the other 13 were not rerun on the final build. This is not a full 17-test run.",
+  "render_phase": "in_page_official_qr",
+  "qr_fixture": "Explicit local PNG with CONTRACT / NOT A QR CODE text, served by the intercepted same-origin image API; not a real or simulated scannable QR.",
+  "history_note": "Earlier window-only, saved-check and QR candidates remain in local temporary run folders. This unpublished report and screenshots now describe the final in-page QR behavior. The independent 5-test regression report retains its earlier build identity."
+}
