@@ -70,5 +70,17 @@
     "report": "github-ci-v023.json",
     "windows_updater_cases_actually_executed": 17,
     "customer_gui_and_business": "待外部条件"
+  },
+  "primary_workspace_redeployment": {
+    "retained_entity_count": 115,
+    "entities_unchanged": true,
+    "credential_files_unchanged": true,
+    "scope": "return primary workspace to released main and standard start.sh; read-only comparison before any new work",
+    "application_version": "0.2.3",
+    "runtime_files_match_release_payload": 13,
+    "frontend_javascript": "index-DLla0KoL.js",
+    "frontend_css": "index-Dv1BBRwq.css",
+    "additional_model_calls": 0,
+    "feishu_writes": 0
   }
 }

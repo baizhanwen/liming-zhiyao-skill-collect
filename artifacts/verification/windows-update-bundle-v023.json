@@ -11,5 +11,5 @@
   "contains_private_data": false,
   "supported_updater_shell": "PowerShell 7",
   "ci_tested_source": "73b6655b4d6498047bf1d9dd380fc698c9b647b5",
-  "publication": "not yet published; release metadata recorded separately"
+  "publication": "published prerelease; verified download, see github-release-v023.json"
 }
