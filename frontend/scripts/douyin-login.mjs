@@ -71,6 +71,17 @@ function proxyAllowed(value) {
   try { const u = new URL(value); return u.protocol === 'http:' && ['127.0.0.1', '[::1]'].includes(u.hostname) && Number(u.port) > 0 && Number(u.port) <= 65535 && !u.username && !u.password && u.pathname === '/' && !u.search && !u.hash; }
   catch { return false; }
 }
+export function loginResourceAllowed(url, resourceType) {
+  // This browser only establishes an account session. Homepage autoplay and
+  // recommendation feeds must not occupy its bounded TLS connection pool.
+  if (resourceType === 'media') return false;
+  try {
+    const target = new URL(url), host = target.hostname.toLowerCase();
+    if (['douyinvod.com', 'douyincdn.com', 'zjcdn.com'].some(domain => host === domain || host.endsWith('.' + domain))) return false;
+    if (officialPage(url) && /^\/aweme\/v1\/web\/(?:tab\/feed|feed|recommend\/feed|related\/aweme|comment\/list)(?:\/|$)/.test(target.pathname)) return false;
+    return true;
+  } catch { return false; }
+}
 export async function visibleVerification(page) {
   if (!officialPage(page.url())) return false;
   return Boolean(await firstVisibleText(page.getByText(VERIFICATION_TEXT, { exact: false })).catch(() => null));
@@ -421,6 +432,7 @@ export async function main(runtime = {}) {
       const request = route.request();
       if (cancelled || Date.now() >= deadline || responses > 700 || bytes > 100 * 1024 * 1024 || !request.url().startsWith('https://')) return route.abort('blockedbyclient');
       if (request.isNavigationRequest() && !request.frame().parentFrame() && !officialPage(request.url())) return route.abort('blockedbyclient');
+      if (!loginResourceAllowed(request.url(), request.resourceType())) return route.abort('blockedbyclient');
       return route.continue(); // Every outbound TCP connection remains pinned by the mandatory proxy.
     });
     const page = await context.newPage();
