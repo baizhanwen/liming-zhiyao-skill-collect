@@ -1,0 +1,388 @@
+{
+  "recorded_at": "2026-11-01T05:07:58.726Z",
+  "assessment": "通过",
+  "tool": "scripts/diagnose_douyin.py",
+  "application_version": "0.2.2",
+  "source_commit": "b1bc279b1bed92f71249805fb490ea133a3f047f",
+  "run_id": 41275251100,
+  "run_url": "https://github.com/baizhanwen/liming-zhiyao-skill-collect/actions/runs/41275251100",
+  "status": "completed",
+  "conclusion": "success",
+  "jobs": [
+    {
+      "id": 124756019577,
+      "name": "Test and build (macos-latest)",
+      "status": "completed",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-01T05:00:57Z",
+          "completed_at": "2026-11-01T05:00:59Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-01T05:00:59Z",
+          "completed_at": "2026-11-01T05:01:01Z"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-01T05:01:01Z",
+          "completed_at": "2026-11-01T05:01:01Z"
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-01T05:01:01Z",
+          "completed_at": "2026-11-01T05:01:05Z"
+        },
+        {
+          "name": "Run astral-sh/setup-uv@v6",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-01T05:01:05Z",
+          "completed_at": "2026-11-01T05:01:08Z"
+        },
+        {
+          "name": "macOS/Linux repeatable installation",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-01T05:01:08Z",
+          "completed_at": "2026-11-01T05:01:23Z"
+        },
+        {
+          "name": "Windows repeatable installation",
+          "status": "completed",
+          "conclusion": "skipped",
+          "started_at": "2026-11-01T05:01:23Z",
+          "completed_at": "2026-11-01T05:01:23Z"
+        },
+        {
+          "name": "Restore locked development dependencies after setup",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-01T05:01:23Z",
+          "completed_at": "2026-11-01T05:01:23Z"
+        },
+        {
+          "name": "Core and connector contract tests (after browser installation)",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-01T05:01:23Z",
+          "completed_at": "2026-11-01T05:02:11Z"
+        },
+        {
+          "name": "Local diagnostic (does not prove external connections)",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-01T05:02:11Z",
+          "completed_at": "2026-11-01T05:02:12Z"
+        },
+        {
+          "name": "Post Run astral-sh/setup-uv@v6",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-01T05:02:12Z",
+          "completed_at": "2026-11-01T05:02:12Z"
+        },
+        {
+          "name": "Post Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-01T05:02:12Z",
+          "completed_at": "2026-11-01T05:02:13Z"
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-01T05:02:13Z",
+          "completed_at": "2026-11-01T05:02:13Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-01T05:02:13Z",
+          "completed_at": "2026-11-01T05:02:13Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-01T05:02:13Z",
+          "completed_at": "2026-11-01T05:02:14Z"
+        }
+      ]
+    },
+    {
+      "id": 124756019702,
+      "name": "Test and build (ubuntu-latest)",
+      "status": "completed",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-01T05:00:56Z",
+          "completed_at": "2026-11-01T05:00:58Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-01T05:00:58Z",
+          "completed_at": "2026-11-01T05:00:59Z"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-01T05:00:59Z",
+          "completed_at": "2026-11-01T05:00:59Z"
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-01T05:00:59Z",
+          "completed_at": "2026-11-01T05:01:00Z"
+        },
+        {
+          "name": "Run astral-sh/setup-uv@v6",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-01T05:01:00Z",
+          "completed_at": "2026-11-01T05:01:02Z"
+        },
+        {
+          "name": "macOS/Linux repeatable installation",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-01T05:01:02Z",
+          "completed_at": "2026-11-01T05:01:11Z"
+        },
+        {
+          "name": "Windows repeatable installation",
+          "status": "completed",
+          "conclusion": "skipped",
+          "started_at": "2026-11-01T05:01:11Z",
+          "completed_at": "2026-11-01T05:01:11Z"
+        },
+        {
+          "name": "Restore locked development dependencies after setup",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-01T05:01:11Z",
+          "completed_at": "2026-11-01T05:01:11Z"
+        },
+        {
+          "name": "Core and connector contract tests (after browser installation)",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-01T05:01:11Z",
+          "completed_at": "2026-11-01T05:01:20Z"
+        },
+        {
+          "name": "Local diagnostic (does not prove external connections)",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-01T05:01:20Z",
+          "completed_at": "2026-11-01T05:01:20Z"
+        },
+        {
+          "name": "Post Run astral-sh/setup-uv@v6",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-01T05:01:20Z",
+          "completed_at": "2026-11-01T05:01:21Z"
+        },
+        {
+          "name": "Post Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-01T05:01:21Z",
+          "completed_at": "2026-11-01T05:01:21Z"
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-01T05:01:21Z",
+          "completed_at": "2026-11-01T05:01:21Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-01T05:01:21Z",
+          "completed_at": "2026-11-01T05:01:21Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-01T05:01:21Z",
+          "completed_at": "2026-11-01T05:01:21Z"
+        }
+      ]
+    },
+    {
+      "id": 124756019735,
+      "name": "Test and build (windows-latest)",
+      "status": "completed",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-01T05:00:57Z",
+          "completed_at": "2026-11-01T05:00:58Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-01T05:00:58Z",
+          "completed_at": "2026-11-01T05:01:04Z"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-01T05:01:04Z",
+          "completed_at": "2026-11-01T05:01:05Z"
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-01T05:01:05Z",
+          "completed_at": "2026-11-01T05:01:13Z"
+        },
+        {
+          "name": "Run astral-sh/setup-uv@v6",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-01T05:01:13Z",
+          "completed_at": "2026-11-01T05:01:16Z"
+        },
+        {
+          "name": "macOS/Linux repeatable installation",
+          "status": "completed",
+          "conclusion": "skipped",
+          "started_at": "2026-11-01T05:01:16Z",
+          "completed_at": "2026-11-01T05:01:16Z"
+        },
+        {
+          "name": "Windows repeatable installation",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-01T05:01:16Z",
+          "completed_at": "2026-11-01T05:01:45Z"
+        },
+        {
+          "name": "Restore locked development dependencies after setup",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-01T05:01:45Z",
+          "completed_at": "2026-11-01T05:01:46Z"
+        },
+        {
+          "name": "Core and connector contract tests (after browser installation)",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-01T05:01:46Z",
+          "completed_at": "2026-11-01T05:02:54Z"
+        },
+        {
+          "name": "Local diagnostic (does not prove external connections)",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-01T05:02:54Z",
+          "completed_at": "2026-11-01T05:02:55Z"
+        },
+        {
+          "name": "Post Run astral-sh/setup-uv@v6",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-01T05:02:55Z",
+          "completed_at": "2026-11-01T05:02:55Z"
+        },
+        {
+          "name": "Post Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-01T05:02:55Z",
+          "completed_at": "2026-11-01T05:02:55Z"
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-01T05:02:55Z",
+          "completed_at": "2026-11-01T05:02:55Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-01T05:02:55Z",
+          "completed_at": "2026-11-01T05:02:58Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "started_at": "2026-11-01T05:02:58Z",
+          "completed_at": "2026-11-01T05:02:58Z"
+        }
+      ]
+    }
+  ],
+  "test_results": [
+    {
+      "os": "ubuntu-latest",
+      "passed": 529,
+      "skipped": 3,
+      "failed": 0,
+      "seconds": 8.6
+    },
+    {
+      "os": "macos-latest",
+      "passed": 529,
+      "skipped": 3,
+      "failed": 0,
+      "seconds": 46.4
+    },
+    {
+      "os": "windows-latest",
+      "passed": 527,
+      "skipped": 5,
+      "failed": 0,
+      "seconds": 61.21
+    }
+  ],
+  "scope": "Runner installation/build/browser runtime readiness, local tests and explicit offline diagnostic contracts only; no supplier business calls or customer Windows 11 execution.",
+  "new_diagnostic_contracts": 59,
+  "new_skips": 0,
+  "existing_common_skips": [
+    "FFmpeg media processing fixture",
+    "FFprobe malicious-media fixture",
+    "project Chromium offline media fixture requiring FFmpeg"
+  ],
+  "windows_additional_skips": [
+    "symlink permission",
+    "POSIX TIME_WAIT behavior"
+  ],
+  "customer_diagnostic_report_received": false
+}

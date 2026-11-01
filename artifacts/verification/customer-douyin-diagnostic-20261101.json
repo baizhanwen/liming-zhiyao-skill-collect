@@ -98,9 +98,28 @@
     "no_database_or_credential_file_reads_by_utility": true
   },
   "publication": {
-    "source": "未验证",
-    "ci": "未验证",
-    "release_tags_changed": false
+    "source": "通过",
+    "source_commit": "b1bc279b1bed92f71249805fb490ea133a3f047f",
+    "source_readback_sha256": "508f50d40bb38d92cc2f0130e4326d60c76ae7807cbf4caad59d15d6e5bd15a5",
+    "ci": "通过",
+    "ci_run_id": 41275251100,
+    "ci_url": "https://github.com/baizhanwen/liming-zhiyao-skill-collect/actions/runs/41275251100",
+    "ci_test_counts": {
+      "macos": {
+        "passed": 529,
+        "skipped": 3
+      },
+      "ubuntu": {
+        "passed": 529,
+        "skipped": 3
+      },
+      "windows": {
+        "passed": 527,
+        "skipped": 5
+      }
+    },
+    "release_tags_changed": false,
+    "customer_windows_runtime_still_unverified": true
   },
   "boundary": "Page HTTP success, a numeric video ID in URL, or installed runtime are not original-media or model acceptance. Diagnostic utility does not add QR login or claim to fix the customer machine."
 }
