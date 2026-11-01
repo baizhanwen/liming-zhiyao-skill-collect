@@ -62,6 +62,7 @@ MESSAGES = {
     'douyin_session_protocol': '项目登录检查未返回有效结果，请重新打开登录窗口',
     'douyin_session_storage': '本机会话未能安全保存或读取，请检查资料目录权限',
     'douyin_session_expired': '本地保存的认证 Cookie 已到期，请检查登录或重新扫码',
+    'douyin_session_qr_expired': '官网二维码已失效，请点击重新获取二维码',
 }
 
 
@@ -359,6 +360,8 @@ class _NodeRunner:
                     on_message({'type': 'qr', 'image_base64': message.get('image_base64')})
                 elif message.get('type') == 'qr_clear':
                     on_message({'type': 'qr_clear'})
+                elif message.get('type') == 'qr_expired':
+                    on_message({'type': 'qr_expired'})
                 elif message.get('type') == 'verification_frame':
                     on_message({key: message.get(key) for key in
                         ('type', 'image_base64', 'width', 'height', 'frame_id')})
@@ -510,7 +513,8 @@ class DouyinSessionService:
                     self.active['check_sent'] = True
                     command_runner = runner
                     if self._status not in ('waiting_confirmation', 'verification_required'):
-                        self._status, self._error = 'checking', None
+                        if not self._error or self._error['code'] != 'douyin_session_qr_expired':
+                            self._status, self._error = 'checking', None
                         self._persist_locked()
                 result = self._snapshot_locked()
             else:
@@ -568,6 +572,14 @@ class DouyinSessionService:
                         if self.active is active and not active['cancel'].is_set() and mode == 'login':
                             self._clear_qr(active)
                     return
+                if message.get('type') == 'qr_expired':
+                    with self.lock:
+                        if (self.active is active and not active['cancel'].is_set()
+                                and mode == 'login' and not active['verification_started']):
+                            self._clear_qr(active)
+                            self._status = 'waiting_scan'
+                            self._error = _error('douyin_session_qr_expired')
+                    return
                 if message.get('type') == 'qr':
                     with self.lock:
                         if (self.active is not active or active['cancel'].is_set()
@@ -575,7 +587,7 @@ class DouyinSessionService:
                                 or active['verification_started']):
                             return
                         image = _qr_png(message.get('image_base64'))
-                        if image is None:
+                        if image is None or image == active['qr_image']:
                             return
                         active['qr_count'] += 1
                         if active['qr_count'] > MAX_QR_IMAGES:
@@ -583,6 +595,8 @@ class DouyinSessionService:
                             return
                         active['qr_image'] = image
                         active['qr_updated_at'] = datetime.now(timezone.utc).isoformat()
+                        if self._error and self._error['code'] == 'douyin_session_qr_expired':
+                            self._error = None
                     return
                 phase = message.get('phase')
                 if phase not in ('opening', 'waiting_scan', 'waiting_confirmation', 'checking', 'verification_required'):
@@ -592,10 +606,15 @@ class DouyinSessionService:
                         if active['verification_started'] and phase in (
                                 'opening', 'waiting_scan', 'waiting_confirmation', 'checking'):
                             return
+                        if (self._error and self._error['code'] == 'douyin_session_qr_expired'
+                                and phase in ('opening', 'checking')):
+                            return
                         if phase == 'verification_required':
                             active['verification_started'] = True
                             self._clear_qr(active)
-                        self._status, self._error = phase, None
+                        self._status = phase
+                        if not self._error or self._error['code'] != 'douyin_session_qr_expired':
+                            self._error = None
                         if phase != 'checking':
                             active['check_sent'] = False
                         if phase == 'waiting_confirmation' or (phase == 'checking' and mode == 'check'):

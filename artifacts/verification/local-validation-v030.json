@@ -3,15 +3,15 @@
   "date": "2026-11-01",
   "scope": "Latest backend and Node offline contracts; frontend current privacy fix and earlier impacted-contract runs recorded independently. Real auth separate.",
   "pytest": {
-    "passed": 777,
+    "passed": 792,
     "failed": 0,
     "skipped": 0,
-    "seconds": 42.23,
+    "seconds": 49.78,
     "junit": "pytest-v030.xml"
   },
   "frontend": {
     "build": "passed",
-    "javascript": "index-BcjBchrg.js",
+    "javascript": "index-CHdhXr6F.js",
     "css": "index-jPAKYIil.css",
     "current_privacy_case": {
       "passed": 1,
@@ -23,7 +23,12 @@
       "seconds": 13.9,
       "javascript": "index-LjXYgJxm.js"
     },
-    "not_one_combined_ui_run": true
+    "not_one_combined_ui_run": true,
+    "latest_qr_expiry_case": {
+      "passed": 1,
+      "seconds": 8.4,
+      "report": "ui-douyin-qr-expiry-contract-v030.json"
+    }
   },
   "doctor": "passed local-only; not external acceptance",
   "data_preservation": {
@@ -33,11 +38,12 @@
     "scope": "controlled restart before user QR login; excludes connection status metadata"
   },
   "new_dependencies": false,
-  "real_authenticated_douyin_media": "pending new real account test after reviewed MFA lifecycle fixes",
+  "real_authenticated_douyin_media": "pending user official identity verification",
   "customer_windows_business": "unverified",
   "model_calls_started_by_login_tests": 0,
   "feishu_writes": 0,
-  "reviewed_node_sha256": "d9bc3b86cbccf5d44e8dd330fc463b9e2f09cfe2618196108ab7961ddbf3f16f",
+  "reviewed_node_sha256": "b9775f3e7d7b236e735fd87ff138158fd26edcea6a15768a611b933f2990ea6d",
   "independent_review": "completed with no unresolved blocker; offline review does not establish real account login",
-  "initial_login_entry": "official homepage; check and independent proof remain self page"
+  "initial_login_entry": "official homepage; check and independent proof remain self page",
+  "real_qr_stability": "one PNG and one version observed for 25.29 seconds; expired state prompts manual refresh"
 }

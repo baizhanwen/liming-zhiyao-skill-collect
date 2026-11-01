@@ -411,7 +411,8 @@ class FakeProxy:
         self.closed = True
 
 
-@pytest.mark.parametrize('case', ['success', 'malformed', 'qr_limit', 'total_limit', 'verification_limit', 'verification_total'])
+@pytest.mark.parametrize('case', ['success', 'malformed', 'qr_limit', 'total_limit',
+    'qr_expired_total', 'verification_limit', 'verification_total'])
 def test_node_runner_has_no_profile_file_or_secret_environment_and_cleans_up(tmp_path, monkeypatch, case):
     script = tmp_path / 'frontend/scripts/douyin-login.mjs'
     script.parent.mkdir(parents=True)
@@ -433,7 +434,8 @@ def test_node_runner_has_no_profile_file_or_secret_environment_and_cleans_up(tmp
             self.stdin = io.StringIO()
             if case == 'success':
                 output = '\n'.join(json.dumps(value) for value in [
-                    {'type': 'qr_clear', 'unknown': PRIVATE}, verification_message(),
+                    {'type': 'qr_clear', 'unknown': PRIVATE},
+                    {'type': 'qr_expired', 'unknown': PRIVATE}, verification_message(),
                     {'type': 'verification_error', 'code': 'input_focus', 'message': PRIVATE},
                     {'type': 'verification_clear', 'unknown': PRIVATE}, success()]) + '\n'
             elif case == 'qr_limit':
@@ -441,6 +443,8 @@ def test_node_runner_has_no_profile_file_or_secret_environment_and_cleans_up(tmp
             elif case == 'total_limit':
                 output = (json.dumps({'type': 'progress', 'phase': 'waiting_scan',
                     'unknown': 'x' * 300000}) + '\n') * 8 + json.dumps(success()) + '\n'
+            elif case == 'qr_expired_total':
+                output = (json.dumps({'type': 'qr_expired', 'unknown': 'x' * 300000}) + '\n') * 8 + json.dumps(success()) + '\n'
             elif case == 'verification_limit':
                 output = (json.dumps(verification_message()) + '\n') * 49 + json.dumps(success()) + '\n'
             elif case == 'verification_total':
@@ -469,7 +473,7 @@ def test_node_runner_has_no_profile_file_or_secret_environment_and_cleans_up(tmp
     if case == 'success':
         messages = []
         assert runner.run(options, messages.append, lambda: False)['authenticated'] is True
-        assert messages == [{'type': 'qr_clear'},
+        assert messages == [{'type': 'qr_clear'}, {'type': 'qr_expired'},
             {key: value for key, value in verification_message().items() if key != 'untrusted'},
             {'type': 'verification_error', 'code': 'input_focus'}, {'type': 'verification_clear'}]
         assert PRIVATE not in json.dumps(messages)
@@ -542,7 +546,8 @@ def test_qr_is_current_login_memory_only_and_creates_no_persisted_heartbeat(serv
     base64.b64encode(qr_png() + b'x' * (64 * 1024)).decode(),
     base64.b64encode(qr_png(width=100000)).decode(),
     base64.b64encode(qr_png()).decode() + '\n',
-])
+], ids=['none', 'wrong-type', 'not-base64', 'data-uri', 'not-png',
+        'truncated-png', 'oversized-png', 'oversized-dimensions', 'trailing-newline'])
 def test_invalid_or_excessive_qr_data_is_ignored_without_echo(service_factory, image):
     runner = FakeRunner()
     service, store, vault = service_factory(runner)
@@ -593,12 +598,91 @@ def test_qr_update_count_has_an_independent_service_limit(service_factory):
     runner = FakeRunner()
     service, _, _ = service_factory(runner)
     start(service, runner)
-    for _ in range(20):
-        runner.callback(qr_message())
+    for width in range(1, 21):
+        runner.callback(qr_message(qr_png(width)))
     assert service.qr_image() is not None
-    runner.callback(qr_message())
+    runner.callback(qr_message(qr_png(21)))
     assert service.qr_image() is None
     runner.finish()
+
+
+def test_identical_qr_does_not_change_image_version_count_or_storage(service_factory):
+    runner = FakeRunner()
+    service, store, vault = service_factory(runner)
+    start(service, runner)
+    runner.callback(qr_message())
+    before, writes, encrypted = service.status(), len(store.writes), copy.deepcopy(vault.values)
+    for _ in range(50):
+        runner.callback(qr_message())
+    assert service.status() == before and service.qr_image() == qr_png()
+    assert service.active['qr_count'] == 1
+    assert len(store.writes) == writes and vault.values == encrypted
+    service.check_login()
+    runner.callback(qr_message())
+    assert service.status()['qr_updated_at'] == before['qr_updated_at']
+    assert service.active['qr_count'] == 1 and runner.commands == [{'type': 'check'}]
+    runner.finish()
+
+
+def test_qr_expiration_clears_image_and_requires_user_action_without_refreshing(service_factory):
+    runner = FakeRunner()
+    service, store, vault = service_factory(runner)
+    start(service, runner)
+    runner.callback({'type': 'progress', 'phase': 'waiting_scan'})
+    runner.callback(qr_message())
+    writes, encrypted = len(store.writes), copy.deepcopy(vault.values)
+    runner.callback({'type': 'qr_expired', 'cookie': SECRET, 'message': PRIVATE})
+    expected = {'code': 'douyin_session_qr_expired',
+        'message': '官网二维码已失效，请点击重新获取二维码'}
+    assert service.status()['status'] == 'waiting_scan'
+    assert service.status()['error'] == expected and service.status()['browser_open'] is True
+    assert service.qr_image() is None and service.status()['qr_updated_at'] is None
+    assert runner.commands == [] and len(store.writes) == writes and vault.values == encrypted
+    assert service.check_login()['status'] == 'waiting_scan'
+    runner.callback({'type': 'progress', 'phase': 'checking'})
+    assert service.status()['status'] == 'waiting_scan'
+    runner.callback({'type': 'progress', 'phase': 'waiting_scan'})
+    assert service.status()['error'] == expected and service.qr_image() is None
+    assert runner.commands == [{'type': 'check'}]
+    runner.callback(qr_message(qr_png(2)))
+    assert service.qr_image() == qr_png(2) and service.status()['error'] is None
+    # New valid image events clear only the QR-expired hint, not other errors.
+    with service.lock:
+        service._error = login._error('douyin_session_runtime')
+    runner.callback(qr_message(qr_png(3)))
+    assert service.status()['error']['code'] == 'douyin_session_runtime'
+    private_free(service.status()); private_free(store.writes)
+    runner.finish()
+
+
+def test_qr_expiration_cannot_override_mfa_or_a_new_login_generation(service_factory):
+    old, new = FakeRunner(), FakeRunner()
+    service, store, _ = service_factory(old, new)
+    start(service, old)
+    show_verification(old)
+    before, image, writes = service.status(), service.verification_image(), len(store.writes)
+    old.callback({'type': 'qr_expired', 'message': PRIVATE})
+    assert service.status() == before and service.verification_image() == image
+    assert len(store.writes) == writes and old.commands == []
+    start(service, new)
+    new.callback({'type': 'progress', 'phase': 'waiting_scan'})
+    new.callback(qr_message())
+    before = service.status()
+    old.callback({'type': 'qr_expired'})
+    assert service.status() == before and service.qr_image() == qr_png()
+    new.finish(); old.finish()
+
+
+def test_headless_check_ignores_qr_expiration(service_factory):
+    initial, checking = FakeRunner(), FakeRunner()
+    service, _, _ = service_factory(initial, checking)
+    start(service, initial); initial.finish()
+    service.check_login(); assert checking.started.wait(1)
+    checking.callback({'type': 'progress', 'phase': 'checking'})
+    before = service.status()
+    checking.callback({'type': 'qr_expired'})
+    assert service.status() == before and checking.commands == []
+    checking.finish()
 
 
 def test_qr_clear_is_memory_only_and_late_clear_cannot_erase_new_login_image(service_factory):

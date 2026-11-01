@@ -1,0 +1,31 @@
+{
+  "scope": "real project-created official login QR, read-only stability observation; no user authentication inferred",
+  "original_png_bytes": 806,
+  "dimensions": [
+    512,
+    512
+  ],
+  "observed_seconds_after_first_image": 25.29,
+  "distinct_pngs": 1,
+  "distinct_image_versions": 1,
+  "single_unchanged_image": true,
+  "all_image_reads_png_no_store": true,
+  "interrupted_by_authentication": false,
+  "events": [
+    {
+      "elapsed_seconds": 0.04,
+      "status": "waiting_scan",
+      "qr_available": true,
+      "safe_error_code": null
+    }
+  ],
+  "qr_or_input_images_saved": false,
+  "model_calls_started_by_probe": 0,
+  "task_mutations_by_probe": 0,
+  "expiry_followup": {
+    "observed": true,
+    "qr_available": false,
+    "safe_error_code": "douyin_session_qr_expired",
+    "automatic_new_challenge_started": false
+  }
+}

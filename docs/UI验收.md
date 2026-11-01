@@ -192,3 +192,5 @@ Windows PowerShell 的 Chromium 指定方式是 `$env:PW_CHANNEL="chromium"`，�
 当前定义共 20 项，未重跑完整套件。图片明显标记 `CONTRACT / NOT OFFICIAL`，临时内容只是自编契约文本且不写入公开报告；没有读取真实验证码、发送真实短信、操作用户会话或调用付费模型。本组只验证点击、文字与列出的按键，不自动解题，也不证明真实 SMS 身份验证或登录完成；实际官网与本人验证结果由独立真实证据说明。
 
 最后针对自动新帧期间输入框短暂禁用会丢失焦点的问题，将本机临时输入框与官网动作门控分开：当前帧有效、未消费、连接正常且无操作在途时，可以继续本机掩码输入；官网提交、点击和按键仍须新图加载完成。`index-BcjBchrg.js / index-jPAKYIil.css` 构建只重跑原 **1 项隐私契约，通过，0 失败、0 跳过，11.6 秒**。用例明确延迟新 JPEG，检查加载前后输入焦点和长度保留，提交仍禁用至加载完成，再验证发送清空、旧帧不重发、断连与退出清理。见[独立焦点后续报告](../artifacts/verification/ui-douyin-verification-focus-contract-v030.json)。未重跑前述 4 项或完整 20 项，没有操作真实官网、短信或用户输入。
+
+二维码失效的后续最小调整：服务保持 `waiting_scan`，当 `error.code=douyin_session_qr_expired` 时主卡明确提示“官网二维码已失效，请点击重新获取二维码”，不再显示正在等待官网生成；图片随 `qr_available=false` 隐藏，不自动发起登录。`index-CHdhXr6F.js / index-jPAKYIil.css` 构建仅重跑原 QR 错误流程 **1 项，通过，0 失败、0 跳过，8.4 秒**：包含失效无图、清晰手动指引、后续自动 GET 不发 POST，以及点击重取才发 `login`。见[独立二维码失效契约报告](../artifacts/verification/ui-douyin-qr-expiry-contract-v030.json)。全部状态和 PNG 均为显式模拟，不证明真实官网二维码稳定性或扫码完成；此前验证视图与广泛回归未重跑。

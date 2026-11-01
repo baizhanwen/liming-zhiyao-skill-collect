@@ -281,10 +281,28 @@ async function unobscuredQr(image) {
     if (!container) return false;
     const box = element.getBoundingClientRect();
     if (box.width <= 0 || box.height <= 0) return false;
+    for (let node = element; node && node.nodeType === 1; node = node.parentElement) {
+      const style = getComputedStyle(node);
+      if (Number.parseFloat(style.opacity) === 0 || style.visibility === 'hidden' || style.display === 'none') return false;
+    }
     return [[.1,.1],[.9,.1],[.5,.5],[.1,.9],[.9,.9]].every(([x,y]) => {
       const hit = document.elementFromPoint(box.left + box.width*x, box.top + box.height*y);
       return hit === element || Boolean(hit && container.contains(hit));
     });
+  }).catch(() => false);
+}
+export async function visibleQrExpiry(panel) {
+  const text = panel.getByText('二维码失效', { exact: true }).first();
+  if (!await text.isVisible().catch(() => false)) return false;
+  return text.evaluate(element => {
+    for (let node = element; node && node.nodeType === 1; node = node.parentElement) {
+      const style = getComputedStyle(node);
+      if (Number.parseFloat(style.opacity) === 0 || style.visibility === 'hidden' || style.display === 'none') return false;
+    }
+    const box = element.getBoundingClientRect();
+    if (box.width <= 0 || box.height <= 0) return false;
+    const hit = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
+    return hit === element || Boolean(hit && element.contains(hit));
   }).catch(() => false);
 }
 export async function visibleScanConfirmation(page) {
@@ -292,26 +310,20 @@ export async function visibleScanConfirmation(page) {
   return page.locator(QR_PANEL).getByText(/扫码成功|请在手机(?:抖音)?(?:上)?确认/, { exact: false }).first().isVisible().catch(() => false);
 }
 export function qrRelay(send, { clock = Date.now } = {}) {
-  const seen = new Set(); let lastCheck = -Infinity, sent = 0, refreshes = 0, reading = false, cleared = false;
+  const seen = new Set(); let lastCheck = -Infinity, sent = 0, reading = false, cleared = false, expired = false, firstHash = '';
   return {
-    reset() { seen.clear(); cleared = false; },
     clear() { if (!cleared) { send({ type: 'qr_clear' }); cleared = true; } },
+    expire() { this.clear(); if (!expired) { expired = true; send({ type: 'qr_expired' }); } },
     async tick(page) {
-      if (reading || clock() - lastCheck < 5000) return;
+      if (reading || expired || clock() - lastCheck < 5000) return;
       lastCheck = clock(); reading = true;
       try {
         if (!officialPage(page.url())) { this.clear(); return; }
         const panel = page.locator(QR_PANEL);
         if (await panel.count() !== 1 || !await panel.isVisible()) { this.clear(); return; }
-        if (await panel.getByText('二维码失效', { exact: true }).first().isVisible()) {
-          if (!cleared) { send({ type: 'qr_clear' }); cleared = true; }
-          seen.clear();
-          const refresh = panel.getByText('点击刷新', { exact: true }).first();
-          if (refreshes < 20 && await refresh.isVisible()) {
-            refreshes += 1;
-            await refresh.click({ timeout: 1500 });
-          }
-          return; // Never forward the expired element; inspect fresh UI next tick.
+        if (await visibleQrExpiry(panel)) {
+          this.expire();
+          return; // Only an explicit new login may create the next challenge.
         }
         if (sent >= 20) return;
         const image = await currentQrImage(page);
@@ -322,6 +334,8 @@ export function qrRelay(send, { clock = Date.now } = {}) {
         if (!png || !officialPage(page.url()) || !await unobscuredQr(image)) { this.clear(); return; }
         const hash = crypto.createHash('sha256').update(png).digest('hex');
         if (seen.has(hash)) return;
+        if (firstHash && hash !== firstHash) { this.expire(); return; }
+        firstHash = hash;
         seen.add(hash); sent += 1; cleared = false;
         send({ type: 'qr', image_base64: png.toString('base64') });
       } catch { this.clear(); /* No raw page, image or exception is logged. */ }
@@ -458,7 +472,7 @@ export async function main(runtime = {}) {
         if (probePage) { const old = probePage; probePage = null; await old.close?.().catch(() => {}); }
       }
       if (checking) {
-        checking = false; relay.reset();
+        checking = false;
         if (verification) { relay.clear(); view.force(); progress('verification_required'); }
         else if (waitingConfirmation) { relay.clear(); progress('waiting_confirmation'); }
         else progress(options.mode === 'check' ? 'checking' : 'waiting_scan');

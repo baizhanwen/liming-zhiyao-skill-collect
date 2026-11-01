@@ -158,55 +158,59 @@ def test_only_explicit_official_denial_can_mark_session_not_authenticated(url, s
     assert helper('officialAuthDenial', url, status, payload) == {'value': denied}
 
 
-def test_qr_relay_is_element_only_memory_png_bounded_deduplicated_and_resettable():
+def test_qr_relay_keeps_one_original_png_per_login_generation_and_never_resets_periodically():
     script = """import {qrRelay} from './frontend/scripts/douyin-login.mjs';
-let now=0,screenshots=0,exact=true;
+let now=0,reads=0,exact=true;
 let png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLbtAAAAABJRU5ErkJggg==','base64'); const sent=[];
-const image={count:async()=>1,isVisible:async()=>true,evaluate:async()=>true,getAttribute:async name=>{screenshots++;exact&&=name==='src';return 'data:image/png;base64,'+png.toString('base64');},screenshot:async()=>{throw Error('no screenshot');}};
+const image={count:async()=>1,isVisible:async()=>true,evaluate:async()=>true,getAttribute:async name=>{reads++;exact&&=name==='src';return 'data:image/png;base64,'+png.toString('base64');},screenshot:async()=>{throw Error('no screenshot');}};
 const panel={count:async()=>1,isVisible:async()=>true,getByText:()=>({first:()=>({isVisible:async()=>false})})};
-const page={url:()=> 'https://www.douyin.com/user/self',locator:selector=>{
+const page={url:()=> 'https://www.douyin.com/jingxuan',locator:selector=>{
 if(selector==='#douyin_login_comp_scan_code')return panel;
-exact&&=selector==='#douyin_login_comp_scan_code #animate_qrcode_container img[aria-label="二维码"]';return image;},
-getByRole:()=>{throw Error('global tutorial image must not be selected');}};
+exact&&=selector==='#douyin_login_comp_scan_code #animate_qrcode_container img[aria-label="二维码"]';return image;}};
 const relay=qrRelay(message=>sent.push(message),{clock:()=>now});
-await relay.tick(page);now=4999;await relay.tick(page);const beforeInterval=screenshots;
-now=5000;await relay.tick(page);const deduplicated=sent.length;
-relay.reset();now=10000;await relay.tick(page);const afterReset=sent.length;
-for(let i=1;i<=30;i++){now+=5000;png=Buffer.from(png);png[29]=i;await relay.tick(page);}
-const count=sent.length;
-let bad=0;const bounded=qrRelay(()=>bad++,{clock:()=>now});png=Buffer.alloc(65537);await bounded.tick(page);
-console.log(JSON.stringify({beforeInterval,deduplicated,afterReset,count,bad,exact,
-safe_fields:sent.every(v=>Object.keys(v).sort().join(',')==='image_base64,type'&&v.type==='qr')}));
+await relay.tick(page);now=4999;await relay.tick(page);const beforeInterval=reads;
+for(let i=0;i<30;i++){now+=5000;await relay.tick(page);}
+const stable=sent.filter(x=>x.type==='qr').length;
+png=Buffer.from(png);png[29]=1;now+=5000;await relay.tick(page);
+const changed=sent.filter(x=>x.type==='qr').length;
+const expired=sent.filter(x=>x.type==='qr_expired').length;
+const cleared=sent.filter(x=>x.type==='qr_clear').length;
+// A new relay exists only in a new user-started login process/generation.
+const newGeneration=[];await qrRelay(x=>newGeneration.push(x),{clock:()=>now}).tick(page);
+const bad=[];png=Buffer.alloc(65537);await qrRelay(x=>bad.push(x),{clock:()=>now}).tick(page);
+console.log(JSON.stringify({beforeInterval,stable,changed,expired,cleared,has_reset:'reset'in relay,exact,
+newGeneration:newGeneration.filter(x=>x.type==='qr').length,badQr:bad.filter(x=>x.type==='qr').length,
+safe_fields:sent.filter(x=>x.type==='qr').every(v=>Object.keys(v).sort().join(',')==='image_base64,type')}));
 """
     result = subprocess.run([shutil.which('node'), '--input-type=module', '-e', script],
         cwd=ROOT, text=True, capture_output=True, timeout=10)
     assert result.returncode == 0 and not result.stderr
-    assert json.loads(result.stdout) == {'beforeInterval': 1, 'deduplicated': 1, 'afterReset': 2,
-        'count': 20, 'bad': 1, 'exact': True, 'safe_fields': True}
+    assert json.loads(result.stdout) == {'beforeInterval': 1, 'stable': 1, 'changed': 1,
+        'expired': 1, 'cleared': 1, 'has_reset': False, 'exact': True,
+        'newGeneration': 1, 'badQr': 0, 'safe_fields': True}
 
 
-def test_expired_official_qr_is_cleared_not_captured_and_only_normal_refresh_is_bounded():
+def test_expired_official_qr_is_cleared_and_waits_for_user_restart_with_zero_refresh_clicks():
     script = """import {qrRelay} from './frontend/scripts/douyin-login.mjs';
-let now=0,expired=false,refreshes=0,screenshots=0;const messages=[];
-const image={count:async()=>1,isVisible:async()=>true,evaluate:async()=>true,getAttribute:async()=>{screenshots++;if(expired)throw Error('must not read expired QR');return 'data:image/png;base64,'+Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLbtAAAAABJRU5ErkJggg==','base64').toString('base64');},screenshot:async()=>{throw Error('no screenshot');}};
+let now=0,expired=false,refreshes=0,reads=0;const messages=[];
+const image={count:async()=>1,isVisible:async()=>true,evaluate:async()=>true,getAttribute:async()=>{reads++;if(expired)throw Error('must not read expired QR');return 'data:image/png;base64,'+Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLbtAAAAABJRU5ErkJggg==','base64').toString('base64');},screenshot:async()=>{throw Error('no screenshot');}};
 const panel={count:async()=>1,isVisible:async()=>true,getByText:label=>({first:()=>({
-isVisible:async()=>label==='扫码登录'||(expired&&['二维码失效','点击刷新'].includes(label)),
-click:async()=>{if(label!=='点击刷新')throw Error('not a normal QR refresh');refreshes++;}})})};
-const page={url:()=> 'https://www.douyin.com/user/self',locator:selector=>selector==='#douyin_login_comp_scan_code'?panel:image};
+isVisible:async()=>expired&&label==='二维码失效',evaluate:async()=>expired,
+click:async()=>{refreshes++;throw Error('must never click an official refresh control');}})})};
+const page={url:()=> 'https://www.douyin.com/jingxuan',locator:selector=>selector==='#douyin_login_comp_scan_code'?panel:image};
 const relay=qrRelay(message=>messages.push(message),{clock:()=>now});
 await relay.tick(page);expired=true;
 for(let i=0;i<25;i++){now+=5000;await relay.tick(page);}
-const screenshotsWhileExpired=screenshots-1;
 expired=false;now+=5000;await relay.tick(page);
-console.log(JSON.stringify({refreshes,screenshotsWhileExpired,qr:messages.filter(x=>x.type==='qr').length,
-clear:messages.filter(x=>x.type==='qr_clear').length,
-clearIsMetadataOnly:messages.filter(x=>x.type==='qr_clear').every(x=>Object.keys(x).join(',')==='type')}));
+console.log(JSON.stringify({refreshes,reads,qr:messages.filter(x=>x.type==='qr').length,
+clear:messages.filter(x=>x.type==='qr_clear').length,expired:messages.filter(x=>x.type==='qr_expired').length,
+metadataOnly:messages.filter(x=>x.type!=='qr').every(x=>Object.keys(x).join(',')==='type')}));
 """
     result = subprocess.run([shutil.which('node'), '--input-type=module', '-e', script],
         cwd=ROOT, text=True, capture_output=True, timeout=10)
     assert result.returncode == 0 and not result.stderr
-    assert json.loads(result.stdout) == {'refreshes': 20, 'screenshotsWhileExpired': 0,
-        'qr': 2, 'clear': 1, 'clearIsMetadataOnly': True}
+    assert json.loads(result.stdout) == {'refreshes': 0, 'reads': 1,
+        'qr': 1, 'clear': 1, 'expired': 1, 'metadataOnly': True}
 
 
 @pytest.mark.parametrize('scenario,gotos,authenticated', [

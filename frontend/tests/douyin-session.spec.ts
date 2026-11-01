@@ -194,6 +194,13 @@ test('抖音会话界面契约：失败任务入口、验证码与网络错误�
   qrFails = false;
   await card.getByRole('button', {name: '重新加载二维码', exact: true}).click();
   await expect(card.getByRole('img', {name: '抖音官方登录二维码', exact: true})).toHaveJSProperty('naturalWidth', 240);
+  current = {...current, qr_available: false, error: {code: 'douyin_session_qr_expired', message: '官网二维码已失效，请点击重新获取二维码'}};
+  await card.getByRole('button', {name: '刷新登录状态', exact: true}).click();
+  await expect(card.getByRole('img', {name: '抖音官方登录二维码', exact: true})).toHaveCount(0);
+  await expect(card.locator('.douyin-session-instruction')).toContainText('官网二维码已失效，请点击“重新获取二维码”');
+  await expect(card.locator('.douyin-session-instruction')).toContainText('不会自动更换二维码');
+  await expect(card).not.toContainText('正在等待抖音官网生成二维码');
+  await page.waitForTimeout(2700); expect(actions).toEqual([]);
   await card.getByRole('button', {name: '重新获取二维码', exact: true}).click();
   await expect(card.getByRole('img', {name: '抖音官方登录二维码', exact: true})).toHaveCount(0);
   await expect(card).toContainText('正在等待抖音官网生成二维码');

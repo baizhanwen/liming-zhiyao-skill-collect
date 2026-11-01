@@ -1,0 +1,74 @@
+{
+  "recorded_at": "2026-11-01T09:44:25.587974+00:00",
+  "kind": "explicit_offline_single_challenge_qr_contract",
+  "scope": "No automatic QR refresh or replay within one login generation",
+  "runs": [
+    {
+      "scope": "Existing Node login, MFA lifecycle and verification-view contracts",
+      "command": ".venv/bin/python -m pytest -q tests/test_douyin_login.py tests/test_douyin_mfa_lifecycle.py tests/test_douyin_verification.py",
+      "passed": 108,
+      "failed": 0,
+      "skipped": 0,
+      "seconds": 30.83
+    },
+    {
+      "scope": "New QR stability and visible-expiry contracts",
+      "command": ".venv/bin/python -m pytest -q tests/test_douyin_qr_stability.py",
+      "passed": 10,
+      "failed": 0,
+      "skipped": 0,
+      "seconds": 7.46
+    },
+    {
+      "scope": "Session service contracts independently run by its owner",
+      "command": ".venv/bin/python -m pytest -q tests/test_douyin_session.py",
+      "passed": 102,
+      "failed": 0,
+      "skipped": 0,
+      "seconds": 0.36,
+      "reported_by": "feishu_connector"
+    }
+  ],
+  "single_combined_run": false,
+  "checks": {
+    "node_syntax": true,
+    "git_diff_check": true
+  },
+  "collect_only": {
+    "collected": 792,
+    "max_nodeid_characters": 16470,
+    "max_nodeid_utf16_units": 16470,
+    "payload_printed": false
+  },
+  "covered": [
+    "No programmatic clicking of the official QR refresh control",
+    "Visible expiry clears image and emits metadata-only qr_expired once, then waits for a user-started new login",
+    "Expiry detection checks ancestor opacity, visibility, nonzero geometry and actual elementFromPoint occlusion",
+    "Repeated active check does not reset QR deduplication or navigate the current challenge",
+    "Same original dataPNG is relayed at most once per login generation, including an actual 6.2-second mock-main multi-tick/check run",
+    "An unrequested different official PNG clears and expires the challenge instead of silently replacing it",
+    "A new explicit login creates a fresh relay generation and may show a new original PNG",
+    "Existing raw-PNG, no-crop, MFA modal lifecycle and fresh-proof guards retained",
+    "Session service deduplicates the same PNG without count/timestamp reload and ignores late QR during MFA"
+  ],
+  "independent_readonly_review": {
+    "agent": "feishu_connector",
+    "unresolved_blockers": 0,
+    "node_sha256": "b9775f3e7d7b236e735fd87ff138158fd26edcea6a15768a611b933f2990ea6d"
+  },
+  "boundaries": [
+    "All PNG data is a synthetic tiny fixture, not a real QR code; no decoding or official-site request was performed",
+    "No SMS, model, Feishu, saved account state, user window or service was accessed",
+    "Real user reports of rotating QR remain failed historical attempts; these offline contracts do not establish a successful new official scan",
+    "Earlier auto-refresh-source reports are retained with their historical hashes and test identities; this report supersedes them only for the new single-challenge behavior",
+    "Initial PR CI remains failure on its original SHA; the Windows short-ID test fix is retained for the parent to commit with this candidate"
+  ],
+  "external_business_requests": 0,
+  "source_hashes": {
+    "frontend/scripts/douyin-login.mjs": "b9775f3e7d7b236e735fd87ff138158fd26edcea6a15768a611b933f2990ea6d",
+    "tests/test_douyin_login.py": "58f7755f506b6f1ed5c3539d7b4125f4357dd3f1e4bc971b86ada663b0121d1c",
+    "tests/test_douyin_qr_stability.py": "5f9a91d461373c291c34a7a9a40d8e5da93621801211ea8fcf81cb0aed6f1a0b",
+    "backend/douyin_session.py": "17dadb491fff3aaf2204e32a90f444eb67550ea5f71ec9215e5c4074fd5fc9c1",
+    "tests/test_douyin_session.py": "50bf6ad8043214ad4123d123c5753372554a3abd76a8c6b85a3622d83893cbd3"
+  }
+}

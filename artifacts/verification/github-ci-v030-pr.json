@@ -1,0 +1,319 @@
+{
+  "recorded_at": "2026-11-01T09:36:24.039Z",
+  "kind": "github_actions_pull_request_result",
+  "repository": "baizhanwen/liming-zhiyao-skill-collect",
+  "pull_request": {
+    "number": 1,
+    "url": "https://github.com/baizhanwen/liming-zhiyao-skill-collect/pull/1",
+    "draft": true
+  },
+  "head_sha": "5aa01f51c9ed05830143994dde867b01deed2293",
+  "node_script_sha256": "d9bc3b86cbccf5d44e8dd330fc463b9e2f09cfe2618196108ab7961ddbf3f16f",
+  "run": {
+    "id": 41283804316,
+    "url": "https://github.com/baizhanwen/liming-zhiyao-skill-collect/actions/runs/41283804316",
+    "attempt": 1,
+    "event": "pull_request",
+    "status": "completed",
+    "conclusion": "failure",
+    "started_at": "2026-11-01T07:11:45Z",
+    "updated_at": "2026-11-01T07:14:45Z",
+    "role": "initial_exact_pr_head_run"
+  },
+  "retrieval": "Read-only GitHub connector run/jobs/decoded job logs; no repository mutation or business request",
+  "jobs": [
+    {
+      "platform": "windows-latest",
+      "job_id": 124780908935,
+      "url": "https://github.com/baizhanwen/liming-zhiyao-skill-collect/actions/runs/41283804316/job/124780908935",
+      "status": "completed",
+      "conclusion": "failure",
+      "pytest": {
+        "passed": 771,
+        "failed": 0,
+        "skipped": 5,
+        "errors": 2,
+        "warnings": 1,
+        "seconds": 81.52
+      },
+      "build": {
+        "success": true,
+        "vite": "8.3.5",
+        "seconds": 0.172,
+        "assets": {
+          "js": "index-BcjBchrg.js",
+          "css": "index-jPAKYIil.css"
+        }
+      },
+      "browser_installation": {
+        "success": true,
+        "chromium": "156.0.8078.4",
+        "chromium_revision": 1248,
+        "headless_shell": true,
+        "playwright_private_ffmpeg_revision": 1013,
+        "source": "Official Playwright CDN; locked project runtime",
+        "note": "Private Playwright FFmpeg download does not supply the optional ffmpeg/ffprobe commands used by application media tests"
+      },
+      "diagnostic": {
+        "status": "skipped_after_test_error",
+        "browser_file_check": "not_run",
+        "optional_ffmpeg_ffprobe": "not_independently_diagnosed"
+      },
+      "skipped_tests": [
+        {
+          "test": "tests/test_core.py::test_real_ffmpeg_pipeline_and_contract_audio_vision",
+          "reason": "FFmpeg external dependency absent"
+        },
+        {
+          "test": "tests/test_review.py::test_review_fake_mp4_hls_cannot_fetch_loopback_resources",
+          "reason": "requires optional FFprobe; other core tests do not depend on it"
+        },
+        {
+          "test": "tests/test_browser_capture.py::test_real_project_renderer_with_explicit_offline_public_fixture",
+          "reason": "requires project Node/Chromium and optional FFmpeg"
+        },
+        {
+          "test": "tests/test_distribution.py::test_port_check_allows_immediate_restart_after_time_wait",
+          "reason": "POSIX address reuse semantics"
+        },
+        {
+          "test": "tests/test_distribution.py::test_backup_rejects_symlink_media",
+          "reason": "symlink creation may require Windows developer mode"
+        }
+      ],
+      "skip_evidence": "Exact skip totals from pytest log. Per-test names/reasons mapped from this SHA's only matching skip predicates; -q workflow did not print a per-test skip list. Ubuntu/macOS doctor independently confirms ffmpeg/ffprobe absent.",
+      "relevant_steps": [
+        {
+          "name": "macOS/Linux repeatable installation",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Windows repeatable installation",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Restore locked development dependencies after setup",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Core and connector contract tests (after browser installation)",
+          "status": "completed",
+          "conclusion": "failure"
+        },
+        {
+          "name": "Local diagnostic (does not prove external connections)",
+          "status": "completed",
+          "conclusion": "skipped"
+        }
+      ]
+    },
+    {
+      "platform": "macos-latest",
+      "job_id": 124780909061,
+      "url": "https://github.com/baizhanwen/liming-zhiyao-skill-collect/actions/runs/41283804316/job/124780909061",
+      "status": "completed",
+      "conclusion": "success",
+      "pytest": {
+        "passed": 774,
+        "failed": 0,
+        "skipped": 3,
+        "errors": 0,
+        "warnings": 1,
+        "seconds": 83.99
+      },
+      "build": {
+        "success": true,
+        "vite": "8.3.5",
+        "seconds": 0.094,
+        "assets": {
+          "js": "index-BcjBchrg.js",
+          "css": "index-jPAKYIil.css"
+        }
+      },
+      "browser_installation": {
+        "success": true,
+        "chromium": "156.0.8078.4",
+        "chromium_revision": 1248,
+        "headless_shell": true,
+        "playwright_private_ffmpeg_revision": 1013,
+        "source": "Official Playwright CDN; locked project runtime",
+        "note": "Private Playwright FFmpeg download does not supply the optional ffmpeg/ffprobe commands used by application media tests"
+      },
+      "diagnostic": {
+        "status": "success",
+        "browser_file_check": "passed; Playwright 1.64.1 browser binary exists; no browser launch or website",
+        "optional_ffmpeg_ffprobe": "absent from PATH"
+      },
+      "skipped_tests": [
+        {
+          "test": "tests/test_core.py::test_real_ffmpeg_pipeline_and_contract_audio_vision",
+          "reason": "FFmpeg external dependency absent"
+        },
+        {
+          "test": "tests/test_review.py::test_review_fake_mp4_hls_cannot_fetch_loopback_resources",
+          "reason": "requires optional FFprobe; other core tests do not depend on it"
+        },
+        {
+          "test": "tests/test_browser_capture.py::test_real_project_renderer_with_explicit_offline_public_fixture",
+          "reason": "requires project Node/Chromium and optional FFmpeg"
+        }
+      ],
+      "skip_evidence": "Exact skip totals from pytest log. Per-test names/reasons mapped from this SHA's only matching skip predicates; -q workflow did not print a per-test skip list. Ubuntu/macOS doctor independently confirms ffmpeg/ffprobe absent.",
+      "relevant_steps": [
+        {
+          "name": "macOS/Linux repeatable installation",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Windows repeatable installation",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Restore locked development dependencies after setup",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Core and connector contract tests (after browser installation)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Local diagnostic (does not prove external connections)",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "platform": "ubuntu-latest",
+      "job_id": 124780909081,
+      "url": "https://github.com/baizhanwen/liming-zhiyao-skill-collect/actions/runs/41283804316/job/124780909081",
+      "status": "completed",
+      "conclusion": "success",
+      "pytest": {
+        "passed": 774,
+        "failed": 0,
+        "skipped": 3,
+        "errors": 0,
+        "warnings": 1,
+        "seconds": 43.21
+      },
+      "build": {
+        "success": true,
+        "vite": "8.3.5",
+        "seconds": 0.142,
+        "assets": {
+          "js": "index-BcjBchrg.js",
+          "css": "index-jPAKYIil.css"
+        }
+      },
+      "browser_installation": {
+        "success": true,
+        "chromium": "156.0.8078.4",
+        "chromium_revision": 1248,
+        "headless_shell": true,
+        "playwright_private_ffmpeg_revision": 1013,
+        "source": "Official Playwright CDN; locked project runtime",
+        "note": "Private Playwright FFmpeg download does not supply the optional ffmpeg/ffprobe commands used by application media tests"
+      },
+      "diagnostic": {
+        "status": "success",
+        "browser_file_check": "passed; Playwright 1.64.1 browser binary exists; no browser launch or website",
+        "optional_ffmpeg_ffprobe": "absent from PATH"
+      },
+      "skipped_tests": [
+        {
+          "test": "tests/test_core.py::test_real_ffmpeg_pipeline_and_contract_audio_vision",
+          "reason": "FFmpeg external dependency absent"
+        },
+        {
+          "test": "tests/test_review.py::test_review_fake_mp4_hls_cannot_fetch_loopback_resources",
+          "reason": "requires optional FFprobe; other core tests do not depend on it"
+        },
+        {
+          "test": "tests/test_browser_capture.py::test_real_project_renderer_with_explicit_offline_public_fixture",
+          "reason": "requires project Node/Chromium and optional FFmpeg"
+        }
+      ],
+      "skip_evidence": "Exact skip totals from pytest log. Per-test names/reasons mapped from this SHA's only matching skip predicates; -q workflow did not print a per-test skip list. Ubuntu/macOS doctor independently confirms ffmpeg/ffprobe absent.",
+      "relevant_steps": [
+        {
+          "name": "macOS/Linux repeatable installation",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Windows repeatable installation",
+          "status": "completed",
+          "conclusion": "skipped"
+        },
+        {
+          "name": "Restore locked development dependencies after setup",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Core and connector contract tests (after browser installation)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "name": "Local diagnostic (does not prove external connections)",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
+  "failure": {
+    "platform": "windows-latest",
+    "test": "tests/test_douyin_session.py::test_invalid_or_excessive_qr_data_is_ignored_without_echo",
+    "parameter_case": "oversized synthetic PNG input; original bytes deliberately omitted",
+    "phases": [
+      "setup",
+      "teardown"
+    ],
+    "errors": 2,
+    "unexecuted_test_cases": 1,
+    "error_type": "ValueError",
+    "message": "the environment variable is longer than 32767 characters",
+    "root_cause": "pytest default parameter ID includes the entire oversized synthetic Base64 payload. Updating PYTEST_CURRENT_TEST exceeds the Windows environment-value limit before the test body runs; teardown repeats the same environment update failure.",
+    "minimal_proposed_fix": "Add short explicit ids to this parametrization, retaining the exact oversized fixture and rejection/privacy assertions.",
+    "product_source_changed": false,
+    "repair_applied_in_this_ci_run": false
+  },
+  "scope": [
+    "Setup installed locked Python production dependencies, npm dependencies, built production frontend, initialized isolated runner database, downloaded official Chromium, then restored development dependencies before tests.",
+    "CI checks use explicit fixtures/mock providers and local safety contracts; no real model, Feishu, Douyin account, phone or SMS operation is performed.",
+    "Optional FFmpeg/FFprobe media tests were skipped; Chromium installation and diagnostic file existence do not prove media acquisition or official login.",
+    "This report describes the first exact PR-head run. It is not an all-platform success, merge or release acceptance."
+  ],
+  "local_followup": {
+    "recorded_at": "2026-11-01T09:37:17.828021+00:00",
+    "change": "Only short semantic pytest parameter IDs added to the 9-case malformed/excessive QR fixture; exact payloads and all assertions retained",
+    "product_source_changed": false,
+    "skip_added": false,
+    "targeted_pytest": {
+      "passed": 97,
+      "failed": 0,
+      "skipped": 0,
+      "seconds": 0.29,
+      "command": ".venv/bin/python -m pytest -q tests/test_douyin_session.py"
+    },
+    "collect_only": {
+      "collected": 777,
+      "max_nodeid_characters": 16470,
+      "max_nodeid_utf16_units": 16470,
+      "largest_environment_value_with_teardown_suffix_utf16_units": 16481,
+      "windows_individual_environment_value_limit": 32767,
+      "payload_printed": false
+    },
+    "followup_ci": "not_started_yet; parent will commit and push; initial failure above remains unchanged"
+  }
+}

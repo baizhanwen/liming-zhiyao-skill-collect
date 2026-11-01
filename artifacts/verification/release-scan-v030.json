@@ -1,14 +1,14 @@
 {
   "status": "passed",
-  "source_files_scanned": 223,
-  "reachable_commits_scanned": 21,
+  "source_files_scanned": 228,
+  "reachable_commits_scanned": 22,
   "findings": [],
   "scope": "known credential patterns, forbidden paths, source and all reachable history; not a guarantee against all secret formats",
   "local_private_value_check": {
     "status": "passed",
     "known_values_checked": 5,
-    "current_files": 223,
-    "history_blobs": 365,
+    "current_files": 228,
+    "history_blobs": 423,
     "findings": [],
     "values_never_printed": true
   }
