@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "product": "liming-zhiyao-skill-collect",
+  "mode": "configure",
+  "ok": true,
+  "stage": "ready",
+  "checks": [
+    {
+      "name": "python",
+      "ok": true,
+      "source": "project",
+      "version": "3.13.17"
+    },
+    {
+      "name": "node",
+      "ok": true,
+      "source": "project",
+      "version": "24.19.0"
+    },
+    {
+      "name": "ffmpeg",
+      "ok": true,
+      "source": "project",
+      "version": "9.0.2-essentials_build-www.gyan.dev"
+    },
+    {
+      "name": "ffprobe",
+      "ok": true,
+      "source": "project",
+      "version": "9.0.2-essentials_build-www.gyan.dev"
+    },
+    {
+      "name": "python_dependencies",
+      "ok": true,
+      "source": "project"
+    },
+    {
+      "name": "frontend",
+      "ok": true,
+      "source": "project"
+    },
+    {
+      "name": "chromium",
+      "ok": true,
+      "source": "project"
+    }
+  ],
+  "provenance": {
+    "source_commit": "9d6a6e29762b09b2cbca507942049546dbe9aa4f",
+    "run_id": 41406357354,
+    "run_url": "https://github.com/baizhanwen/liming-zhiyao-skill-collect/actions/runs/41406357354"
+  }
+}

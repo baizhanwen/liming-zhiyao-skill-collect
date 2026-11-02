@@ -4,7 +4,9 @@
 
 一个本地运行的单用户工作台：丢进 GitHub 或抖音链接，或上传视频、字幕，保留来源证据，整理知识和技能，并与已授权的飞书多维表格手动双向同步。展示名保留 `clloect`，技术名为 `liming-zhiyao-skill-collect`。
 
-当前版本 **[v0.2.3预发布](https://github.com/baizhanwen/liming-zhiyao-skill-collect/releases/tag/v0.2.3)**：优先修复免费本地抖音链接分析。静态短链解析失败时，项目浏览器自动核对官方跳转并采集目标原片；TLS 隧道上限由32调为64，保留总连接256、TLS、公网固定连接、媒体100MiB等保护。客户指定的整段分享文案已在本机一次提交完成17.484秒原片、1段转写、4帧画面、文字分析、GitHub线索查询及知识保存，约37.947秒，无扫码、补传或手动重试。提供保留原配置的Windows升级包（PowerShell7）；三平台CI、发布及下载SHA已核对。先前32隧道失败及模型格式失败独立保留；这不是所有链接或客户Win11实机保证。详见[验收报告](docs/验收报告.md)与[客户升级步骤](docs/客户升级与抖音验收.md)。采集没有新增付费解析服务，模型仍使用用户已有配置。
+当前代码版本 **v0.2.4**：Windows客户可双击“一键配置并启动.cmd”，自动检测并准备缺失依赖，无需预装Python、Node、PowerShell7或Codex；旧客户通过“沿用旧资料并启动.cmd”直接沿用原模型配置和资料。固定来源/SHA校验、项目专属环境、失败重跑与原资料保留已在Windows原生CI验证。首次需要联网；当前便携包支持Windows10/11 x64。[Windows发行入口](https://github.com/baizhanwen/liming-zhiyao-skill-collect/releases/tag/v0.2.4)的最终上传状态以发行页面及最新验收记录为准，[安装步骤](docs/Windows一键安装.md)。安装验收不替代客户网络中的抖音/模型真实业务复验。
+
+历史版本 **[v0.2.3预发布](https://github.com/baizhanwen/liming-zhiyao-skill-collect/releases/tag/v0.2.3)**：优先修复免费本地抖音链接分析。静态短链解析失败时，项目浏览器自动核对官方跳转并采集目标原片；TLS 隧道上限由32调为64，保留总连接256、TLS、公网固定连接、媒体100MiB等保护。客户指定的整段分享文案已在本机一次提交完成17.484秒原片、1段转写、4帧画面、文字分析、GitHub线索查询及知识保存，约37.947秒，无扫码、补传或手动重试。提供保留原配置的Windows升级包（PowerShell7）；三平台CI、发布及下载SHA已核对。先前32隧道失败及模型格式失败独立保留；这不是所有链接或客户Win11实机保证。详见[验收报告](docs/验收报告.md)与[客户升级步骤](docs/客户升级与抖音验收.md)。采集没有新增付费解析服务，模型仍使用用户已有配置。
 
 历史版本 **[v0.2.2预发布](https://github.com/baizhanwen/liming-zhiyao-skill-collect/releases/tag/v0.2.2)**：修复播放器额外目标视频ID导致媒体地址被拒绝的问题，全部原参数保持且下载使用实际观察地址。原失败任务在项目中重新自动取得36.687秒音画，完成1段转写、4帧视觉、文字分析、GitHub候选查询与知识保存，本轮约62.6秒；旧失败历史保留。473项本机测试、生产构建及真实桌面/390px结果查看通过。[三平台CI](https://github.com/baizhanwen/liming-zhiyao-skill-collect/actions/runs/41035193798)通过，发行及标签已读回；范围见[验收报告](docs/验收报告.md)。原[v0.2.1预发布](https://github.com/baizhanwen/liming-zhiyao-skill-collect/releases/tag/v0.2.1)保持；下述0.2.0实测也保留历史身份。
 

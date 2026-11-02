@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "product": "liming-zhiyao-skill-collect",
+  "mode": "check",
+  "ok": false,
+  "stage": "checked",
+  "checks": [
+    {
+      "name": "python",
+      "ok": false,
+      "source": "missing",
+      "version": null
+    },
+    {
+      "name": "node",
+      "ok": false,
+      "source": "missing",
+      "version": null
+    },
+    {
+      "name": "ffmpeg",
+      "ok": false,
+      "source": "missing",
+      "version": null
+    },
+    {
+      "name": "ffprobe",
+      "ok": false,
+      "source": "missing",
+      "version": null
+    },
+    {
+      "name": "python_dependencies",
+      "ok": false,
+      "source": "missing"
+    },
+    {
+      "name": "frontend",
+      "ok": false,
+      "source": "missing"
+    },
+    {
+      "name": "chromium",
+      "ok": false,
+      "source": "missing"
+    }
+  ],
+  "error": {
+    "code": "environment_missing",
+    "message": "检测到缺失环境；正常双击入口可联网自动准备，不需要安装 Codex。"
+  },
+  "provenance": {
+    "source_commit": "9d6a6e29762b09b2cbca507942049546dbe9aa4f",
+    "run_id": 41406357354,
+    "run_url": "https://github.com/baizhanwen/liming-zhiyao-skill-collect/actions/runs/41406357354"
+  },
+  "expectation": "Missing private runtimes are intentional. The workflow asserted this report and zero runtime-directory creation before the cold installation."
+}

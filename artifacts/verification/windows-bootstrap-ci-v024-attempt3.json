@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "application_version": "0.2.4",
+  "source_commit": "c1ccc40198ef2e269ad58794647225b57dd7497d",
+  "date": "2026-11-02",
+  "cold_installation": {
+    "run_id": 41405933558,
+    "url": "https://github.com/baizhanwen/liming-zhiyao-skill-collect/actions/runs/41405933558",
+    "conclusion": "failure",
+    "windows_powershell_51_cold_check": "passed",
+    "actual_dependency_installation": {
+      "conclusion": "success",
+      "started_at": "2026-11-02T07:23:17Z",
+      "completed_at": "2026-11-02T07:24:17Z",
+      "python": "3.13.17",
+      "node": "24.19.0",
+      "ffmpeg": "9.0.2-essentials_build-www.gyan.dev",
+      "ffprobe": "9.0.2-essentials_build-www.gyan.dev",
+      "python_dependencies": "passed",
+      "frontend": "passed",
+      "chromium": "passed",
+      "all_runtime_sources": "project-private"
+    },
+    "acceptance_before_failure": [
+      "Downloaded runtime cache SHA-256 checks",
+      "Complete application bundle build excluding installed runtimes and synthetic credentials",
+      "Actual packaged CMD pinned-manifest check and corrupt-payload rejection",
+      "Two offline reconfiguration runs",
+      "Synthetic in-project model, encrypted key, knowledge and media preservation",
+      "Read-only doctor",
+      "First real loopback application startup and compiled frontend response"
+    ],
+    "failure": {
+      "step": "Verify offline reconfiguration, encrypted configuration preservation, and real local startup",
+      "cause": "The harness used configuration-only -NoStart -Json for a second-click expectation. Configuration-only mode intentionally refuses to operate on a running service; it is not equivalent to the customer's normal launch action.",
+      "repair": "Test the actual second launch with -Offline -NoBrowser and require the fixed already_running stage while the first process remains alive. Do not relax the production running-service protection."
+    },
+    "scope_limit": "The run failed before its final acceptance report and actual Chromium offline-media test. External legacy-directory pointer acceptance was not included in this revision."
+  },
+  "matrix": {
+    "run_id": 41405933535,
+    "url": "https://github.com/baizhanwen/liming-zhiyao-skill-collect/actions/runs/41405933535",
+    "conclusion": "success",
+    "ubuntu": {"passed": 637, "skipped": 46, "failed": 0, "seconds": 12.28},
+    "macos": {"passed": 637, "skipped": 46, "failed": 0, "seconds": 45.97},
+    "windows": {"passed": 678, "skipped": 5, "failed": 0, "seconds": 115.65},
+    "actual_windows_bootstrap_contracts": 26
+  },
+  "external_business_acceptance": {
+    "douyin": "not executed", "models": "not executed", "feishu": "not executed",
+    "customer_windows_11": "not observed"
+  },
+  "scope": "Historical partial installation/startup proof is retained without changing the failed overall run to success."
+}
