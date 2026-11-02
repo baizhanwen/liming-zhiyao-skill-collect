@@ -72,7 +72,11 @@ def main():
 
     baseline = json.loads(args.path_baseline.read_text(encoding='utf-8-sig'))
     require(persistent_paths() == baseline, 'Cold installation modified a persistent PATH.')
-    data = project / 'data'
+    # This is an explicitly seeded legacy directory outside the new application
+    # folder. The persisted pointer exercises the ordinary later-launch path;
+    # writing this fixture is not a claim that a human used FolderBrowserDialog.
+    require(not (project / 'data').exists(), 'NoStart created a new business data directory.')
+    data = args.report.parent / "existing 中文 ' dollar$ &" / 'data'
     store = Store(data)
     vault = Vault(data)
     key = 'EXPLICIT_SYNTHETIC_LOCAL_KEY_NO_EXTERNAL_CALLS'
@@ -84,14 +88,20 @@ def main():
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text('EXPLICIT_SYNTHETIC_PRESERVED_DATA', encoding='utf-8')
     (project / '.env').write_text('EXPLICIT_SYNTHETIC_NOT_AUTO_LOADED=1\n', encoding='utf-8')
+    pointer = project / '.runtime/data-location.json'
+    pointer.write_text(json.dumps({'schema_version': 1, 'path': str(data)}), encoding='utf-8')
     before_rows = digest(json.dumps(store.list('model_configs') + store.list('knowledge'), sort_keys=True).encode())
-    before_files = {str(path.relative_to(project)): path.read_bytes() for path in (
-        data / '.secrets.key', data / 'secrets.enc', data / 'uploads/synthetic.txt',
-        data / 'tasks/synthetic/source.txt', project / '.env')}
+    protected_files = {
+        'encrypted_key': data / '.secrets.key', 'encrypted_values': data / 'secrets.enc',
+        'uploaded_source': data / 'uploads/synthetic.txt', 'task_source': data / 'tasks/synthetic/source.txt',
+        'source_environment_file': project / '.env', 'persisted_data_pointer': pointer,
+    }
+    before_files = {label: path.read_bytes() for label, path in protected_files.items()}
     original_managed = {name: (project / '.runtime' / name / '.skill-collect-managed.json').read_bytes()
                         for name in lock['runtimes']}
     env = dict(os.environ, PYTHONUTF8='1', PYTHONNOUSERSITE='1',
-               PLAYWRIGHT_BROWSERS_PATH=environment['browser_cache'], SKILL_COLLECT_DATA=str(data))
+               PLAYWRIGHT_BROWSERS_PATH=environment['browser_cache'])
+    env.pop('SKILL_COLLECT_DATA', None)  # The persisted pointer must supply it.
     dirs = [str(Path(environment[name]).parent) for name in ('python', 'node', 'ffmpeg', 'ffprobe')]
     env['PATH'] = os.pathsep.join(dict.fromkeys(dirs)) + os.pathsep + env['PATH']
 
@@ -139,14 +149,15 @@ def main():
         report = json.loads(result.stdout)
         require(report['ok'] is True and report['mode'] == 'configure', 'Offline reconfiguration did not report readiness.')
         require(all(check['ok'] is True for check in report['checks']), 'An environment check did not pass after installation.')
-    require(all((project / relative).read_bytes() == body for relative, body in before_files.items()), 'Reconfiguration changed a protected synthetic file.')
+    require(all(protected_files[label].read_bytes() == body for label, body in before_files.items()), 'Reconfiguration changed a protected synthetic file.')
+    require(not (project / 'data').exists(), 'Reconfiguration replaced the external legacy directory with an empty local database.')
     require(all((project / '.runtime' / name / '.skill-collect-managed.json').read_bytes() == body
                 for name, body in original_managed.items()), 'Offline replay replaced a runtime unnecessarily.')
     require(digest(json.dumps(store.list('model_configs') + store.list('knowledge'), sort_keys=True).encode()) == before_rows,
             'Reconfiguration changed stored synthetic records.')
     require(Vault(data).get('model_text') == key, 'An encrypted model key was not retained.')
 
-    doctor = subprocess.run([sys.executable, 'scripts/doctor.py', '--json'], env=env,
+    doctor = subprocess.run([sys.executable, 'scripts/doctor.py', '--data', str(data), '--json'], env=env,
                             capture_output=True, text=True, encoding='utf-8', timeout=30)
     require(doctor.returncode == 0 and json.loads(doctor.stdout)['ok'] is True, 'Read-only doctor did not pass after installation.')
     with socket.socket() as listener:
@@ -174,13 +185,16 @@ def main():
         require(status.get('version') == __version__ and status.get('mode') == 'local_single_user', 'The wrong local application answered.')
         require(status['models']['text']['key_configured'] is True, 'Stored synthetic model configuration was not visible to the app.')
         require(status['counts']['knowledge'] == 1, 'Stored synthetic knowledge was not visible to the app.')
+        require(Path(status['diagnostics']['sqlite']).resolve() == (data / 'app.sqlite3').resolve(),
+                'The actual server did not use the external legacy data directory.')
         with opener.open(f'http://127.0.0.1:{port}/', timeout=3) as response:
             require(response.status == 200 and b'/assets/' in response.read(), 'The compiled workbench was not served.')
         # A second click reuses the same service and never creates a duplicate.
         second = subprocess.run([shell, '-NoLogo', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', script,
-                                 '-Offline', '-NoStart', '-Json'], env=env, capture_output=True, text=True,
+                                 '-Offline', '-NoBrowser'], env=env, capture_output=True, text=True,
                                 encoding='utf-8', errors='replace', timeout=30)
-        require(second.returncode == 0 and json.loads(second.stdout)['stage'] == 'already_running', 'A second click did not reuse the owned local service.')
+        require(second.returncode == 0 and '[already_running]' in second.stdout,
+                'A second actual launch did not reuse the owned local service.')
         require(process.poll() is None, 'A second click terminated the first service.')
     finally:
         if process.poll() is None:
@@ -188,7 +202,8 @@ def main():
         process.wait(timeout=15)
 
     require(persistent_paths() == baseline, 'Bootstrap changed persistent system/user PATH.')
-    require(all((project / relative).read_bytes() == body for relative, body in before_files.items()), 'Startup changed a protected synthetic file.')
+    require(all(protected_files[label].read_bytes() == body for label, body in before_files.items()), 'Startup changed a protected synthetic file.')
+    require(not (project / 'data').exists(), 'Startup created an empty replacement data directory.')
     require(digest(json.dumps(store.list('model_configs') + store.list('knowledge'), sort_keys=True).encode()) == before_rows,
             'Startup changed stored synthetic records.')
     public = {
@@ -196,6 +211,9 @@ def main():
         'bootstrap_shell': 'Windows PowerShell 5.1', 'runtimes': download_checks,
         'production_dependencies_installed': True, 'offline_reconfiguration_runs': 2,
         'encrypted_key_bytes_preserved': True, 'stored_model_and_knowledge_preserved': True,
+        'external_legacy_data_loaded_via_persisted_pointer': True,
+        'new_project_data_directory_created': False,
+        'gui_folder_selection': 'not executed; explicit fixture pointer used',
         'synthetic_media_and_env_preserved': True, 'persistent_path_unchanged': True,
         'actual_loopback_http_startup': True, 'compiled_workbench_served': True,
         'second_click_reused_owned_service': True,

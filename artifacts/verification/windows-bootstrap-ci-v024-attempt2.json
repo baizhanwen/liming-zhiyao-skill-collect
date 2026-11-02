@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "application_version": "0.2.4",
+  "source_commit": "183127374734c31f069a33335b74d63236bd65ef",
+  "date": "2026-11-02",
+  "cold_installation": {
+    "run_id": 41405623960,
+    "url": "https://github.com/baizhanwen/liming-zhiyao-skill-collect/actions/runs/41405623960",
+    "conclusion": "failure",
+    "windows_powershell_51_cold_check": "passed",
+    "path_fixture": "Actual Unicode, spaces, apostrophe, dollar sign and ampersand; raw temporary path omitted.",
+    "failure_stage": "frontend_build",
+    "failure_code": "frontend_build",
+    "explicit_public_source_diagnostic": {
+      "npm_lifecycle_build_exit": 1,
+      "direct_typescript_exit": 0,
+      "direct_vite_exit": 0,
+      "compiled_javascript": "index-CTheZEfE.js",
+      "cause": "The Windows npm lifecycle command shim mishandled the ampersand-containing path. Direct Node invocations of the same installed TypeScript and Vite succeeded.",
+      "repair": "Invoke the locked TypeScript and Vite files directly through Node with separate argument arrays. Retain the special-character path and ignore-scripts policy."
+    },
+    "configuration_startup_media_acceptance": "not executed"
+  },
+  "matrix": {
+    "run_id": 41405623828,
+    "url": "https://github.com/baizhanwen/liming-zhiyao-skill-collect/actions/runs/41405623828",
+    "conclusion": "success",
+    "ubuntu": {"passed": 637, "skipped": 46, "failed": 0, "seconds": 13.47},
+    "macos": {"passed": 637, "skipped": 46, "failed": 0, "seconds": 51.01},
+    "windows": {"passed": 678, "skipped": 5, "failed": 0, "seconds": 83.65},
+    "actual_windows_bootstrap_contracts": 26,
+    "skip_scope": "Unix: 17 prior Windows-only contracts, 26 new bootstrap Windows-only contracts, 3 missing FFmpeg/FFprobe media contracts. Windows: 3 missing media contracts plus 2 prior platform/privilege-specific cases."
+  },
+  "external_business_acceptance": {
+    "douyin": "not executed", "models": "not executed", "feishu": "not executed",
+    "customer_windows_11": "not observed"
+  },
+  "scope": "A successful matrix does not supersede this run's failed actual cold installation. Intermediate GitHub App workflow-write runs are not treated as final acceptance."
+}

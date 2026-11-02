@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "application_version": "0.2.4",
+  "source_commit": "968e9540c4959460e905034b437c900524052283",
+  "date": "2026-11-02",
+  "cold_installation": {
+    "run_id": 41405093467,
+    "url": "https://github.com/baizhanwen/liming-zhiyao-skill-collect/actions/runs/41405093467",
+    "conclusion": "failure",
+    "windows_powershell_51_cold_check": "passed",
+    "failure_stage": "frontend_build",
+    "failure_code": "frontend_build",
+    "configuration_startup_media_acceptance": "not executed",
+    "note": "The failure report retained initial missing-runtime checks. Those checks are not the state of runtimes after installation; only the failure stage is used here."
+  },
+  "matrix": {
+    "run_id": 41405093392,
+    "url": "https://github.com/baizhanwen/liming-zhiyao-skill-collect/actions/runs/41405093392",
+    "conclusion": "failure",
+    "ubuntu": {"passed": 637, "skipped": 46, "failed": 0, "seconds": 12.61},
+    "macos": {"passed": 637, "skipped": 46, "failed": 0, "seconds": 53.52},
+    "windows": {"passed": 677, "skipped": 5, "failed": 1, "seconds": 92.94},
+    "windows_failure": {
+      "test": "test_actual_windows_archive_rejects_bad_entries_before_extracting_even_good_files[backslash]",
+      "cause": "The explicit malformed ZIP fixture was normalized by Windows Python ZipInfo.__init__, so it contained a valid slash name rather than the intended backslash name.",
+      "repair": "Preserve the malformed ZIP entry name explicitly after constructing ZipInfo. The production path check was not relaxed."
+    }
+  },
+  "external_business_acceptance": {
+    "douyin": "not executed", "models": "not executed", "feishu": "not executed",
+    "customer_windows_11": "not observed"
+  },
+  "scope": "Historical failed CI evidence retained separately from subsequent fixes and successful runs."
+}
