@@ -1,0 +1,122 @@
+name: Windows one-click cold installation
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  bootstrap:
+    name: PowerShell 5.1 private runtime installation
+    runs-on: windows-latest
+    timeout-minutes: 35
+    env:
+      PYTHONUTF8: '1'
+      PYTHONNOUSERSITE: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare a source checkout with a nontrivial Windows path
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if ($PSVersionTable.PSVersion.Major -ne 5) { throw 'This job must use Windows PowerShell 5.1.' }
+          $Target = Join-Path $env:RUNNER_TEMP "SkillCollect 中文 ' dollar`$ &"
+          $Archive = Join-Path $env:RUNNER_TEMP 'skill-collect-public-source.zip'
+          $Proof = Join-Path $env:RUNNER_TEMP 'skill-collect-bootstrap-proof'
+          & git archive --format=zip --output=$Archive HEAD
+          if ($LASTEXITCODE -ne 0) { throw 'Cannot prepare the exact public source.' }
+          Expand-Archive -LiteralPath $Archive -DestinationPath $Target
+          New-Item -ItemType Directory -Path $Proof | Out-Null
+          "SC_BOOTSTRAP_PROJECT=$Target" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "SC_BOOTSTRAP_PROOF=$Proof" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      - name: Read-only cold check uses no preinstalled Python or Node
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $Shell = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
+          $Script = Join-Path $env:SC_BOOTSTRAP_PROJECT 'scripts\windows_bootstrap.ps1'
+          $Output = & $Shell -NoLogo -NoProfile -ExecutionPolicy Bypass -File $Script -CheckOnly -ForcePrivateRuntimes -Json
+          $Code = $LASTEXITCODE
+          $Report = ($Output -join "`n") | ConvertFrom-Json
+          if ($Code -eq 0 -or $Report.ok -ne $false -or $Report.mode -ne 'check') { throw 'Cold check did not report the absent private runtimes.' }
+          if (Test-Path -LiteralPath (Join-Path $env:SC_BOOTSTRAP_PROJECT '.runtime')) { throw 'Read-only check wrote the runtime directory.' }
+          $Output | Out-File -LiteralPath (Join-Path $env:SC_BOOTSTRAP_PROOF 'cold-check.json') -Encoding utf8
+          # Persist hashes only, never publish system/user PATH contents.
+          $Hasher = [Security.Cryptography.SHA256]::Create()
+          try {
+            $Values = @()
+            $Locations = @(
+              @{root=[Microsoft.Win32.Registry]::CurrentUser;key='Environment'},
+              @{root=[Microsoft.Win32.Registry]::LocalMachine;key='SYSTEM\CurrentControlSet\Control\Session Manager\Environment'}
+            )
+            foreach ($Location in $Locations) {
+              $Key = $Location.root.OpenSubKey($Location.key)
+              $Value = ''
+              if ($Key) {
+                try { $Value = [string]$Key.GetValue('Path', '', [Microsoft.Win32.RegistryValueOptions]::DoNotExpandEnvironmentNames) }
+                finally { $Key.Dispose() }
+              }
+              $Values += ([BitConverter]::ToString($Hasher.ComputeHash([Text.Encoding]::UTF8.GetBytes($Value)))).Replace('-','').ToLowerInvariant()
+            }
+            ConvertTo-Json -InputObject @($Values) -Compress | Out-File -LiteralPath (Join-Path $env:SC_BOOTSTRAP_PROOF 'path-baseline.json') -Encoding utf8
+          } finally { $Hasher.Dispose() }
+          exit 0
+      - name: Download pinned runtimes and configure from scratch without Codex or pwsh
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $Shell = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
+          $Script = Join-Path $env:SC_BOOTSTRAP_PROJECT 'scripts\windows_bootstrap.ps1'
+          $Output = & $Shell -NoLogo -NoProfile -ExecutionPolicy Bypass -File $Script -ForcePrivateRuntimes -NoStart -Json
+          $Code = $LASTEXITCODE
+          $Output | Out-File -LiteralPath (Join-Path $env:SC_BOOTSTRAP_PROOF 'cold-install.json') -Encoding utf8
+          $Report = ($Output -join "`n") | ConvertFrom-Json
+          if ($Code -ne 0 -or $Report.ok -ne $true) { throw 'Cold private runtime installation failed. See sanitized report.' }
+          foreach ($Name in @('python','node','ffmpeg','ffprobe')) {
+            $Item = $Report.checks | Where-Object { $_.name -eq $Name }
+            if (-not $Item.ok -or $Item.source -ne 'project') { throw 'A preinstalled system runtime was used.' }
+          }
+      - name: Verify offline reconfiguration, encrypted configuration preservation, and real local startup
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $Python = Join-Path $env:SC_BOOTSTRAP_PROJECT '.venv\Scripts\python.exe'
+          & $Python (Join-Path $env:GITHUB_WORKSPACE 'tests\windows_bootstrap_acceptance.py') --project $env:SC_BOOTSTRAP_PROJECT --report (Join-Path $env:SC_BOOTSTRAP_PROOF 'acceptance.json') --path-baseline (Join-Path $env:SC_BOOTSTRAP_PROOF 'path-baseline.json')
+          if ($LASTEXITCODE -ne 0) { throw 'Bootstrap acceptance failed.' }
+          $Environment = Get-Content -LiteralPath (Join-Path $env:SC_BOOTSTRAP_PROJECT '.runtime\environment.json') -Raw | ConvertFrom-Json
+          foreach ($Name in @('node','ffmpeg','ffprobe')) {
+            Split-Path -Parent $Environment.$Name | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          }
+          "PLAYWRIGHT_BROWSERS_PATH=$($Environment.browser_cache)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      - uses: astral-sh/setup-uv@v6
+      - name: Restore exact development dependencies after production bootstrap acceptance
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Set-Location -LiteralPath $env:SC_BOOTSTRAP_PROJECT
+          & uv sync --frozen --no-python-downloads --python (Join-Path $env:SC_BOOTSTRAP_PROJECT '.runtime\python\tools\python.exe')
+          if ($LASTEXITCODE -ne 0) { throw 'Locked test dependency restoration failed.' }
+      - name: Execute Windows contracts and actual Chromium with an offline self-authored video
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Set-Location -LiteralPath $env:SC_BOOTSTRAP_PROJECT
+          & .\.venv\Scripts\python.exe -m pytest -q tests/test_windows_bootstrap.py tests/test_browser_capture.py::test_real_project_renderer_with_explicit_offline_public_fixture --junitxml="$env:SC_BOOTSTRAP_PROOF\contracts.xml"
+          if ($LASTEXITCODE -ne 0) { throw 'Windows bootstrap/actual offline Chromium contracts failed.' }
+          # This dedicated job must execute the media test, not silently skip it.
+          [xml]$Results = Get-Content -LiteralPath (Join-Path $env:SC_BOOTSTRAP_PROOF 'contracts.xml') -Raw
+          if ([int]$Results.testsuites.testsuite.skipped -ne 0) { throw 'A required Windows/bootstrap/media test was skipped.' }
+          foreach ($Suite in $Results.testsuites.testsuite) { if ($Suite.hostname) { $Suite.hostname = '[REDACTED]' } }
+          $Results.Save((Join-Path $env:SC_BOOTSTRAP_PROOF 'contracts.xml'))
+      - name: Retain sanitized installer and offline acceptance evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-bootstrap-public-evidence
+          path: |
+            ${{ runner.temp }}/skill-collect-bootstrap-proof/cold-check.json
+            ${{ runner.temp }}/skill-collect-bootstrap-proof/cold-install.json
+            ${{ runner.temp }}/skill-collect-bootstrap-proof/acceptance.json
+            ${{ runner.temp }}/skill-collect-bootstrap-proof/contracts.xml
+          if-no-files-found: warn

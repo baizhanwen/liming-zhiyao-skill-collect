@@ -1,0 +1,35 @@
+{
+  "date": "2026-11-02",
+  "scope": "local frontend maintenance; application version remains 0.2.3",
+  "implementation": {
+    "natural_language_default": true,
+    "user_can_uncheck": true,
+    "fresh_page_resets_to_default": true,
+    "privacy_notice_retained": true
+  },
+  "validation": {
+    "production_build": "passed: TypeScript and Vite",
+    "javascript_asset": "index-cCEo38qe.js",
+    "desktop": {"viewport_width": 1196, "document_width": 1196, "checked": true},
+    "narrow": {"viewport_width": 390, "document_width": 390, "checked": true},
+    "interaction": "actual page: unchecked, reloaded, checked again",
+    "new_automated_tests": 0,
+    "external_model_calls": 0,
+    "external_github_search_calls": 0,
+    "external_feishu_calls": 0
+  },
+  "search_code_review": {
+    "stops_at_first_match": false,
+    "repository_query_suffix": " skill",
+    "default_repository_page_size": 6,
+    "repository_sort": "updated",
+    "additional_authenticated_code_page_size": 6,
+    "automatic_pagination": false,
+    "automatic_query_broadening": false,
+    "deduplication": false,
+    "frontend_renders_all_returned_items": true,
+    "user_search_effective_query_and_total": "not observed; no specific cause attributed"
+  },
+  "release": "not committed or published in this maintenance; existing v0.2.3 assets unchanged",
+  "screenshot": "discovery-natural-default-20261102.jpg"
+}

@@ -15,6 +15,9 @@
 | python-multipart | Apache-2.0，上传处理 |
 | pytest / pytest-timeout | MIT，开发验收 |
 | FFmpeg | 外部系统程序，其许可受用户安装构建选项影响；本仓库不捆绑其二进制 |
+| CPython 便携运行时 | Windows一键入口按固定版本从CPython维护者的NuGet包下载；Python Software Foundation许可及随包第三方声明，本仓库不捆绑二进制 |
+| Node.js 便携运行时 | Windows一键入口从nodejs.org下载固定版本ZIP；MIT及随包第三方声明，不改变系统Node安装 |
+| Gyan FFmpeg Windows构建 | FFmpeg官网列出的独立构建来源；本次固定9.0.2 essentials为GPLv3，启动器从上游单独下载，保留其LICENSE及源码入口，不纳入本项目MIT许可或分发ZIP |
 | [Easel](https://github.com/ZJU-REAL/Easel) / [展示](https://zjureal.com/Easel/) | 仅作为视觉参考和真实来源读取验收对象；未复用其代码、标志或素材 |
 | [anthropics/skills](https://github.com/anthropics/skills) | 真实多技能发现与包完整性验收对象。公开验收只存路径、SHA与统计，不重新分发技能正文/脚本；应用导入包保留来源许可 |
 
