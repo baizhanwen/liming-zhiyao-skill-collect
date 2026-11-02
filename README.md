@@ -4,7 +4,7 @@
 
 一个本地运行的单用户工作台：丢进 GitHub 或抖音链接，或上传视频、字幕，保留来源证据，整理知识和技能，并与已授权的飞书多维表格手动双向同步。展示名保留 `clloect`，技术名为 `liming-zhiyao-skill-collect`。
 
-当前代码版本 **v0.2.4**：Windows客户可双击“一键配置并启动.cmd”，自动检测并准备缺失依赖，无需预装Python、Node、PowerShell7或Codex；旧客户通过“沿用旧资料并启动.cmd”直接沿用原模型配置和资料。固定来源/SHA校验、项目专属环境、失败重跑与原资料保留已在Windows原生CI验证。首次需要联网；当前便携包支持Windows10/11 x64。[Windows发行入口](https://github.com/baizhanwen/liming-zhiyao-skill-collect/releases/tag/v0.2.4)的最终上传状态以发行页面及最新验收记录为准，[安装步骤](docs/Windows一键安装.md)。安装验收不替代客户网络中的抖音/模型真实业务复验。
+当前版本 **[v0.2.4预发布](https://github.com/baizhanwen/liming-zhiyao-skill-collect/releases/tag/v0.2.4)**：Windows客户可双击“一键配置并启动.cmd”，自动检测并准备缺失依赖，无需预装Python、Node、PowerShell7或Codex；旧客户通过“沿用旧资料并启动.cmd”直接沿用原模型配置和资料。固定来源/SHA校验、项目专属环境、失败重跑与原资料保留已在Windows原生CI验证。首次需要联网；当前便携包支持Windows10/11 x64。[一键安装包](https://github.com/baizhanwen/liming-zhiyao-skill-collect/releases/download/v0.2.4/SkillCollect-v0.2.4-Windows-OneClick.zip)已发布，公开下载SHA、sidecar及GitHub资产digest已核对，[安装步骤](docs/Windows一键安装.md)。安装验收不替代客户网络中的抖音/模型真实业务复验。
 
 历史版本 **[v0.2.3预发布](https://github.com/baizhanwen/liming-zhiyao-skill-collect/releases/tag/v0.2.3)**：优先修复免费本地抖音链接分析。静态短链解析失败时，项目浏览器自动核对官方跳转并采集目标原片；TLS 隧道上限由32调为64，保留总连接256、TLS、公网固定连接、媒体100MiB等保护。客户指定的整段分享文案已在本机一次提交完成17.484秒原片、1段转写、4帧画面、文字分析、GitHub线索查询及知识保存，约37.947秒，无扫码、补传或手动重试。提供保留原配置的Windows升级包（PowerShell7）；三平台CI、发布及下载SHA已核对。先前32隧道失败及模型格式失败独立保留；这不是所有链接或客户Win11实机保证。详见[验收报告](docs/验收报告.md)与[客户升级步骤](docs/客户升级与抖音验收.md)。采集没有新增付费解析服务，模型仍使用用户已有配置。
 
@@ -20,7 +20,7 @@
 
 ## 安装与启动
 
-Windows 客户的一键入口（v0.2.4 本次维护）：下载完整 Windows 一键安装包并解压到可写的新文件夹，双击 **`一键配置并启动.cmd`**。它使用系统自带 PowerShell 5.1，检测并自动准备缺失的 Python、Node.js、FFmpeg/FFprobe、项目依赖与 Chromium，完成后打开本地工作台；以后双击同一个入口即可。首次需要联网，下载失败显示阶段并允许重新运行，不要求安装 Codex 或手动配置 PATH。
+Windows 客户的一键入口（v0.2.4）：下载完整 Windows 一键安装包并解压到可写的新文件夹，双击 **`一键配置并启动.cmd`**。它使用系统自带 PowerShell 5.1，检测并自动准备缺失的 Python、Node.js、FFmpeg/FFprobe、项目依赖与 Chromium，完成后打开本地工作台；以后双击同一个入口即可。首次需要联网，下载失败显示阶段并允许重新运行，不要求安装 Codex 或手动配置 PATH。
 
 已有资料和模型配置的客户，在新文件夹第一次双击 **`沿用旧资料并启动.cmd`**，选择原项目文件夹或原 `data` 目录。它直接沿用整套原资料和加密凭证，不复制、导出或上传密钥；以后普通入口自动记住所选目录。原项目应先停止运行。详见 [Windows 一键安装与原资料保留](docs/Windows一键安装.md)。Windows ARM64/32位不在当前便携包范围。
 

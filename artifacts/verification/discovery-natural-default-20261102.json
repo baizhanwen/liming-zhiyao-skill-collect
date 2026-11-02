@@ -10,8 +10,16 @@
   "validation": {
     "production_build": "passed: TypeScript and Vite",
     "javascript_asset": "index-cCEo38qe.js",
-    "desktop": {"viewport_width": 1196, "document_width": 1196, "checked": true},
-    "narrow": {"viewport_width": 390, "document_width": 390, "checked": true},
+    "desktop": {
+      "viewport_width": 1196,
+      "document_width": 1196,
+      "checked": true
+    },
+    "narrow": {
+      "viewport_width": 390,
+      "document_width": 390,
+      "checked": true
+    },
     "interaction": "actual page: unchecked, reloaded, checked again",
     "new_automated_tests": 0,
     "external_model_calls": 0,
@@ -31,5 +39,6 @@
     "user_search_effective_query_and_total": "not observed; no specific cause attributed"
   },
   "release": "not committed or published in this maintenance; existing v0.2.3 assets unchanged",
-  "screenshot": "discovery-natural-default-20261102.jpg"
+  "screenshot": "discovery-natural-default-20261102.jpg",
+  "subsequent_distribution": "Included in v0.2.4 source and Windows one-click package; see github-release-v024.json"
 }
