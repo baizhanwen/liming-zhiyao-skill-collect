@@ -7,9 +7,11 @@
 - Python >=3.11（推荐3.12），Node.js 推荐24 LTS；Vite8接受20.19+或22.12+兼容分支。媒体处理可选 FFmpeg/FFprobe。
 - macOS/Linux：`bash scripts/setup.sh`，再 `bash scripts/start.sh`。
 - Windows PowerShell7：`pwsh -File scripts/setup.ps1`，再 `pwsh -File scripts/start.ps1`。
+- Windows 10/11 x64 客户可直接双击根目录 `一键配置并启动.cmd`，使用系统自带 PowerShell 5.1；按用户已明确授权的范围，自动检测并从固定官方/官方列出的来源下载缺失运行时，校验 `scripts/windows-runtime-lock.json` 的 SHA-256 后放入项目 `.runtime/`。不需要预装 Python、Node、PowerShell7 或 Codex，不修改全局 PATH、注册表或其他软件环境。
+- 升级到新目录时，双击 `沿用旧资料并启动.cmd`，本人选择原项目或资料目录；只保存本机资料目录指针，不复制或输出密钥。不可猜测其他项目的资料。
 - 默认入口 `http://127.0.0.1:8765`。后端 `uvicorn backend.main:app` 提供前端构建产物与 API。默认回环；不要擅自公开服务或改造成多用户模式。
 - `SKILL_COLLECT_DATA` 选择资料目录，`SKILL_COLLECT_PORT` 选择端口。`.env.example` 仅文档模板，不自动加载执行 `.env`。
-- 缺少系统运行时只给官方安装来源，不执行不明来源安装命令；不要全局修改用户 Python/Node 环境。
+- 常规维护缺少运行时只给官方来源；用户主动运行一键入口时允许按上述锁定清单自动准备项目专属环境。不执行不明来源安装命令，不全局修改用户 Python/Node 环境。
 
 ## 验证
 

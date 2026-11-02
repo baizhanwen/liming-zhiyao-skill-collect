@@ -1,4 +1,5 @@
 .venv/
+.runtime/
 node_modules/
 frontend/dist/
 data/

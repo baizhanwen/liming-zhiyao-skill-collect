@@ -15,6 +15,9 @@
 | python-multipart | Apache-2.0，上传处理 |
 | pytest / pytest-timeout | MIT，开发验收 |
 | FFmpeg | 外部系统程序，其许可受用户安装构建选项影响；本仓库不捆绑其二进制 |
+| CPython 便携运行时 | Windows一键入口按固定版本从CPython维护者的NuGet包下载；Python Software Foundation许可及随包第三方声明，本仓库不捆绑二进制 |
+| Node.js 便携运行时 | Windows一键入口从nodejs.org下载固定版本ZIP；MIT及随包第三方声明，不改变系统Node安装 |
+| Gyan FFmpeg Windows构建 | FFmpeg官网列出的独立构建来源；本次固定9.0.2 essentials为GPLv3，启动器从上游单独下载，保留其LICENSE及源码入口，不纳入本项目MIT许可或分发ZIP |
 | [Easel](https://github.com/ZJU-REAL/Easel) / [展示](https://zjureal.com/Easel/) | 仅作为视觉参考和真实来源读取验收对象；未复用其代码、标志或素材 |
 | [anthropics/skills](https://github.com/anthropics/skills) | 真实多技能发现与包完整性验收对象。公开验收只存路径、SHA与统计，不重新分发技能正文/脚本；应用导入包保留来源许可 |
 
@@ -22,7 +25,7 @@ GitHub 技能的仓库级许可不一定覆盖每个技能。导入前查看真�
 
 界面图标为本项目手写 SVG 路径，未复制 Easel 资产。合成媒体契约夹具使用本机 FFmpeg 色块/正弦波，仅证明对应测试流程，未冒充用户视频或真实模型理解。真实原片验收单列脱敏统计与哈希，原媒体及私人材料不随仓库分发。
 
-## 升级包内的前端运行时代码
+## 升级包与一键安装包内的前端运行时代码
 
 Windows升级包包含已构建页面，内含 react 19.3.1, react-dom 19.3.1, scheduler 0.28.0。三者使用相同的下列MIT许可；许可证原文来自锁定安装包的LICENSE，随升级包分发。本项目自身LICENSE也随包提供，许可文件不进入待替换的payload。
 

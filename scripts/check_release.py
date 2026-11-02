@@ -21,7 +21,7 @@ def git(*args):
 
 def forbidden(path):
     parts=Path(path).parts
-    return any(p in ('data','backups','.venv','node_modules','chat analysis','private','__pycache__') for p in parts) or Path(path).name in ('.secrets.key','secrets.enc','.env') or path.endswith(('.sqlite3','.db','.mp4','.mov','.wav','.mp3','.zip'))
+    return any(p in ('data','backups','.venv','.runtime','node_modules','chat analysis','private','__pycache__') for p in parts) or Path(path).name in ('.secrets.key','secrets.enc','.env') or path.endswith(('.sqlite3','.db','.mp4','.mov','.wav','.mp3','.zip'))
 
 
 def scan(history=True):

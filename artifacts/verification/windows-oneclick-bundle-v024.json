@@ -1,0 +1,19 @@
+{
+  "product": "liming-zhiyao-skill-collect",
+  "version": "0.2.4",
+  "filename": "SkillCollect-v0.2.4-Windows-OneClick.zip",
+  "sha256": "740197230be9794f670124911e2b45923878c9d3476e71bba81e67c8b4a8f7c9",
+  "size": 446955,
+  "payload_files": 62,
+  "archive_files": 65,
+  "manifest_sha256": "8ad37ea60caa190cf71725b2a481677650f9684529a331b62c18a8de977a63cf",
+  "launcher_sha256": {
+    "一键配置并启动.cmd": "3aec2a77875ffbbbc325866b3917a239bd5d33252a83fb81373a9308050a496d",
+    "沿用旧资料并启动.cmd": "73cc06359926fae51916d294ebc68c5b2dffaa5129224aa1a8bd89bb1b01c8a8"
+  },
+  "runtimes_bundled": false,
+  "scope": "Public source, built frontend and one-click bootstrap; no user data, credentials or installed runtimes",
+  "program_verified_commit": "9d6a6e29762b09b2cbca507942049546dbe9aa4f",
+  "package_scope": "Final release candidate, with final build-time documentation; upload and read-back recorded separately",
+  "official_runtime_downloads_not_bundled": true
+}

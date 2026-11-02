@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "platform": "win-x64",
+  "runtimes": {
+    "python": {
+      "version": "3.13.17",
+      "kind": "zip",
+      "url": "https://api.nuget.org/v3-flatcontainer/python/3.13.17/python.3.13.17.nupkg",
+      "sha256": "dce409744b088f94c6e37ba41f8100c384c27e029e843237364c602d30d475e5",
+      "archive_prefix": "",
+      "executable": "tools/python.exe",
+      "max_download_bytes": 33554432,
+      "source": "https://www.nuget.org/packages/python/3.13.17",
+      "documentation": "https://docs.python.org/3/using/windows.html#the-nuget-org-packages",
+      "license": "Python Software Foundation License"
+    },
+    "node": {
+      "version": "24.19.0",
+      "kind": "zip",
+      "url": "https://nodejs.org/dist/v24.19.0/node-v24.19.0-win-x64.zip",
+      "sha256": "57f71ab3652e797d84acddc79c81cc9ff1c6ddb2a1974cdb83f00fee9bff4c73",
+      "archive_prefix": "node-v24.19.0-win-x64/",
+      "executable": "node.exe",
+      "max_download_bytes": 67108864,
+      "source": "https://nodejs.org/dist/v24.19.0/SHASUMS256.txt",
+      "license": "MIT and bundled third-party notices"
+    },
+    "ffmpeg": {
+      "version": "9.0.2",
+      "kind": "zip",
+      "url": "https://www.gyan.dev/ffmpeg/builds/packages/ffmpeg-9.0.2-essentials_build.zip",
+      "sha256": "60f467265b1e312373dbcd92200c2618a74850f98d3d078e94296bb3fa2047ba",
+      "archive_prefix": "ffmpeg-9.0.2-essentials_build/",
+      "executable": "bin/ffmpeg.exe",
+      "probe": "bin/ffprobe.exe",
+      "max_download_bytes": 167772160,
+      "source": "https://www.gyan.dev/ffmpeg/builds/packages/ffmpeg-9.0.2-essentials_build.zip.sha256",
+      "documentation": "https://ffmpeg.org/download.html",
+      "license": "GPL-3.0; downloaded separately with upstream license and source links"
+    }
+  }
+}

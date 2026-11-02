@@ -1,0 +1,36 @@
+{
+  "date": "2026-11-02",
+  "scope": "Actual upstream Windows archive downloads on macOS; binaries not executed",
+  "private_download_directory_excluded_from_git": true,
+  "archives": [
+    {
+      "runtime": "CPython",
+      "version": "3.13.17",
+      "source": "https://api.nuget.org/v3-flatcontainer/python/3.13.17/python.3.13.17.nupkg",
+      "bytes": 14826465,
+      "sha256": "dce409744b088f94c6e37ba41f8100c384c27e029e843237364c602d30d475e5",
+      "inspected": ["tools/python.exe", "tools/Lib/venv/__init__.py", "tools/Lib/ensurepip/__init__.py"],
+      "windows_execution": "not performed on this macOS host"
+    },
+    {
+      "runtime": "Node.js",
+      "version": "24.19.0",
+      "source": "https://nodejs.org/dist/v24.19.0/node-v24.19.0-win-x64.zip",
+      "bytes": 37304352,
+      "sha256": "57f71ab3652e797d84acddc79c81cc9ff1c6ddb2a1974cdb83f00fee9bff4c73",
+      "upstream_checksum_matches": true,
+      "checksum_source": "https://nodejs.org/dist/v24.19.0/SHASUMS256.txt"
+    },
+    {
+      "runtime": "FFmpeg and FFprobe",
+      "version": "9.0.2",
+      "source": "https://www.gyan.dev/ffmpeg/builds/packages/ffmpeg-9.0.2-essentials_build.zip",
+      "bytes": 114768076,
+      "sha256": "60f467265b1e312373dbcd92200c2618a74850f98d3d078e94296bb3fa2047ba",
+      "upstream_checksum_matches": true,
+      "checksum_source": "https://www.gyan.dev/ffmpeg/builds/packages/ffmpeg-9.0.2-essentials_build.zip.sha256",
+      "inspected": ["ffmpeg-9.0.2-essentials_build/bin/ffmpeg.exe", "ffmpeg-9.0.2-essentials_build/bin/ffprobe.exe", "ffmpeg-9.0.2-essentials_build/LICENSE"]
+    }
+  ],
+  "live_douyin_or_model_or_feishu_calls": 0
+}

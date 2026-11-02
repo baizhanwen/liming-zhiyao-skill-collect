@@ -1,0 +1,12 @@
+{
+  "date": "2026-11-02",
+  "platform": "macOS arm64",
+  "application_version": "0.2.4",
+  "pytest": {"passed": 640, "skipped": 43, "failed": 0, "warnings": 1, "seconds": 11.73, "junit": "pytest-v024.xml"},
+  "skip_scope": "17 existing Windows-only updater contracts and 26 new Windows-only bootstrap contracts; not executed on macOS",
+  "build": {"status": "passed", "typescript": "7.0.2", "vite": "8.3.5", "modules": 22, "javascript_asset": "index-CTheZEfE.js", "css_asset": "index-Dv1BBRwq.css"},
+  "ui": {"status": "passed", "tests": 1, "seconds": 5.9, "scope": "Existing real loopback service workflow with isolated temporary data and self-authored fixtures, desktop and 390px; no model or external business calls", "evidence": "windows-oneclick-ui-v024.json"},
+  "existing_workspace_preservation": {"entities": 126, "entity_payloads_unchanged": true, "credential_files": 2, "credential_bytes_unchanged": true, "private_before_after_snapshots_retained": true},
+  "native_windows_bootstrap": "Separate Windows CI evidence required; not inferred from macOS tests, archive downloads, or UI operations",
+  "external_business_calls_in_this_validation": 0
+}

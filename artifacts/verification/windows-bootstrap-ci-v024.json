@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "application_version": "0.2.4",
+  "source_commit": "9d6a6e29762b09b2cbca507942049546dbe9aa4f",
+  "date": "2026-11-02",
+  "matrix": {
+    "run_id": 41406357405,
+    "url": "https://github.com/baizhanwen/liming-zhiyao-skill-collect/actions/runs/41406357405",
+    "conclusion": "success",
+    "defined_tests": 683,
+    "ubuntu": {
+      "job_id": 125149151547,
+      "passed": 637, "skipped": 46, "failed": 0, "seconds": 12.83,
+      "installation_build_browser_download_and_doctor": "passed"
+    },
+    "macos": {
+      "job_id": 125149151735,
+      "passed": 637, "skipped": 46, "failed": 0, "seconds": 49.41,
+      "installation_build_browser_download_and_doctor": "passed"
+    },
+    "windows": {
+      "job_id": 125149152085,
+      "passed": 678, "skipped": 5, "failed": 0, "seconds": 63.59,
+      "installation_build_browser_download_and_doctor": "passed",
+      "actual_bootstrap_contracts": 26
+    },
+    "skip_scope": {
+      "unix_46": "17 prior Windows-only update contracts plus 26 new Windows-only bootstrap contracts plus 3 media contracts without FFmpeg/FFprobe in the matrix environment.",
+      "windows_5": "The same 3 unavailable media contracts plus the pre-existing symlink-privilege and POSIX TIME_WAIT cases.",
+      "media_boundary": "The separate cold job below actually executed one Chromium/media fixture after installing FFmpeg. It does not retroactively change matrix skip counts or count the other two skipped media tests as executed."
+    },
+    "warnings": "One existing upstream Starlette TestClient deprecation warning per platform."
+  },
+  "cold_windows_installation": {
+    "run_id": 41406357354,
+    "job_id": 125149151554,
+    "url": "https://github.com/baizhanwen/liming-zhiyao-skill-collect/actions/runs/41406357354",
+    "conclusion": "success",
+    "platform_scope": "GitHub Actions Windows x64 runner, Windows PowerShell 5.1; no customer Win11 execution claimed.",
+    "cold_conditions": "New source directory with actual Unicode, spaces, apostrophe, dollar sign and ampersand. ForcePrivateRuntimes ignores preinstalled Python, Node and FFmpeg; no Codex or PowerShell 7 is required by the installer.",
+    "initial_readonly_check": "Passed expected missing-private-runtime and zero-write assertions.",
+    "actual_dependency_installation": {
+      "started_at": "2026-11-02T07:27:13Z",
+      "completed_at": "2026-11-02T07:27:53Z",
+      "python": "3.13.17",
+      "node": "24.19.0",
+      "ffmpeg_and_ffprobe": "9.0.2",
+      "runtime_download_sha256_checks": "passed",
+      "project_virtualenv_pip_packages_npm_packages_frontend_and_chromium": "passed"
+    },
+    "production_acceptance": {
+      "started_at": "2026-11-02T07:27:53Z",
+      "completed_at": "2026-11-02T07:28:08Z",
+      "offline_reconfiguration_runs": 2,
+      "external_existing_data_directory": "Loaded through an explicitly seeded persisted pointer. The new application directory never created a replacement data directory.",
+      "synthetic_model_encrypted_key_knowledge_media_env_and_pointer": "preserved",
+      "persistent_system_and_user_path": "unchanged",
+      "actual_loopback_application_and_compiled_frontend": "passed",
+      "actual_second_launch_reuses_owned_service": "passed",
+      "actual_complete_packaged_cmd_pinned_manifest": "passed",
+      "corrupted_package_rejected_before_writes": "passed",
+      "bundle_privacy_allowlist": "passed",
+      "gui_folder_dialog": "not executed; fixture pointer acceptance is not a GUI-selection claim"
+    },
+    "dedicated_executed_contracts": {
+      "passed": 27, "skipped": 0, "failed": 0,
+      "stdout_seconds": 13.76, "junit_seconds": 13.737,
+      "scope": "26 Windows bootstrap contracts and the existing actual Chromium/RPC/broker fixture with a self-authored audio/video file and explicit mock HTTP origins.",
+      "actual_chromium_media_test_seconds": 1.856,
+      "note": "These 26 bootstrap cases overlap the main matrix. Do not add them again to the project's defined-test count."
+    },
+    "public_evidence": [
+      "windows-bootstrap-cold-check-v024.json",
+      "windows-bootstrap-cold-install-v024.json",
+      "windows-bootstrap-acceptance-v024.json",
+      "windows-bootstrap-contracts-v024.xml"
+    ]
+  },
+  "retained_history": [
+    "windows-bootstrap-ci-v024-attempt1.json",
+    "windows-bootstrap-ci-v024-attempt2.json",
+    "windows-bootstrap-ci-v024-attempt3.json"
+  ],
+  "external_business_acceptance": {
+    "douyin_source_calls": 0, "model_calls": 0, "feishu_calls": 0,
+    "customer_windows_11": "not observed",
+    "real_customer_gui_folder_selection": "not observed",
+    "notice": "Dependency installation, synthetic preservation and offline media checks do not establish the customer's actual Douyin/network/model result."
+  },
+  "release_scope": "CI acceptance only. The Windows verification-bundle hash in the acceptance attachment is not the final published release-asset checksum."
+}
