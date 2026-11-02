@@ -526,7 +526,16 @@ function SC-SetUpProject($Found) {
     # when absent; existing customer frontend/data are not blindly overwritten.
     if (-not [IO.File]::Exists((SC-Child $script:SCRoot 'frontend/dist/index.html'))) {
         SC-Stage 'frontend_build' '构建工作台页面。'
-        SC-RunRequired $Found['node'].path @($Found['node'].npm, '--prefix', (SC-Child $script:SCRoot 'frontend'), 'run', 'build') 300 'frontend_build' '工作台构建失败；请核对完整项目文件后重试。'
+        # npm lifecycle scripts invoke cmd.exe and its generated .cmd shims.
+        # On real Windows those shims misparse an otherwise valid project path
+        # containing '&'. Call the lockfile's local CLIs directly with argv;
+        # paths never become shell syntax or injected JavaScript.
+        $FrontendRoot = SC-Child $script:SCRoot 'frontend'
+        $TypeScript = SC-Child $script:SCRoot 'frontend/node_modules/typescript/bin/tsc'
+        $Vite = SC-Child $script:SCRoot 'frontend/node_modules/vite/bin/vite.js'
+        $TsConfig = SC-Child $script:SCRoot 'frontend/tsconfig.json'
+        SC-RunRequired $Found['node'].path @($TypeScript, '-b', $TsConfig) 300 'frontend_typescript' '工作台 TypeScript 检查失败；请核对完整项目文件后重试。'
+        SC-RunRequired $Found['node'].path @($Vite, 'build', $FrontendRoot) 300 'frontend_build' '工作台构建失败；请核对完整项目文件后重试。'
     }
     if ($MissingBrowser) {
         if ($script:SCOffline) { SC-Fail 'offline_missing' '离线模式下缺少配套 Chromium；请联网重新双击。' }
@@ -642,6 +651,8 @@ function SC-Report([bool]$Ok, [object[]]$Checks, [string]$Mode) {
 }
 function Invoke-SkillCollectBootstrap {
     $Checks = @()
+    $Found = @{}
+    $Lock = $null
     try {
         if ($env:OS -cne 'Windows_NT' -or -not [Environment]::Is64BitOperatingSystem -or -not [Environment]::Is64BitProcess -or
                 $env:PROCESSOR_ARCHITECTURE -eq 'ARM64' -or $env:PROCESSOR_ARCHITEW6432 -eq 'ARM64') { SC-Fail 'unsupported_platform' '本安装器目前支持 Windows 10/11 x64；请使用对应架构的系统终端。' }
@@ -714,6 +725,21 @@ function Invoke-SkillCollectBootstrap {
         SC-StartApp $Port $DataDirectory
         return 0
     } catch {
+        # A failed late step must not report the initial cold-check snapshot as
+        # the final environment state. Refresh only runtime/import/file probes,
+        # and retain the actual failing step if a diagnostic probe also fails.
+        $FailureStage = $script:SCStage
+        $FailureCode = $script:SCErrorCode
+        $FailureMessage = $script:SCErrorMessage
+        if (-not $CheckOnly -and $Lock -and $script:SCRoot -and $script:SCPrivate) {
+            try {
+                $Found = SC-FindRuntimes $Lock
+                $Checks = SC-EnvironmentChecks $Found
+            } catch { }
+        }
+        $script:SCStage = $FailureStage
+        $script:SCErrorCode = $FailureCode
+        $script:SCErrorMessage = $FailureMessage
         if (-not $Json) {
             Write-Host ('[' + $script:SCStage + '/' + $script:SCErrorCode + '] ' + $script:SCErrorMessage)
             Write-Host '可保留此窗口并重新双击重试。不要把密钥、Cookie或验证码发送给他人。'

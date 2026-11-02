@@ -16,6 +16,7 @@ import sys
 import time
 import urllib.error
 import urllib.request
+import zipfile
 
 
 def require(condition, message):
@@ -54,6 +55,7 @@ def main():
     from backend import __version__
     from backend.security import Vault
     from backend.store import Store
+    from scripts.build_windows_bundle import build_bundle
 
     shell = str(Path(os.environ['SystemRoot']) / 'System32/WindowsPowerShell/v1.0/powershell.exe')
     script = str(project / 'scripts/windows_bootstrap.ps1')
@@ -92,6 +94,43 @@ def main():
                PLAYWRIGHT_BROWSERS_PATH=environment['browser_cache'], SKILL_COLLECT_DATA=str(data))
     dirs = [str(Path(environment[name]).parent) for name in ('python', 'node', 'ffmpeg', 'ffprobe')]
     env['PATH'] = os.pathsep.join(dict.fromkeys(dirs)) + os.pathsep + env['PATH']
+
+    # Build the actual complete distribution from this exact checkout. The
+    # source now deliberately contains synthetic data, encrypted keys, runtimes
+    # and node_modules; none may become part of the public application ZIP.
+    archive_path = args.report.parent / 'explicit-ci-only-full-bundle.zip'
+    bundle = build_bundle(project, archive_path)
+    extracted = args.report.parent / "bundle 中文 ' dollar$ &"
+    with zipfile.ZipFile(archive_path) as archive:
+        require(not any('/data/' in name or '/.runtime/' in name or '/node_modules/' in name
+                        for name in archive.namelist()), 'The complete distribution contained private/runtime directories.')
+        require(not any(key.encode() in archive.read(name) for name in archive.namelist()),
+                'The complete distribution contained the explicit synthetic credential.')
+        archive.extractall(extracted)  # Only our just-built, allowlisted archive.
+    packaged = extracted / ('SkillCollect-v' + __version__ + '-Windows')
+    launcher = packaged / '一键配置并启动.cmd'
+
+    def run_packaged_check():
+        command = '"' + os.environ['COMSPEC'] + '" /d /s /c "' + subprocess.list2cmdline(
+            [str(launcher), '-CheckOnly', '-ForcePrivateRuntimes', '-Json']) + '"'
+        checked = subprocess.run(command, env=dict(env, SKILL_COLLECT_BOOTSTRAP_NO_PAUSE='1'),
+                                 capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=45)
+        return checked.returncode, json.loads(checked.stdout)
+
+    packaged_code, packaged_check = run_packaged_check()
+    require(packaged_code != 0 and packaged_check.get('stage') == 'checked'
+            and packaged_check.get('error', {}).get('code') == 'environment_missing',
+            'The complete pinned CMD distribution did not validate before checking its absent private runtimes.')
+    require(not (packaged / '.runtime').exists() and not (packaged / 'data').exists(),
+            'The packaged read-only check created environment or data directories.')
+    payload = next((packaged / 'frontend/dist/assets').glob('*.js'))
+    payload.write_bytes(payload.read_bytes() + b'\n/* explicit synthetic corruption */\n')
+    corrupt_code, corrupt_check = run_packaged_check()
+    require(corrupt_code != 0 and corrupt_check.get('error', {}).get('code') == 'bundle_payload',
+            'The complete pinned CMD distribution accepted a corrupted application payload.')
+    require(not (packaged / '.runtime').exists() and not (packaged / 'data').exists(),
+            'A corrupted package created runtime or data directories before rejection.')
+
     for _ in range(2):
         result = subprocess.run([shell, '-NoLogo', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', script,
                                  '-ForcePrivateRuntimes', '-Offline', '-NoStart', '-Json'],
@@ -160,6 +199,10 @@ def main():
         'synthetic_media_and_env_preserved': True, 'persistent_path_unchanged': True,
         'actual_loopback_http_startup': True, 'compiled_workbench_served': True,
         'second_click_reused_owned_service': True,
+        'full_public_bundle_built': True, 'full_packaged_cmd_manifest_verified': True,
+        'full_packaged_cmd_corruption_refused_before_writes': True,
+        'public_bundle_excludes_synthetic_data_and_installed_runtimes': True,
+        'bundle_sha256': bundle['sha256'],
         'external_model_calls': 0, 'douyin_source_calls': 0, 'feishu_calls': 0,
         'scope': 'Real dependency installation and local runtime startup with explicit synthetic data; not customer Win11 or Douyin business acceptance.',
     }
