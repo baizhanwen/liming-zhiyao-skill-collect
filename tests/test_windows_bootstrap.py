@@ -292,3 +292,65 @@ def test_actual_windows_source_cmd_needs_no_preinstalled_pwsh_and_preserves_path
     assert result.returncode != 0 and report['ok'] is False
     assert report['mode'] == 'check'
     assert tree_bytes(project) == before
+
+
+def bundle_manifest_fixture(project):
+    dist = project / 'frontend/dist'
+    dist.mkdir(parents=True)
+    (dist / 'index.html').write_text('Explicit synthetic compiled workbench; never opened.\n')
+    files = []
+    for relative, body in sorted(tree_bytes(project).items()):
+        if relative not in PROTECTED:
+            files.append({'path': relative, 'size': len(body), 'sha256': hashlib.sha256(body).hexdigest()})
+    return {'schema_version': 1, 'product': PRODUCT, 'version': '0.2.4',
+            'runtimes_bundled': False, 'files': files}
+
+
+@WINDOWS
+@pytest.mark.parametrize('case', ['missing_pin', 'wrong_pin', 'changed_payload', 'unsafe_path',
+                                  'private_path', 'duplicate_path'])
+def test_actual_windows_bundle_verification_rejects_tampering_without_writing_environment_or_data(tmp_path, case):
+    project = project_fixture(tmp_path)
+    manifest = bundle_manifest_fixture(project)
+    if case == 'unsafe_path':
+        manifest['files'].append({'path': '../outside', 'size': 0, 'sha256': '0' * 64})
+    elif case == 'private_path':
+        manifest['files'].append({'path': 'data/secrets.enc', 'size': 0, 'sha256': '0' * 64})
+    elif case == 'duplicate_path':
+        manifest['files'].append(dict(manifest['files'][0]))
+    raw = json.dumps(manifest).encode()
+    (project / 'bundle-manifest.json').write_bytes(raw)
+    pin = hashlib.sha256(raw).hexdigest()
+    if case == 'changed_payload':
+        (project / 'backend/main.py').write_text('# Explicit synthetic payload corruption\n')
+    if case == 'wrong_pin':
+        pin = '0' * 64
+    arguments = [] if case == 'missing_pin' else ['-BundleManifestSha256', pin]
+    before = tree_bytes(project)
+    result = invoke(project, '-CheckOnly', '-ForcePrivateRuntimes', *arguments)
+    report = report_from(result)
+    assert result.returncode != 0 and report['ok'] is False
+    assert report['error']['code'] in ('bundle_pin', 'bundle_hash', 'bundle_payload', 'bundle_private', 'unsafe_path')
+    assert tree_bytes(project) == before
+
+
+@WINDOWS
+def test_actual_windows_packaged_cmd_passes_pinned_manifest_to_system_powershell(tmp_path):
+    project = project_fixture(tmp_path)
+    manifest = bundle_manifest_fixture(project)
+    raw = json.dumps(manifest).encode()
+    (project / 'bundle-manifest.json').write_bytes(raw)
+    pin = hashlib.sha256(raw).hexdigest()
+    launcher = project / 'one-click.cmd'
+    template = (ROOT / '一键配置并启动.cmd').read_text(encoding='utf-8-sig')
+    assert template.count('__BUNDLE_MANIFEST_SHA256__') == 1
+    launcher.write_text(template.replace('__BUNDLE_MANIFEST_SHA256__', pin), encoding='utf-8')
+    before = tree_bytes(project)
+    command = '"' + os.environ['COMSPEC'] + '" /d /s /c "' + subprocess.list2cmdline(
+        [str(launcher), '-CheckOnly', '-ForcePrivateRuntimes', '-Json']) + '"'
+    result = subprocess.run(command, env=dict(os.environ, SKILL_COLLECT_BOOTSTRAP_NO_PAUSE='1'),
+                            capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=50)
+    report = report_from(result)
+    assert result.returncode != 0 and report['ok'] is False
+    assert report['stage'] == 'checked' and report['error']['code'] == 'environment_missing'
+    assert tree_bytes(project) == before
