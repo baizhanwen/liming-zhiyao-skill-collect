@@ -311,7 +311,7 @@ function SC-Download($Entry, [string]$Target) {
     $Uri = [Uri]$Entry.url
     $Timer = [Diagnostics.Stopwatch]::StartNew()
     $NextProgress = 0
-    $Response = $null; $Input = $null; $Output = $null
+    $Response = $null; $SourceStream = $null; $Output = $null
     try {
         for ($Redirect = 0; $Redirect -le 5; $Redirect++) {
             if ($Uri.Scheme -cne 'https' -or $Uri.Port -ne 443 -or $Uri.UserInfo -or $Uri.Host -notin $script:SCDownloadHosts) {
@@ -337,11 +337,11 @@ function SC-Download($Entry, [string]$Target) {
             break
         }
         if (-not $Response) { SC-Fail 'download_response' '未取得官方环境下载响应。' }
-        $Input = $Response.GetResponseStream()
+        $SourceStream = $Response.GetResponseStream()
         $Output = [IO.File]::Open($Part, [IO.FileMode]::CreateNew, [IO.FileAccess]::Write, [IO.FileShare]::None)
         $Buffer = New-Object byte[] 65536
         $Total = [long]0
-        while (($Count = $Input.Read($Buffer, 0, $Buffer.Length)) -gt 0) {
+        while (($Count = $SourceStream.Read($Buffer, 0, $Buffer.Length)) -gt 0) {
             $Total += $Count
             if ($Total -gt [long]$Entry.max_download_bytes -or $Timer.Elapsed.TotalSeconds -gt 900) {
                 SC-Fail 'download_budget' '环境下载超过大小或等待限制；可重新双击继续。'
@@ -360,7 +360,7 @@ function SC-Download($Entry, [string]$Target) {
         [IO.File]::Move($Part, $Target)
     } finally {
         if ($Output) { $Output.Dispose() }
-        if ($Input) { $Input.Dispose() }
+        if ($SourceStream) { $SourceStream.Dispose() }
         if ($Response) { $Response.Close() }
         if ([IO.File]::Exists($Part)) { [IO.File]::Delete($Part) }
     }
@@ -398,17 +398,17 @@ function SC-ExpandZip([string]$Archive, [string]$Destination, [string]$Prefix = 
             if ($Item.directory) { $null = [IO.Directory]::CreateDirectory($Item.path); continue }
             $null = [IO.Directory]::CreateDirectory([IO.Path]::GetDirectoryName($Item.path))
             $null = SC-AssertLocalPath $Item.path
-            $Input = $Item.entry.Open()
+            $SourceStream = $Item.entry.Open()
             $Output = [IO.File]::Open($Item.path, [IO.FileMode]::CreateNew, [IO.FileAccess]::Write, [IO.FileShare]::None)
             try {
                 $Buffer = New-Object byte[] 65536
                 $Written = [long]0
-                while (($Count = $Input.Read($Buffer, 0, $Buffer.Length)) -gt 0) {
+                while (($Count = $SourceStream.Read($Buffer, 0, $Buffer.Length)) -gt 0) {
                     $Written += $Count
                     if ($Written -gt $Item.entry.Length -or $Written -gt 1073741824) { SC-Fail 'archive_size' '环境实际解压字节超过已校验的文件长度。' }
                     $Output.Write($Buffer, 0, $Count)
                 }
-            } finally { $Output.Dispose(); $Input.Dispose() }
+            } finally { $Output.Dispose(); $SourceStream.Dispose() }
             if ((Get-Item -LiteralPath $Item.path).Length -ne $Item.entry.Length) { SC-Fail 'archive_size' '环境解压文件长度不符。' }
         }
     } finally { $Zip.Dispose(); $Stream.Dispose() }
