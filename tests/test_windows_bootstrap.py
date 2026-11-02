@@ -222,6 +222,10 @@ def test_actual_windows_archive_rejects_bad_entries_before_extracting_even_good_
     with zipfile.ZipFile(archive, 'w') as target:
         target.writestr('runtime/python.exe', b'EXPLICIT_SYNTHETIC_NOT_AN_EXECUTABLE')
         entry = zipfile.ZipInfo(cases[case])
+        # ZipInfo.__init__ normalizes os.sep on Windows. Preserve the explicit
+        # malformed ZIP name so this really exercises backslash rejection.
+        entry.filename = cases[case]
+        entry.orig_filename = cases[case]
         if case == 'symlink':
             entry.create_system = 3
             entry.external_attr = 0o120777 << 16
