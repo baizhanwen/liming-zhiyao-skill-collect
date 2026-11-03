@@ -63,9 +63,9 @@ def main():
                 assert recovered['status']=='waiting_config' and recovered['error']['code']=='interrupted_request'
                 c.post('/api/tasks/'+id+'/retry').raise_for_status()
                 final=wait_for(lambda:(t if (t:=c.get('/api/tasks/'+id).json())['status']=='succeeded' else None))
-                knowledge=c.get('/api/knowledge').json();assert len(knowledge)==1
+                assert final['analysis'] and not c.get('/api/knowledge').json() and not c.get('/api/skills').json()
                 assert final['source']['snapshot_hash']==before['source']['snapshot_hash']
-                result={'status':'passed','test_type':'real_uvicorn_process_kill_restart_with_explicit_local_mock_model','process_killed_during':'analysis','recovered_status':recovered['status'],'recovered_error':recovered['error']['code'],'final_status':final['status'],'source_hash_preserved':True,'knowledge_count':len(knowledge),'mock_model_calls':len(calls),'real_external_model':False}
+                result={'status':'passed','test_type':'real_uvicorn_process_kill_restart_with_explicit_local_mock_model','process_killed_during':'analysis','recovered_status':recovered['status'],'recovered_error':recovered['error']['code'],'final_status':final['status'],'source_hash_preserved':True,'analysis_preserved_in_task':True,'knowledge_count':0,'skill_count':0,'mock_model_calls':len(calls),'real_external_model':False}
                 (ROOT/'artifacts/verification/process-recovery.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n')
                 print(json.dumps(result,ensure_ascii=False,indent=2))
         finally:

@@ -203,7 +203,7 @@ class TaskRunner:
             if not t:raise AppError('not_found','未找到任务',status=404)
             if id in self.active_ids:raise AppError('task_stopping','任务正在结束当前请求，请稍后补充材料',status=409)
             if t['status'] in ('running','queued'):raise AppError('task_busy','请先取消或等待当前处理结束',status=409)
-            if t['status']=='succeeded':raise AppError('task_complete','该任务已完成；新材料请创建新任务，以保留原分析与知识',status=409)
+            if t['status']=='succeeded':raise AppError('task_complete','该任务已完成；新材料请创建新任务，以保留原分析和来源',status=409)
             t.setdefault('uploads',[]).append(upload)
             for k in ('source','media','analysis','vision_result','transcripts','media_complete','skill_id','project_links','progress','last_error','stage_started_at'):
                 t.pop(k,None)
@@ -419,10 +419,6 @@ class TaskRunner:
             self.stage(id,'project_links','根据保存的证据识别并检索 GitHub 项目；候选不代表已确认对应')
             project_links=self._project_links(source,analysis)
             self.checkpoint(id,project_links=project_links)
-        self.stage(id,'save','保存分析与知识卡片')
-        # Stable task ID makes saving idempotent across process restarts.
-        knowledge=self.store.get('knowledge',id) or self.store.put('knowledge',{'id':id,'title':source.get('title','来源知识'),'summary':analysis['overview'],'body':'\n\n'.join(analysis.get('steps',[])),'analysis':analysis,'evidence':source.get('evidence',[]),'source_id':id,'task_id':id,'tags':[],'category':'未分类','archived':False})
-        if project_links and knowledge.get('project_links')!=project_links:
-            self.store.put('knowledge',{**knowledge,'project_links':project_links})
-        self.stage(id,'complete','分析和知识卡片已保存','succeeded')
-        self.checkpoint(id,status='succeeded',knowledge_id=knowledge['id'],error=None,ended_at=now())
+        self.stage(id,'save','保存分析结果到任务记录')
+        self.stage(id,'complete','分析结果已保存在任务记录','succeeded')
+        self.checkpoint(id,status='succeeded',error=None,ended_at=now())

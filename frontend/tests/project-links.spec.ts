@@ -51,7 +51,9 @@ for (const viewport of [{width: 1440, height: 1100, label: '桌面'}, {width: 39
     mkdirSync(artifacts, {recursive: true});
     let current: any = fixture(), repositoryTask: any = null;
     const taskCreates: any[] = [], modelCalls: string[] = [], unexpected: string[] = [], pageErrors: string[] = [];
-    let lookups = 0, externalOpens = 0;
+    let lookups = 0, externalOpens = 0, skillSaves = 0;
+    const skill = {id: 'ui-project-links-skill', name: '[契约] 来源复查技能', status: 'draft', version: 1,
+      body: '# 执行步骤\n阅读来源材料。', tags: [], files: [], archived: false};
     page.on('pageerror', error => pageErrors.push(error.message));
     await context.route('https://**/*', route => {
       if (route.request().url() === 'https://github.com/review-lab/evidence-workflow') {
@@ -63,7 +65,13 @@ for (const viewport of [{width: 1440, height: 1100, label: '桌面'}, {width: 39
       const request = route.request(), path = new URL(request.url()).pathname, method = request.method();
       if (path === '/api/status') return route.fulfill({json: {counts: {tasks: 1, knowledge: 0, skills: 0}, diagnostics: {}}});
       if (path === '/api/settings') return route.fulfill({json: {models: {text: {base_url: provider, model: 'ui-contract-text'}, vision: {}, transcription: {}}, github: {}, feishu: {}}});
-      if (path === '/api/knowledge' || path === '/api/skills') return route.fulfill({json: []});
+      if (path === '/api/skills') return route.fulfill({json: skillSaves && !request.url().endsWith('archived=true') ? [skill] : []});
+      if (path === '/api/skills/' + skill.id) return route.fulfill({json: skill});
+      if (path === '/api/skills/' + skill.id + '/versions') return route.fulfill({json: []});
+      if (path === '/api/tasks/' + current.id + '/skill' && method === 'POST') {
+        skillSaves++; current = {...current, skill_id: skill.id};
+        return route.fulfill({json: skill});
+      }
       if (path.startsWith('/api/models/')) {modelCalls.push(path); return route.fulfill({status: 400, json: {error: {message: '本契约禁止模型调用'}}});}
       if (path === '/api/tasks' && method === 'GET') return route.fulfill({json: [current]});
       if (path === '/api/tasks' && method === 'POST') {
@@ -118,6 +126,9 @@ for (const viewport of [{width: 1440, height: 1100, label: '桌面'}, {width: 39
     await expect(page.locator('#task-evidence-frames-observation')).toContainText(quote);
     await page.getByRole('button', {name: '分析结果', exact: true}).click();
     await expect(page.locator('body')).toHaveJSProperty('scrollWidth', viewport.width);
+    await expect(page.getByRole('button', {name: '保存为个人技能', exact: true})).toBeVisible();
+    await expect(page.getByRole('button', {name: '保存知识', exact: true})).toHaveCount(0);
+    expect(skillSaves).toBe(0);
     const popupPromise = page.waitForEvent('popup');
     await direct.getByRole('link', {name: '打开 GitHub', exact: true}).click();
     const popup = await popupPromise; await popup.waitForLoadState(); await expect(popup).toHaveURL('https://github.com/review-lab/evidence-workflow'); await popup.close();
@@ -154,7 +165,7 @@ for (const viewport of [{width: 1440, height: 1100, label: '桌面'}, {width: 39
     await expect(page.locator('.page-heading .badge')).toHaveText('进行中');
     await expect(page.locator('.stage-panel')).toContainText('当前阶段：自动获取原片');
     await expect(page.getByRole('button', {name: '备用：补传视频或字幕', exact: true})).toBeVisible();
-    await expect(page.getByRole('button', {name: '生成 Skill 草稿', exact: true})).toHaveCount(0);
+    await expect(page.getByRole('button', {name: '保存为个人技能', exact: true})).toHaveCount(0);
     current = {...current, status: 'waiting_material', error: {code: 'douyin_browser_missing', stage: 'fetch',
       message: '[契约] 缺少 Chromium 浏览器组件，请运行项目安装程序后重试。'}};
     await page.reload(); await expect(page.locator('.task-row')).toContainText('自动获取未完成'); await page.locator('.task-row').click();
@@ -194,16 +205,25 @@ for (const viewport of [{width: 1440, height: 1100, label: '桌面'}, {width: 39
     expect(taskCreates[0]).toEqual({input: 'https://github.com/review-lab/evidence-workflow', depth: 'quick'});
     await expect(page.locator('.page-heading h1')).toHaveText('[契约] 手动创建的 GitHub 任务');
     await expect(section).toHaveCount(0); // Repository sources do not acquire video cards.
+    await page.reload(); await open();
+    await page.getByRole('button', {name: '保存为个人技能', exact: true}).click();
+    await expect(page.getByRole('heading', {name: skill.name, exact: true})).toBeVisible();
+    expect(skillSaves).toBe(1);
+    await page.goto('/#tasks'); await page.reload(); await open();
+    await page.getByRole('button', {name: '查看个人技能', exact: true}).click();
+    await expect(page.getByRole('heading', {name: skill.name, exact: true})).toBeVisible();
+    expect(skillSaves).toBe(1);
+
     expect(modelCalls).toHaveLength(0); expect(unexpected).toHaveLength(0); expect(pageErrors).toHaveLength(0);
     writeFileSync(resolve(artifacts, `project-links-${viewport.width}-checks.json`), JSON.stringify({
       status: 'passed', viewport, evidence_kind: 'explicit_ui_contract_only',
       checks: ['actual evidence excerpts and recorded time ranges', 'explicit repository existence distinct from identity and execution verification',
         'single and ambiguous name candidates remain unconfirmed', 'no-match distinct from lookup error', 'user input is not original-video evidence',
-        'invalid URLs and unknown evidence not promoted', 'source evidence jump', 'manual open intercepted locally', 'single lookup without model calls',
+        'invalid URLs and unknown evidence not promoted', 'source evidence jump', 'manual open intercepted locally', 'single lookup without model calls', 'manual skill draft saves once and reopens without regeneration',
         'text-summary/subtitle/frames-only/legacy/empty/stale states distinct', 'automatic acquisition is the primary customer path',
         'missing Chromium names the stage and cause without claiming success or requiring upload as the primary path',
         'no horizontal overflow', 'one manual repository task uses existing API', 'repository task hides media card'],
-      api_calls: {manual_project_lookups: lookups, explicit_task_creates: taskCreates.length, model_calls: modelCalls.length},
+      api_calls: {manual_project_lookups: lookups, explicit_task_creates: taskCreates.length, manual_skill_saves: skillSaves, model_calls: modelCalls.length},
       real_github_calls: false, real_model_calls: false, user_configuration_modified: false,
     }, null, 2));
   });

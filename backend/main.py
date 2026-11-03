@@ -309,9 +309,16 @@ def create_app(data_dir=None,start_worker=True,model_client=None,github_factory=
     @app.post('/api/tasks/{id}/knowledge')
     def save_knowledge(id:str):
         task=get_task(id)
-        if not task.get('analysis'):raise AppError('analysis_missing','请先完成来源分析')
+        analysis=task.get('analysis')
+        if not analysis:raise AppError('analysis_missing','请先完成来源分析')
         existing=store.get('knowledge',id)
-        return existing or store.put('knowledge',{'id':id,'title':task['title'],'summary':task['analysis']['overview'],'body':'\n'.join(task['analysis']['steps']),'source_id':id,'task_id':id,'tags':[],'category':'未分类','archived':False})
+        if existing:return existing
+        source=task.get('source') or {}
+        entry={'id':id,'title':source.get('title') or task['title'],'summary':analysis['overview'],
+            'body':'\n\n'.join(analysis.get('steps',[])),'analysis':analysis,'evidence':source.get('evidence',[]),
+            'source_id':id,'task_id':id,'tags':[],'category':'未分类','archived':False}
+        if task.get('project_links'):entry['project_links']=task['project_links']
+        return store.put('knowledge',entry)
 
     @app.post('/api/tasks/{id}/skill')
     def generate_skill(id:str):
