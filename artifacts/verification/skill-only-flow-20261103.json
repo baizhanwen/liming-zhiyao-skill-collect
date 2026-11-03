@@ -1,0 +1,34 @@
+{
+  "date": "2026-11-03",
+  "scope": "local_task_and_personal_skill_flow",
+  "python": {
+    "passed": 640,
+    "skipped": 43,
+    "initial_sandbox_loopback_failures": 36
+  },
+  "browser": {
+    "passed": 13,
+    "viewports": [
+      1440,
+      390
+    ],
+    "real_local_service": true,
+    "explicit_contracts_for_external_calls": true,
+    "verified": [
+      "legacy knowledge bookmark falls back to workbench",
+      "no separate knowledge action on task result",
+      "manual personal skill draft save and reopen without regeneration",
+      "Feishu sync preview, conflict and confirmation contract"
+    ]
+  },
+  "local_deployment": {
+    "workbench_http": 200,
+    "status_http": 200,
+    "new_listener": true,
+    "existing_task_skill_legacy_knowledge_ids_preserved": true,
+    "built_script": "index-DeBGJADi.js"
+  },
+  "live_model_calls": 0,
+  "live_feishu_calls": 0,
+  "github_release_created": false
+}

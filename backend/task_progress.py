@@ -22,8 +22,8 @@ PHASE_DETAILS = {
     'model_analysis': '正在等待内容分析结果；服务内部进度不可测量',
     'project_links': '正在根据已保存证据检索和核验 GitHub 项目',
     'retry_wait': '本轮请求失败，正在短暂等待后自动重试',
-    'saving': '正在保存分析和知识卡片',
-    'complete': '分析和知识卡片已保存',
+    'saving': '正在保存分析结果到任务记录',
+    'complete': '分析结果已保存在任务记录',
 }
 METRIC_KEYS = frozenset({
     'completed', 'total', 'requests', 'downloaded_bytes', 'proxy_connections',

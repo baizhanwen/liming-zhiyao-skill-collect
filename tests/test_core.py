@@ -74,7 +74,12 @@ def test_api_subtitle_to_knowledge_draft_zip_and_restart(tmp_path):
         assert result['status']=='succeeded'
         assert result['analysis']['basis']=='subtitles' and result['analysis']['validation']=='not_executed'
         assert result['analysis']['usage']['total_tokens']==42
+        assert c.get('/api/knowledge').json()==[] and c.get('/api/skills').json()==[]
+        assert 'knowledge_id' not in result and 'skill_id' not in result
+        saved=c.post('/api/tasks/'+t['id']+'/knowledge')
+        assert saved.status_code==200
         k=c.get('/api/knowledge?q=核对').json()[0]
+        assert saved.json()==k
         assert k['source_id']==t['id'] and k['evidence'][0]['time'].startswith('00:00')
         c.put('/api/knowledge/'+k['id'],json={'body':'用户已经编辑'})
         c.post('/api/tasks/'+t['id']+'/retry');app.state.runner.run(t['id'])
@@ -151,7 +156,7 @@ def test_task_retry_reuses_acquisition_and_analysis_checkpoint(tmp_path):
     runner.run(task['id'])
     assert store.get('tasks',task['id'])['status']=='succeeded'
     assert counts=={'fetch':1,'model':2}
-    assert len(store.list('knowledge'))==1
+    assert not store.list('knowledge') and not store.list('skills')
 
 
 def test_task_final_failure_and_recovery(tmp_path):

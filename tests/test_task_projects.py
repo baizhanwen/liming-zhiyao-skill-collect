@@ -38,7 +38,7 @@ def runner_fixture(tmp_path):
     return store,models,runner,task
 
 
-def test_project_stage_saved_with_knowledge_and_original_evidence(tmp_path,monkeypatch):
+def test_project_stage_saved_in_task_with_original_evidence(tmp_path,monkeypatch):
     store,models,runner,task=runner_fixture(tmp_path); seen=[]
     def lookup(source,analysis,factory):
         seen.append(deepcopy(source))
@@ -51,7 +51,7 @@ def test_project_stage_saved_with_knowledge_and_original_evidence(tmp_path,monke
     assert result['source']==seen[0]
     assert result['project_links']['basis']=='subtitles'
     assert result['project_links']['source_snapshot_hash']==result['source']['snapshot_hash']
-    assert store.get('knowledge',task['id'])['project_links']==result['project_links']
+    assert store.get('knowledge',task['id']) is None
     stages=[s['stage'] for s in result['stages']]
     assert stages.index('analysis')<stages.index('project_links')<stages.index('save')
 
@@ -65,8 +65,8 @@ def test_lookup_failure_keeps_analysis_and_recheck_never_calls_models(tmp_path,m
     monkeypatch.setattr('backend.tasks.resolve_project_links',lookup)
     runner.run(task['id']); first=store.get('tasks',task['id'])
     assert first['status']=='succeeded' and first['project_links']['status']=='unavailable'
-    knowledge=store.get('knowledge',task['id'])
-    store.put('knowledge',{**knowledge,'summary':'用户编辑的摘要','body':'用户保留的正文'})
+    store.put('knowledge',{'id':task['id'],'task_id':task['id'],
+        'summary':'用户编辑的摘要','body':'用户保留的正文'})
     result=runner.refresh_project_links(task['id'])
     assert models.calls==1 and len(calls)==2 and result['project_links']['status']=='found'
     assert result['analysis']==first['analysis'] and result['source']==first['source']
@@ -85,7 +85,7 @@ def test_resume_preserves_project_checkpoint_and_avoids_model_or_search_calls(tm
     monkeypatch.setattr('backend.tasks.resolve_project_links',forbidden)
     runner.run(task['id']); result=store.get('tasks',task['id'])
     assert result['status']=='succeeded' and result['project_links']==links and models.calls==0
-    assert store.get('knowledge',task['id'])['project_links']==links
+    assert store.get('knowledge',task['id']) is None
 
 
 def test_new_material_clears_prior_project_links(tmp_path):
