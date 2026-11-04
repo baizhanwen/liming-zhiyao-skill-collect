@@ -56,7 +56,7 @@ def test_bundle_manifest_and_launchers_cover_only_public_payload(tmp_path):
     prefix = 'SkillCollect-v0.2.4-Windows/'
     expected_payload = set(bundle.FILES) | {'frontend/dist/index.html',
         'frontend/dist/assets/index-fixture.js', 'frontend/dist/assets/index-fixture.css'}
-    assert {'AGENTS.md', '项目施工书.md', 'docs/验收报告.md', 'docs/实施进度.md',
+    assert {'AGENTS.md', 'docs/用户使用说明.md', 'docs/验收报告.md', 'docs/实施进度.md',
         'docs/GitHub接入.md', 'docs/飞书接入.md', 'docs/MiniMax接入.md',
         'docs/Windows一键安装.md', 'docs/客户升级与抖音验收.md',
         'docs/安装与数据.md', 'docs/技术决策.md', 'docs/抖音原片获取与分析.md'} <= expected_payload

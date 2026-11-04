@@ -27,7 +27,7 @@ DATA_LAUNCHER = '沿用旧资料并启动.cmd'
 LAUNCHERS = (LAUNCHER, DATA_LAUNCHER)
 MANIFEST = 'bundle-manifest.json'
 FILES = (
-    'AGENTS.md', 'README.md', 'LICENSE', 'THIRD_PARTY_NOTICES.md', '项目施工书.md',
+    'AGENTS.md', 'README.md', 'LICENSE', 'THIRD_PARTY_NOTICES.md', 'docs/用户使用说明.md',
     '.env.example', 'pyproject.toml', 'uv.lock', 'requirements.txt',
     'backend/__init__.py', 'backend/main.py', 'backend/browser_capture.py',
     'backend/media.py', 'backend/models.py', 'backend/project_links.py',
