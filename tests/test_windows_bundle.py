@@ -23,12 +23,12 @@ def source_fixture(tmp_path):
         path = source / name
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text('# Explicit synthetic public source fixture.\n', encoding='utf-8')
-    (source / 'backend/__init__.py').write_text("__version__ = '0.2.4'\n")
+    (source / 'backend/__init__.py').write_text("__version__ = '0.2.5'\n")
     # Empty Python package initializers are valid public source files.
     (source / 'backend/connectors/__init__.py').write_bytes(b'')
-    (source / 'pyproject.toml').write_text('[project]\nname="liming-zhiyao-skill-collect"\nversion="0.2.4"\n')
-    (source / 'uv.lock').write_text('version=1\n[[package]]\nname="liming-zhiyao-skill-collect"\nversion="0.2.4"\n')
-    package = {'name': bundle.PRODUCT + '-workbench', 'version': '0.2.4'}
+    (source / 'pyproject.toml').write_text('[project]\nname="liming-zhiyao-skill-collect"\nversion="0.2.5"\n')
+    (source / 'uv.lock').write_text('version=1\n[[package]]\nname="liming-zhiyao-skill-collect"\nversion="0.2.5"\n')
+    package = {'name': bundle.PRODUCT + '-workbench', 'version': '0.2.5'}
     (source / 'frontend/package.json').write_text(json.dumps(package))
     (source / 'frontend/package-lock.json').write_text(json.dumps({**package, 'packages': {'': package}}))
     for name in bundle.LAUNCHERS:
@@ -53,7 +53,7 @@ def test_bundle_manifest_and_launchers_cover_only_public_payload(tmp_path):
         path.write_bytes(sentinel)
     output = tmp_path / 'Windows.zip'
     report = bundle.build_bundle(source, output)
-    prefix = 'SkillCollect-v0.2.4-Windows/'
+    prefix = 'SkillCollect-v0.2.5-Windows/'
     expected_payload = set(bundle.FILES) | {'frontend/dist/index.html',
         'frontend/dist/assets/index-fixture.js', 'frontend/dist/assets/index-fixture.css'}
     assert {'AGENTS.md', 'docs/用户使用说明.md', 'docs/验收报告.md', 'docs/实施进度.md',
@@ -65,7 +65,7 @@ def test_bundle_manifest_and_launchers_cover_only_public_payload(tmp_path):
         assert all(sentinel not in archive.read(name) for name in archive.namelist())
         raw_manifest = archive.read(prefix + bundle.MANIFEST)
         manifest = json.loads(raw_manifest)
-        assert manifest['product'] == bundle.PRODUCT and manifest['version'] == '0.2.4'
+        assert manifest['product'] == bundle.PRODUCT and manifest['version'] == '0.2.5'
         assert not manifest['runtimes_bundled']
         assert {entry['path'] for entry in manifest['files']} == expected_payload
         assert hashlib.sha256(raw_manifest).hexdigest() == report['manifest_sha256']

@@ -54,6 +54,7 @@ def main():
     sys.path.insert(0, str(project))
     from backend import __version__
     from backend.security import Vault
+    from backend.skills import SkillService
     from backend.store import Store
     from scripts.build_windows_bundle import build_bundle
 
@@ -83,6 +84,20 @@ def main():
     vault.set('model_text', key)
     store.put('model_configs', {'id': 'text', 'base_url': 'https://example.invalid/v1', 'model': 'explicit-synthetic-no-call-model'})
     store.put('knowledge', {'id': 'bootstrap-preservation', 'title': 'Explicit synthetic preservation record', 'body': 'No external source or model.'})
+    skill = SkillService(store).create({
+        'name': 'Explicit synthetic preserved personal skill',
+        'description': 'Self-authored preservation fixture, never executed.',
+        'body': '# Synthetic fixture\n\nRead the supplied local material and retain its source.\n',
+        'files': [{'path': 'references/synthetic.txt', 'content': 'EXPLICIT_SYNTHETIC_SKILL_REFERENCE'}],
+        'tags': ['explicit-synthetic-fixture'],
+    })
+    task = store.put('tasks', {
+        'id': 'bootstrap-preservation-task', 'title': 'Explicit synthetic completed task',
+        'input': 'Self-authored local preservation fixture; no external request.',
+        'status': 'succeeded', 'stage': 'complete', 'stages': [], 'skill_id': skill['id'],
+        'source': {'basis': 'text_only', 'text': 'EXPLICIT_SYNTHETIC_SAVED_SOURCE'},
+        'analysis': {'overview': 'Self-authored fixture analysis.', 'steps': ['Retain the supplied source.']},
+    })
     for relative in ('uploads/synthetic.txt', 'tasks/synthetic/source.txt'):
         target = data / relative
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -90,7 +105,12 @@ def main():
     (project / '.env').write_text('EXPLICIT_SYNTHETIC_NOT_AUTO_LOADED=1\n', encoding='utf-8')
     pointer = project / '.runtime/data-location.json'
     pointer.write_text(json.dumps({'schema_version': 1, 'path': str(data)}), encoding='utf-8')
-    before_rows = digest(json.dumps(store.list('model_configs') + store.list('knowledge'), sort_keys=True).encode())
+    def preserved_rows_digest():
+        kinds = ('model_configs', 'knowledge', 'tasks', 'skills', 'skill_versions')
+        records = {kind: store.list(kind) for kind in kinds}
+        return digest(json.dumps(records, sort_keys=True).encode())
+
+    before_rows = preserved_rows_digest()
     protected_files = {
         'encrypted_key': data / '.secrets.key', 'encrypted_values': data / 'secrets.enc',
         'uploaded_source': data / 'uploads/synthetic.txt', 'task_source': data / 'tasks/synthetic/source.txt',
@@ -153,7 +173,7 @@ def main():
     require(not (project / 'data').exists(), 'Reconfiguration replaced the external legacy directory with an empty local database.')
     require(all((project / '.runtime' / name / '.skill-collect-managed.json').read_bytes() == body
                 for name, body in original_managed.items()), 'Offline replay replaced a runtime unnecessarily.')
-    require(digest(json.dumps(store.list('model_configs') + store.list('knowledge'), sort_keys=True).encode()) == before_rows,
+    require(preserved_rows_digest() == before_rows,
             'Reconfiguration changed stored synthetic records.')
     require(Vault(data).get('model_text') == key, 'An encrypted model key was not retained.')
 
@@ -185,6 +205,24 @@ def main():
         require(status.get('version') == __version__ and status.get('mode') == 'local_single_user', 'The wrong local application answered.')
         require(status['models']['text']['key_configured'] is True, 'Stored synthetic model configuration was not visible to the app.')
         require(status['counts']['knowledge'] == 1, 'Stored synthetic knowledge was not visible to the app.')
+        with opener.open(f'http://127.0.0.1:{port}/api/skills', timeout=3) as response:
+            saved_skills = json.load(response)
+        matching_skills = [item for item in saved_skills if item['id'] == skill['id']]
+        require(len(matching_skills) == 1 and matching_skills[0]['body'] == skill['body']
+                and matching_skills[0]['files'] == skill['files']
+                and matching_skills[0]['version'] == skill['version']
+                and matching_skills[0]['content_hash'] == skill['content_hash'],
+                'Stored synthetic personal skill, files or version were not visible to the app.')
+        with opener.open(f'http://127.0.0.1:{port}/api/skills/{skill["id"]}/versions', timeout=3) as response:
+            saved_versions = json.load(response)
+        require(len(saved_versions) == 1 and saved_versions[0]['snapshot'] == skill,
+                'Stored synthetic personal skill version history was not visible to the app.')
+        with opener.open(f'http://127.0.0.1:{port}/api/tasks', timeout=3) as response:
+            saved_tasks = json.load(response)
+        matching_tasks = [item for item in saved_tasks if item['id'] == task['id']]
+        require(len(matching_tasks) == 1 and all(matching_tasks[0].get(field) == task[field]
+                for field in ('status', 'source', 'analysis', 'skill_id')),
+                'Stored synthetic completed task, analysis or skill association was not visible to the app.')
         require(Path(status['diagnostics']['sqlite']).resolve() == (data / 'app.sqlite3').resolve(),
                 'The actual server did not use the external legacy data directory.')
         with opener.open(f'http://127.0.0.1:{port}/', timeout=3) as response:
@@ -204,13 +242,15 @@ def main():
     require(persistent_paths() == baseline, 'Bootstrap changed persistent system/user PATH.')
     require(all(protected_files[label].read_bytes() == body for label, body in before_files.items()), 'Startup changed a protected synthetic file.')
     require(not (project / 'data').exists(), 'Startup created an empty replacement data directory.')
-    require(digest(json.dumps(store.list('model_configs') + store.list('knowledge'), sort_keys=True).encode()) == before_rows,
+    require(preserved_rows_digest() == before_rows,
             'Startup changed stored synthetic records.')
     public = {
         'schema_version': 1, 'application_version': __version__, 'platform': 'Windows x64',
         'bootstrap_shell': 'Windows PowerShell 5.1', 'runtimes': download_checks,
         'production_dependencies_installed': True, 'offline_reconfiguration_runs': 2,
         'encrypted_key_bytes_preserved': True, 'stored_model_and_knowledge_preserved': True,
+        'stored_completed_task_and_personal_skill_preserved': True,
+        'personal_skill_files_and_version_history_visible': True,
         'external_legacy_data_loaded_via_persisted_pointer': True,
         'new_project_data_directory_created': False,
         'gui_folder_selection': 'not executed; explicit fixture pointer used',

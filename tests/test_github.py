@@ -120,6 +120,40 @@ def test_search_no_token_is_real_repository_search_only():
     assert not any(r.url.path == '/search/code' for r in calls)
 
 
+@pytest.mark.parametrize('query,fallback', [
+    ('抖音分析', 'douyin analysis skill'),
+    ('douyin video content analysis automation', 'douyin analysis skill'),
+    ('douyin analysis', '抖音 分析 skill'),
+])
+def test_empty_skill_search_uses_one_original_keyword_fallback(query, fallback):
+    repo = {'full_name': 'example/douyin-skill', 'html_url': 'https://github.com/example/douyin-skill'}
+    def respond(request):
+        items = [repo] if request.url.params['q'] == fallback else []
+        return httpx.Response(200, json={'total_count': len(items), 'items': items})
+
+    c, calls = connector(fail=respond)
+    result = c.search(query, original_query='抖音分析')
+    assert result['repository_queries'] == [query + ' skill', fallback]
+    assert result['effective_query'] == fallback
+    assert [item['repository'] for item in result['items']] == ['example/douyin-skill']
+    assert [r.url.path for r in calls] == ['/search/repositories', '/search/repositories']
+    assert all(r.url.params['per_page'] == '6' and 'sort' not in r.url.params for r in calls)
+
+
+def test_skill_search_reports_a_rate_limited_fallback():
+    def respond(request):
+        if request.url.params['q'] == 'douyin analysis skill':
+            return httpx.Response(429)
+        return httpx.Response(200, json={'total_count': 0, 'items': []})
+
+    c, calls = connector(fail=respond)
+    result = c.search('抖音分析')
+    assert result['items'] == []
+    assert result['effective_query'] == '抖音分析 skill'
+    assert len(calls) == 2
+    assert '补充仓库搜索未完成' in result['notes'][0]
+
+
 def test_authenticated_code_search():
     c, calls = connector(token='contract-only')
     result = c.search('transcript')
