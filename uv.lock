@@ -291,7 +291,7 @@ wheels = [
 
 [[package]]
 name = "liming-zhiyao-skill-collect"
-version = "0.2.4"
+version = "0.2.5"
 source = { virtual = "." }
 dependencies = [
     { name = "cryptography" },

@@ -21,7 +21,7 @@ import zipfile
 
 PROJECT = Path(__file__).resolve().parents[1]
 PRODUCT = 'liming-zhiyao-skill-collect'
-VERSION = '0.2.4'
+VERSION = '0.2.5'
 LAUNCHER = '一键配置并启动.cmd'
 DATA_LAUNCHER = '沿用旧资料并启动.cmd'
 LAUNCHERS = (LAUNCHER, DATA_LAUNCHER)
@@ -125,7 +125,10 @@ def validate_versions(data: dict[str, bytes]) -> None:
         lock = json.loads(data['frontend/package-lock.json'])
         uv_project = [item for item in tomllib.loads(data['uv.lock'].decode())['package']
                       if item['name'] == PRODUCT]
-        backend_version = re.fullmatch(rb"\s*__version__\s*=\s*['\"](0\.2\.4)['\"]\s*", data['backend/__init__.py'])
+        backend_version = re.fullmatch(
+            rb"\s*__version__\s*=\s*['\"]" + re.escape(VERSION.encode()) + rb"['\"]\s*",
+            data['backend/__init__.py'],
+        )
         if (project['name'] != PRODUCT or project['version'] != VERSION or not backend_version or
                 package['name'] != PRODUCT + '-workbench' or package['version'] != VERSION or
                 lock['version'] != VERSION or lock['packages']['']['version'] != VERSION or

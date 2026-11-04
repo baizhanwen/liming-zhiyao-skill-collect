@@ -1,0 +1,38 @@
+{
+  "date": "2026-11-04",
+  "application_version": "0.2.5",
+  "pytest": {
+    "tests": 687,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 43,
+    "seconds": 13.591
+  },
+  "browser": {
+    "passed": 13,
+    "scope": "real isolated local service and explicitly mocked external-service UI contracts",
+    "viewports": [
+      1440,
+      390
+    ]
+  },
+  "frontend_built": true,
+  "sha256": {
+    "backend/__init__.py": "f1fe2e9a65933e5e8fb5d13d0f349481984f8c68a803f3430be843a6acc1f6a2",
+    "backend/main.py": "738edd2e6cce22161a3bcf5ffa3c89893370cbc2ba267eb5a949fc8604b9cf86",
+    "backend/connectors/github.py": "054907fd98d9f2aba0e6088e86af82fbda13d650c016f188dd7340fa9a564f0f",
+    "backend/tasks.py": "0d04ed614c71126068c89cb29762d9d814e6afdb8d29d339da9c7dd51b609837",
+    "backend/task_progress.py": "eacd23afdedc406cfc48ae510ea860e89c5715818f9a25a3f6cffb947e78f85c",
+    "frontend/src/App.tsx": "a3b22ce57cfe161e32b0e0765bc2549a8a7d9b1e8fa7ce79898b6b2e4583a665",
+    "frontend/package.json": "859e51f422ac670ca968e9ca573425adad26078b7cef1df718b7ffa8ac9a8775",
+    "frontend/package-lock.json": "9461e450b9789cc9083621e0b0637df8cb6fa253e9f4bd4b86ea0505d834dd9b",
+    "pyproject.toml": "84349cc11e9f08e5532c052b322ee7b9a26319832465e8f9e1a37a96483fb757",
+    "uv.lock": "3ccf869764dd0e7ec137efb55fa156d1124c6385a7c73d81ed6d7101a912cb7b",
+    "scripts/build_windows_bundle.py": "92dcfb0f281e6a098628d568c73a5b7f2f580395638e9efda7f740321ca6b7eb",
+    "scripts/windows_bootstrap.ps1": "08b7440e8f49c726f1ec180eb379883415417286aedf24599e42339ea9012155",
+    "tests/windows_bootstrap_acceptance.py": "1da74dc8b4211318fe6c7d97589417936a3c569ccb9d12febaa0d1ddd1b60f7c"
+  },
+  "external_model_calls": false,
+  "external_feishu_calls": false,
+  "customer_windows_business": "not observed"
+}

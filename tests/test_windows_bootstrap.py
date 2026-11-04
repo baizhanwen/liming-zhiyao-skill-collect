@@ -306,7 +306,7 @@ def bundle_manifest_fixture(project):
     for relative, body in sorted(tree_bytes(project).items()):
         if relative not in PROTECTED:
             files.append({'path': relative, 'size': len(body), 'sha256': hashlib.sha256(body).hexdigest()})
-    return {'schema_version': 1, 'product': PRODUCT, 'version': '0.2.4',
+    return {'schema_version': 1, 'product': PRODUCT, 'version': '0.2.5',
             'runtimes_bundled': False, 'files': files}
 
 

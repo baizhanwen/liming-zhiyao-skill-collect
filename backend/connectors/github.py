@@ -612,12 +612,35 @@ class GitHubConnector:
                 'source': 'https://api.github.com/search/repositories', 'fetched_at': int(time.time()),
                 'notes': ['仅返回 GitHub 索引候选；不能据此确认与视频中的项目相同，未读取或执行仓库代码。']}
 
-    def search(self, query: str, limit: int = 6) -> dict:
+    def search(self, query: str, limit: int = 6, *, original_query: str | None = None) -> dict:
         query = query.strip()
         if not query or len(query) > 240:
             raise GithubError('query', '搜索词须为 1 到 240 个字符')
         limit = max(1, min(limit, 12))
-        repos = self._request('/search/repositories', {'q': query + ' skill', 'per_page': limit, 'sort': 'updated'})
+        effective_query = query + ' skill'
+        repository_queries = [effective_query]
+        repos = self._request('/search/repositories', {'q': effective_query, 'per_page': limit})
+        notes = []
+        if not repos.get('items'):
+            fallback = (original_query or query).strip()
+            douyin_alias = {
+                '抖音分析': 'douyin analysis',
+                '分析抖音': 'douyin analysis',
+                '抖音视频分析': 'douyin video analysis',
+                '分析抖音视频': 'douyin video analysis',
+            }.get(''.join(fallback.split()))
+            if douyin_alias and douyin_alias != query.casefold():
+                fallback = douyin_alias
+            elif douyin_alias:
+                fallback = ' '.join(fallback.replace('抖音', ' 抖音 ').split())
+            if fallback and len(fallback) <= 240 and fallback.casefold() != query.casefold():
+                fallback_query = fallback + ' skill'
+                repository_queries.append(fallback_query)
+                try:
+                    repos = self._request('/search/repositories', {'q': fallback_query, 'per_page': limit})
+                    effective_query = fallback_query
+                except GithubError as exc:
+                    notes.append('补充仓库搜索未完成：' + exc.message)
         results = []
         for item in repos.get('items', []):
             results.append({'repository': item['full_name'], 'name': item['full_name'], 'url': item['html_url'],
@@ -625,7 +648,6 @@ class GitHubConnector:
                             'updated_at': item.get('updated_at'), 'license': (item.get('license') or {}).get('spdx_id', 'UNKNOWN'),
                             'path': None, 'verification_status': 'not_inspected', 'kind': 'repository'})
         code_available = False
-        notes = []
         if self.token:
             try:
                 code = self._request('/search/code', {'q': query + ' filename:SKILL.md', 'per_page': limit})
@@ -639,7 +661,7 @@ class GitHubConnector:
                 notes.append('代码搜索不可用：' + exc.message + '；已保留仓库搜索结果。')
         else:
             notes.append('未配置 GitHub Token：使用真实仓库搜索。认证代码搜索不可用，进入仓库后可逐个发现技能。')
-        return {'query': query, 'effective_query': query + ' skill', 'items': results,
+        return {'query': query, 'effective_query': effective_query, 'repository_queries': repository_queries, 'items': results,
                 'total_count': repos.get('total_count'), 'incomplete_results': repos.get('incomplete_results', False),
                 'code_search_available': code_available, 'notes': notes,
                 'source': 'https://api.github.com/search/repositories', 'fetched_at': int(time.time()),
