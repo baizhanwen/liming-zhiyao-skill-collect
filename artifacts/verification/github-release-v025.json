@@ -1,0 +1,72 @@
+{
+  "date": "2026-11-04",
+  "repository": "baizhanwen/liming-zhiyao-skill-collect",
+  "release": {
+    "assets": [
+      {
+        "apiUrl": "https://api.github.com/repos/baizhanwen/liming-zhiyao-skill-collect/releases/assets/708194367",
+        "contentType": "application/zip",
+        "createdAt": "2026-11-04T04:18:44Z",
+        "digest": "sha256:bef9c931b0c7d16925c98b810c14fb09cbf5c15fc4f5db99487efe2ed278e63c",
+        "downloadCount": 0,
+        "id": "RA_kwDOVXnOts4qNjA_",
+        "label": "",
+        "name": "SkillCollect-v0.2.5-Windows-OneClick.zip",
+        "size": 445855,
+        "state": "uploaded",
+        "updatedAt": "2026-11-04T04:18:45Z",
+        "url": "https://github.com/baizhanwen/liming-zhiyao-skill-collect/releases/download/v0.2.5/SkillCollect-v0.2.5-Windows-OneClick.zip"
+      },
+      {
+        "apiUrl": "https://api.github.com/repos/baizhanwen/liming-zhiyao-skill-collect/releases/assets/708194368",
+        "contentType": "application/octet-stream",
+        "createdAt": "2026-11-04T04:18:44Z",
+        "digest": "sha256:0dc7947cfb90653b2d239d881d40bfe4f883abc424b4d0d947f2d75d7a3c6192",
+        "downloadCount": 0,
+        "id": "RA_kwDOVXnOts4qNjBA",
+        "label": "",
+        "name": "SkillCollect-v0.2.5-Windows-OneClick.zip.sha256",
+        "size": 107,
+        "state": "uploaded",
+        "updatedAt": "2026-11-04T04:18:45Z",
+        "url": "https://github.com/baizhanwen/liming-zhiyao-skill-collect/releases/download/v0.2.5/SkillCollect-v0.2.5-Windows-OneClick.zip.sha256"
+      }
+    ],
+    "isDraft": false,
+    "isPrerelease": true,
+    "publishedAt": "2026-11-04T04:19:44Z",
+    "tagName": "v0.2.5",
+    "targetCommitish": "f7416806c16130f49852d53ed255ca76e20a8a59",
+    "url": "https://github.com/baizhanwen/liming-zhiyao-skill-collect/releases/tag/v0.2.5"
+  },
+  "published_public_url_download_verified": true,
+  "public_download_bytes": 445855,
+  "public_download_sha256": "bef9c931b0c7d16925c98b810c14fb09cbf5c15fc4f5db99487efe2ed278e63c",
+  "sha256_sidecar_matches": true,
+  "github_asset_digest_matches": true,
+  "tag_commit": "f7416806c16130f49852d53ed255ca76e20a8a59",
+  "program_verified_commit": "7d964433fedfd045ba23f58378785046c08e90f1",
+  "verified_tree_unchanged_in_release": true,
+  "published_source_files_matching_tag": 59,
+  "manifest_payload_files": 62,
+  "archive_files": 65,
+  "private_data_in_bundle": false,
+  "internal_construction_documents_in_bundle": false,
+  "exact_release_tag_ci": {
+    "cold": {
+      "databaseId": 41772419281,
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/baizhanwen/liming-zhiyao-skill-collect/actions/runs/41772419281",
+      "headSha": "f7416806c16130f49852d53ed255ca76e20a8a59"
+    },
+    "matrix": {
+      "databaseId": 41772419547,
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/baizhanwen/liming-zhiyao-skill-collect/actions/runs/41772419547",
+      "headSha": "f7416806c16130f49852d53ed255ca76e20a8a59"
+    }
+  },
+  "customer_windows_business": "not observed; separate customer-network business acceptance required"
+}

@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "application_version": "0.2.5",
+  "platform": "Windows x64",
+  "bootstrap_shell": "Windows PowerShell 5.1",
+  "runtimes": {
+    "python": {
+      "version": "3.13.17",
+      "sha256_verified": true,
+      "private_executable_exists": true
+    },
+    "node": {
+      "version": "24.19.0",
+      "sha256_verified": true,
+      "private_executable_exists": true
+    },
+    "ffmpeg": {
+      "version": "9.0.2",
+      "sha256_verified": true,
+      "private_executable_exists": true
+    }
+  },
+  "production_dependencies_installed": true,
+  "offline_reconfiguration_runs": 2,
+  "encrypted_key_bytes_preserved": true,
+  "stored_model_and_knowledge_preserved": true,
+  "stored_completed_task_and_personal_skill_preserved": true,
+  "personal_skill_files_and_version_history_visible": true,
+  "external_legacy_data_loaded_via_persisted_pointer": true,
+  "new_project_data_directory_created": false,
+  "gui_folder_selection": "not executed; explicit fixture pointer used",
+  "synthetic_media_and_env_preserved": true,
+  "persistent_path_unchanged": true,
+  "actual_loopback_http_startup": true,
+  "compiled_workbench_served": true,
+  "second_click_reused_owned_service": true,
+  "full_public_bundle_built": true,
+  "full_packaged_cmd_manifest_verified": true,
+  "full_packaged_cmd_corruption_refused_before_writes": true,
+  "public_bundle_excludes_synthetic_data_and_installed_runtimes": true,
+  "bundle_sha256": "e2b188511048d94593aa78fb5e23f9211bd46d4d655b6b65cebc58bd3df8e925",
+  "external_model_calls": 0,
+  "douyin_source_calls": 0,
+  "feishu_calls": 0,
+  "scope": "Real dependency installation and local runtime startup with explicit synthetic data; not customer Win11 or Douyin business acceptance."
+}

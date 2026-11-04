@@ -6,9 +6,9 @@
 
 一个本地运行的单用户工作台：丢进 GitHub 或抖音链接，或上传视频、字幕，在任务记录里保留分析和来源证据，按需保存为个人技能，并与已授权的飞书多维表格手动双向同步。展示名保留 `clloect`，技术名为 `liming-zhiyao-skill-collect`。
 
-当前源码版本 **v0.2.5**：Windows 一键包合入「分析结果保留在任务记录、按需保存个人技能」、发现 Skill 空结果回退、实际查询显示和 GitHub Token 说明；安装包随附面向普通用户的使用说明，仓库和打包清单已移除内部施工与目标提示文件。个人技能仍可与飞书企业技能手动双向同步。
+当前版本 **[v0.2.5预发布](https://github.com/baizhanwen/liming-zhiyao-skill-collect/releases/tag/v0.2.5)**：Windows 一键包合入「分析结果保留在任务记录、按需保存个人技能」、发现 Skill 空结果回退、实际查询显示和 GitHub Token 说明；安装包随附面向普通用户的使用说明，仓库和打包清单已移除内部施工与目标提示文件。个人技能仍可与飞书企业技能手动双向同步。
 
-Windows 10/11 x64 用户可在包发布后通过 [v0.2.5 一键安装包下载入口](https://github.com/baizhanwen/liming-zhiyao-skill-collect/releases/download/v0.2.5/SkillCollect-v0.2.5-Windows-OneClick.zip)获取。新用户双击「一键配置并启动.cmd」；已有模型配置和资料的用户，先停止旧工作台，再把新包解压到新文件夹，第一次双击「沿用旧资料并启动.cmd」，本人选择原项目或资料目录。资料继续保存在原位置，**原资料文件夹必须保留**。发行、Windows 验证及下载校验状态见[验收报告](docs/验收报告.md)。
+Windows 10/11 x64 用户可通过 [v0.2.5 一键安装包下载入口](https://github.com/baizhanwen/liming-zhiyao-skill-collect/releases/download/v0.2.5/SkillCollect-v0.2.5-Windows-OneClick.zip)获取。新用户双击「一键配置并启动.cmd」；已有模型配置和资料的用户，先停止旧工作台，再把新包解压到新文件夹，第一次双击「沿用旧资料并启动.cmd」，本人选择原项目或资料目录。资料继续保存在原位置，**原资料文件夹必须保留**。发行、Windows 验证及下载校验状态见[验收报告](docs/验收报告.md)。
 
 历史版本 **[v0.2.4预发布](https://github.com/baizhanwen/liming-zhiyao-skill-collect/releases/tag/v0.2.4)**：Windows客户可双击“一键配置并启动.cmd”，自动检测并准备缺失依赖，无需预装Python、Node、PowerShell7或Codex；旧客户通过“沿用旧资料并启动.cmd”直接沿用原模型配置和资料。固定来源/SHA校验、项目专属环境、失败重跑与原资料保留已在Windows原生CI验证。首次需要联网；当前便携包支持Windows10/11 x64。[一键安装包](https://github.com/baizhanwen/liming-zhiyao-skill-collect/releases/download/v0.2.4/SkillCollect-v0.2.4-Windows-OneClick.zip)已发布，公开下载SHA、sidecar及GitHub资产digest已核对，[安装步骤](docs/Windows一键安装.md)。安装验收不替代客户网络中的抖音/模型真实业务复验。
 
